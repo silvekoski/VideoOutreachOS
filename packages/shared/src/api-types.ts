@@ -63,6 +63,7 @@ export interface AnalystDto {
   intros: IntroInfo[]
   voice: {
     sampleUrl: string | null
+    voiceId: string | null
     cloneStatus: 'none' | 'pending' | 'ready' | 'failed'
     consentDate: string | null
     consentUrl: string | null
@@ -77,6 +78,10 @@ export interface AnalystPatch {
   defaultSecondChannel?: Channel
   briefLanguage?: Lang
   timeZone?: string
+}
+
+export interface VoiceIdBody {
+  voiceId: string | null
 }
 
 export type InboxGroupKey = 'review' | 'meeting_today' | 'call' | 'second_channel'

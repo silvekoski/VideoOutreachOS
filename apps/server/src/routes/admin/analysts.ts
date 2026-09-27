@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { rm, stat } from 'node:fs/promises'
 import path from 'node:path'
-import { LANGUAGES, analystPatchSchema, isLang } from '@mergero/shared'
+import { LANGUAGES, analystPatchSchema, isLang, voiceIdBodySchema } from '@mergero/shared'
 import { Hono } from 'hono'
 import type { Context } from 'hono'
 import { z } from 'zod'
@@ -14,6 +14,7 @@ import {
   markClonePending,
   requireAnalyst,
   setConsent,
+  setVoiceId,
   setVoiceSample,
   startIntro,
   syncAnalysts,
@@ -22,6 +23,7 @@ import {
 } from '../../domain/analysts.ts'
 import { DomainError } from '../../domain/errors.ts'
 import { alertsFor } from '../../domain/events.ts'
+import { advanceAnalystDeals } from '../../domain/pipeline.ts'
 import { log } from '../../log.ts'
 import { FfmpegError, transcodeVoiceSample } from '../../media/ffmpeg.ts'
 import { insideDir, paths } from '../../paths.ts'
@@ -139,6 +141,15 @@ analystRoutes.post('/analysts/:id/voice', uploadLimit('audio'), async (c) => {
     const row = setVoiceSample(db, id, voiceFile(id), now)
     return row.consentFile !== null ? queueClone(db, row, sampleAt, now) : row
   })
+  return c.json(toAnalystDto(analyst))
+})
+
+analystRoutes.put('/analysts/:id/voice-id', async (c) => {
+  const { db, now } = adminContext()
+  const id = analystId(c)
+  const { voiceId } = await readJson(c, voiceIdBodySchema)
+  const analyst = setVoiceId(db, id, voiceId, now)
+  advanceAnalystDeals(db, id, now)
   return c.json(toAnalystDto(analyst))
 })
 

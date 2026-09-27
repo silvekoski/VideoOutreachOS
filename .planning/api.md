@@ -16,6 +16,7 @@ Request guard for each `/api/*` request:
 | `PATCH /api/analysts/:id` | `AnalystPatch` | `AnalystDto` |
 | `POST /api/analysts/:id/intros/:lang` | multipart: `file` (video), `transcript` (text, required, for the captions) | `AnalystDto` (a first intro gets the status `processing`; over a ready intro, the upload is in `pending` until it is ready), 400 without a transcript |
 | `POST /api/analysts/:id/voice` | multipart: `file` (audio) | `AnalystDto` |
+| `PUT /api/analysts/:id/voice-id` | `VoiceIdBody` (`voiceId`: ElevenLabs voice ID, or null to remove it) | `AnalystDto`. A voice ID sets the clone status `ready`, and null sets `none`. The call advances the deals of the analyst that wait for a voice. A clone job that completes later replaces the ID. |
 | `POST /api/analysts/:id/consent` | multipart: `file` (PDF), `date` (YYYY-MM-DD) | `AnalystDto` |
 | `GET /api/analysts/:id/files/:file` | | intro MP4 (range requests), voice sample, consent PDF |
 | `GET /api/inbox` | `analyst` | `InboxDto` |

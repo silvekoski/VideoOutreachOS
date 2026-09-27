@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
   completeIntro,
-  completeVoiceClone,
   failIntro,
   failVoiceClone,
   listAnalysts,
@@ -9,6 +8,7 @@ import {
   markClonePending,
   readyIntro,
   setConsent,
+  setVoiceId,
   setVoiceSample,
   startIntro,
   syncAnalysts,
@@ -133,7 +133,7 @@ describe('analysts', () => {
     expect(setVoiceSample(t.db, 10, 'analysts/10/voice-sample.mp3', T0).cloneStatus).toBe('none')
     expect(markClonePending(t.db, 10, T0).cloneStatus).toBe('pending')
     expect(failVoiceClone(t.db, 10, T0)).toMatchObject({ cloneStatus: 'failed', voiceId: null })
-    completeVoiceClone(t.db, 10, 'voice-1', T0)
+    setVoiceId(t.db, 10, 'voice-1', T0)
     setConsent(t.db, 10, { date: '2026-09-20', file: 'analysts/10/consent.pdf' }, T0)
     const row = markAlertsSeen(t.db, 10, later(1))
     expect(row).toMatchObject({ voiceId: 'voice-1', cloneStatus: 'ready', consentDate: '2026-09-20', alertsSeenAt: later(1).toISOString() })
@@ -155,6 +155,7 @@ describe('analysts', () => {
       ],
       voice: {
         sampleUrl: `/api/analysts/10/files/voice-sample.mp3?v=${version}`,
+        voiceId: 'voice-1',
         cloneStatus: 'ready',
         consentDate: '2026-09-20',
         consentUrl: `/api/analysts/10/files/consent.pdf?v=${version}`,
@@ -163,6 +164,7 @@ describe('analysts', () => {
       defaultSecondChannel: 'linkedin',
       briefLanguage: 'en',
     })
+    expect(setVoiceId(t.db, 10, null, T0)).toMatchObject({ voiceId: null, cloneStatus: 'none' })
   })
 })
 

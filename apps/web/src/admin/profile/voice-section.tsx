@@ -4,13 +4,58 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useUploadConsent, useUploadVoice } from '../api'
+import { useSetVoiceId, useUploadConsent, useUploadVoice } from '../api'
 import { StateBadge } from '../components/state-badge'
 import { ISO_DAY, localDay } from '../lib/format'
 import { CLONE_META } from '../lib/status'
 import { MediaUploadDialog } from './media-upload-dialog'
 
 const VOICE_MAX_S = 180
+const VOICE_ID = /^[A-Za-z0-9_-]{1,64}$/u
+
+function VoiceIdForm({ analystId, current }: { analystId: number; current: string | null }) {
+  const [value, setValue] = useState(current ?? '')
+  const setVoiceId = useSetVoiceId(analystId)
+  const inputId = useId()
+  const hintId = useId()
+  const trimmed = value.trim()
+  const valid = trimmed === '' || VOICE_ID.test(trimmed)
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault()
+    const next = trimmed === '' ? null : trimmed
+    if (setVoiceId.isPending || !valid || next === current) return
+    setVoiceId.mutate(next, {
+      onSuccess: () => toast.success(next === null ? 'Voice ID removed.' : 'Voice ID saved. New audio uses this voice.'),
+    })
+  }
+
+  return (
+    <form onSubmit={submit} className="grid gap-2 rounded-lg border p-3 sm:grid-cols-[1fr_auto] sm:items-end">
+      <div className="grid gap-1.5">
+        <Label htmlFor={inputId}>ElevenLabs voice ID</Label>
+        <Input
+          id={inputId}
+          value={value}
+          maxLength={64}
+          spellCheck={false}
+          autoComplete="off"
+          aria-invalid={!valid}
+          aria-describedby={hintId}
+          onChange={(event) => setValue(event.target.value)}
+        />
+      </div>
+      <Button type="submit" size="sm" aria-disabled={setVoiceId.isPending || undefined} className="aria-disabled:opacity-50">
+        {setVoiceId.isPending ? 'Saving' : 'Save voice ID'}
+      </Button>
+      <p id={hintId} className={valid ? 'text-xs text-muted-foreground sm:col-span-2' : 'text-xs text-destructive sm:col-span-2'}>
+        {valid
+          ? 'Use a voice from your ElevenLabs account. A new voice sample replaces this ID. Leave the field empty to remove the ID.'
+          : 'Enter letters, digits, hyphens or underscores only.'}
+      </p>
+    </form>
+  )
+}
 
 export function VoiceSection({ analyst }: { analyst: AnalystDto }) {
   const [recording, setRecording] = useState(false)
@@ -53,6 +98,7 @@ export function VoiceSection({ analyst }: { analyst: AnalystDto }) {
         </Button>
       </div>
       {voice.sampleUrl ? <audio src={voice.sampleUrl} controls aria-label="Current voice sample" className="w-full" /> : null}
+      <VoiceIdForm key={voice.voiceId ?? ''} analystId={analyst.id} current={voice.voiceId} />
       <p className="text-sm">
         {voice.consentDate ? (
           <>

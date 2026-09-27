@@ -1,7 +1,7 @@
 import type { Timeline } from '@mergero/shared'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { sql } from '../../src/db/index.ts'
-import { completeIntro, completeVoiceClone, getAnalyst, startIntro } from '../../src/domain/analysts.ts'
+import { completeIntro, getAnalyst, setVoiceId, startIntro } from '../../src/domain/analysts.ts'
 import { requireDeal, updateDeal } from '../../src/domain/deals.ts'
 import { DomainError } from '../../src/domain/errors.ts'
 import { listEvents } from '../../src/domain/events.ts'
@@ -205,7 +205,7 @@ describe('advance', () => {
     expect(pipelineJobs().some((job) => job.type === 'audio')).toBe(false)
 
     startIntro(t.db, 10, 'fi', { recordedAt: '2026-09-26T12:05:00.000Z', transcript: null }, now)
-    completeVoiceClone(t.db, 10, 'voice-new', now)
+    setVoiceId(t.db, 10, 'voice-new', now)
     expect(advanceAnalystDeals(t.db, 10, now)).toEqual([DEAL_ID])
     expect(requireDeal(t.db, DEAL_ID).reviewReasons[0]?.detail).toBe('The Finnish face-cam intro of Aino Analyst is still processing')
 

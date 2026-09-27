@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { AnalystPatch, BookBody, FormSubmitBody, ReviewPatch } from './api-types.ts'
+import type { AnalystPatch, BookBody, FormSubmitBody, ReviewPatch, VoiceIdBody } from './api-types.ts'
 import { SLOT_LIMITS } from './slots.ts'
 import {
   CHANNELS,
@@ -104,6 +104,14 @@ export const analystPatchSchema = z.object({
   briefLanguage: z.enum(LANGUAGES).optional(),
   timeZone: z.string().max(64).refine(isTimeZone, 'expected an IANA time zone, for example Europe/Helsinki').optional(),
 }) satisfies z.ZodType<AnalystPatch>
+
+export const voiceIdBodySchema = z.object({
+  voiceId: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z0-9_-]{1,64}$/u, 'expected an ElevenLabs voice ID, for example 21m00Tcm4TlvDq8ikWAM')
+    .nullable(),
+}) satisfies z.ZodType<VoiceIdBody>
 
 export const scriptOutputSchema = z.object({ script: z.string().min(1) })
 

@@ -5,11 +5,11 @@ import { plannedDurationS } from '@mergero/shared'
 import type { AudioStatus, Lang, SlideSegment, Timeline } from '@mergero/shared'
 import {
   completeIntro,
-  completeVoiceClone,
   failIntro,
   failVoiceClone,
   introUpload,
   requireAnalyst,
+  setVoiceId,
 } from '../domain/analysts.ts'
 import { isExpired, requireDeal } from '../domain/deals.ts'
 import { advance, advanceAnalystDeals } from '../domain/pipeline.ts'
@@ -145,7 +145,7 @@ async function runClone(job: AudioJob<'clone'>, ctx: JobContext): Promise<void> 
     throw error.code === 'ENOENT' ? new NonRetryableError(`The voice sample is missing: ${analyst.voiceSampleFile}`) : error
   })
   const { voiceId } = await ctx.providers.speech.cloneVoice(analyst.name, sample, path.basename(file))
-  completeVoiceClone(ctx.db, analystId, voiceId, ctx.now())
+  setVoiceId(ctx.db, analystId, voiceId, ctx.now())
   log.info('voice clone ready', { analystId, mode: ctx.providers.speech.mode })
   advanceAnalystDeals(ctx.db, analystId, ctx.now())
 }

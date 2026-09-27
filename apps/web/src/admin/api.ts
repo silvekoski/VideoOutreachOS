@@ -15,6 +15,7 @@ import type {
   ReviewReason,
   SessionEventsDto,
   TemplatePreviewDto,
+  VoiceIdBody,
 } from '@mergero/shared'
 import { ADMIN_REQUEST_HEADER } from '@mergero/shared'
 import { approvalState } from './lib/review'
@@ -154,6 +155,15 @@ export function useUpdateAnalyst(analystId: number) {
   const store = useStoreAnalyst()
   return useMutation({
     mutationFn: (patch: AnalystPatch) => request<AnalystDto>('PATCH', `/api/analysts/${analystId}`, { json: patch }),
+    onSuccess: store,
+  })
+}
+
+export function useSetVoiceId(analystId: number) {
+  const store = useStoreAnalyst()
+  return useMutation({
+    mutationFn: (voiceId: string | null) =>
+      request<AnalystDto>('PUT', `/api/analysts/${analystId}/voice-id`, { json: { voiceId } satisfies VoiceIdBody }),
     onSuccess: store,
   })
 }

@@ -162,8 +162,8 @@ export function markClonePending(db: Db, id: number, now: Date = new Date()): An
   return setColumns(db, id, { clone_status: 'pending' }, now)
 }
 
-export function completeVoiceClone(db: Db, id: number, voiceId: string, now: Date = new Date()): AnalystRow {
-  return setColumns(db, id, { voice_id: voiceId, clone_status: 'ready' }, now)
+export function setVoiceId(db: Db, id: number, voiceId: string | null, now: Date = new Date()): AnalystRow {
+  return setColumns(db, id, { voice_id: voiceId, clone_status: voiceId === null ? 'none' : 'ready' }, now)
 }
 
 export function failVoiceClone(db: Db, id: number, now: Date = new Date()): AnalystRow {
@@ -205,6 +205,7 @@ export function toAnalystDto(row: AnalystRow, fileUrlBase = '/api/analysts'): An
     }),
     voice: {
       sampleUrl: fileUrl(row.voiceSampleFile, row.updatedAt),
+      voiceId: row.voiceId,
       cloneStatus: row.cloneStatus,
       consentDate: row.consentDate,
       consentUrl: fileUrl(row.consentFile, row.updatedAt),

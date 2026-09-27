@@ -71,7 +71,7 @@ describe('GET and PATCH /api/analysts', () => {
     expect(body[1]).toMatchObject({
       id: 1001,
       intros: [],
-      voice: { sampleUrl: null, cloneStatus: 'none', consentDate: null, consentUrl: null },
+      voice: { sampleUrl: null, voiceId: null, cloneStatus: 'none', consentDate: null, consentUrl: null },
       defaultExpiryDays: 30,
       defaultSecondChannel: 'linkedin',
       briefLanguage: 'en',
@@ -210,6 +210,16 @@ describe('voice sample and consent', () => {
     }
     expect(existsSync(paths.voiceSample(1001))).toBe(false)
     expect(readdirSync(paths.uploadsDir)).toEqual([])
+  })
+
+  it('sets and clears the voice ID by hand', async () => {
+    const set = await h.json<AnalystDto>('/api/analysts/1001/voice-id', jsonBody('PUT', { voiceId: ' 21m00Tcm4TlvDq8ikWAM ' }))
+    expect(set).toMatchObject({ status: 200, body: { voice: { voiceId: '21m00Tcm4TlvDq8ikWAM', cloneStatus: 'ready' } } })
+    const cleared = await h.json<AnalystDto>('/api/analysts/1001/voice-id', jsonBody('PUT', { voiceId: null }))
+    expect(cleared).toMatchObject({ status: 200, body: { voice: { voiceId: null, cloneStatus: 'none' } } })
+    expect((await h.request('/api/analysts/1001/voice-id', jsonBody('PUT', { voiceId: 'no spaces/here' }))).status).toBe(400)
+    expect((await h.request('/api/analysts/1001/voice-id', jsonBody('PUT', {}))).status).toBe(400)
+    expect((await h.request('/api/analysts/9/voice-id', jsonBody('PUT', { voiceId: 'v1' }))).status).toBe(404)
   })
 
   it('checks the consent date and the file type', async () => {
