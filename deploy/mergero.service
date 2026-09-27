@@ -1,0 +1,19 @@
+[Unit]
+Description=Mergero video tool
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=mergero
+WorkingDirectory=/srv/mergero
+Environment=NODE_ENV=production
+Environment=CHROME_PATH=/usr/bin/google-chrome
+Environment=STORAGE_DIR=/srv/mergero-data/storage
+Environment=COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+EnvironmentFile=-/etc/mergero.env
+ExecStart=/usr/bin/pnpm start
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
