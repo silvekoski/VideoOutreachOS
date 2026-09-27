@@ -1,6 +1,6 @@
-# VideoOutreachOS
-
 ![Mergero VideoOutreachOS: personalized video outreach that turns business prospects into booked meetings.](docs/mergero-banner.png)
+
+# VideoOutreachOS
 
 The Mergero video tool makes a personalized video for the owner of a company in the Mergero Pipedrive pipeline. The owner gets a link. The link opens a page with the video, a valuation calculator and a button that books a Teams meeting with the analyst.
 
