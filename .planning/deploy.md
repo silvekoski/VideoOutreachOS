@@ -21,10 +21,8 @@ The tool runs on a Verda CPU instance, `86.38.238.174` (Ubuntu 26.04, location F
 
 The systemd environment has priority over `.env`, because Node does not replace a variable that is already set.
 
-`ASIAKASTIETO_URL` points to `127.0.0.1`, because the password on the public address blocks the API call to its own mock.
+`ASIAKASTIETO_URL` points to `127.0.0.1`, so the API calls its own mock without the proxy.
 
 ## Access
 
-Caddy gets the TLS certificate through ACME. `/v/*` and `/assets/*` are open. All other paths need basic auth with the user `admin`. The firewall (ufw) lets in ports 22, 80 and 443 only.
-
-To change the password, run `caddy hash-password` on the server, put the hash in the Caddyfile, and run `systemctl reload caddy`.
+Caddy gets the TLS certificate through ACME. All paths are open, and the admin panel has no sign-in. The firewall (ufw) lets in ports 22, 80 and 443 only.
