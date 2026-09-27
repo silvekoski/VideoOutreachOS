@@ -2,7 +2,21 @@
 
 The tool makes a personal video for the owner of a company in the Mergero Pipedrive pipeline. The owner gets a link. The video page plays the video, shows a form with a valuation calculator, and lets the owner book a Teams meeting with the analyst. The tool records the engagement, moves the Pipedrive stage, makes follow-up tasks, and writes a meeting brief before each meeting.
 
-PRD.md holds the requirements. `.planning/` holds the design notes.
+PRD.md holds the requirements. `.planning/` holds the design notes. `.planning/architecture.md` is the contract for all parts of the code.
+
+## Repository layout
+
+| Folder | Contents |
+|---|---|
+| `apps/server` | Hono API and worker (one package, two entry points) |
+| `apps/web` | Vite app: admin panel and video page |
+| `apps/mgx-mock` | mock MGX MCP server and buyer logos |
+| `packages/shared` | types, zod schemas, pure logic, i18n |
+| `packages/scene` | Revideo scene and render function |
+| `scripts` | Pipedrive setup and seed scripts |
+| `config` | Pipedrive field and stage IDs, Mergero facts and brand |
+| `seed` | demo data for the fake providers |
+| `e2e` | Playwright tests |
 
 ## Requirements
 
@@ -50,6 +64,19 @@ For local tests without a face-cam intro or a voice clone, set `DEV_BYPASS=1`. T
 5. Copy the link for a channel from the deal page.
 
 The demo deals are 4001 to 4010 (Finland, Sweden, Norway, Denmark, Germany, Austria, Switzerland, Iceland). Deal 4010 (Iceland) makes an English video.
+
+## Deal stages
+
+A deal moves forward through these stages. It does not move back.
+
+1. **Draft**: the worker scrapes the website, writes the scripts, makes the audio and renders the video.
+2. **Review**: the analyst checks the scripts and the slides.
+3. **Link sent**: the analyst publishes the video, and the link is live.
+4. **Opened**: the owner opens the link.
+5. **Form sent**: the owner sends the form.
+6. **Meeting booked**: the owner books a meeting. The tool closes the open follow-up tasks for the deal.
+
+A deal goes to **Failed** when a worker job fails. If the owner selects "not interested" in the form, the tool marks the deal lost. It writes the reason to Pipedrive. The tool also follows each won, lost and reopened deal in Pipedrive.
 
 ## Connect a real Pipedrive account
 
