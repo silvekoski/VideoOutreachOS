@@ -1,0 +1,28 @@
+{
+  "pipelineId": 2,
+  "stages": {
+    "link_sent": 12,
+    "opened": 13,
+    "form_sent": 14,
+    "meeting_booked": 15
+  },
+  "dealFields": {
+    "video": "5b9bd85b9aa1a198936ff3496c60e479645dde25",
+    "revenueRange": "20e448283479df32f90ca8f2c53356282c2cf708",
+    "profitRange": "8471b4c85eb339a5957fec101d88692963272911",
+    "staffRange": "74972ec3cb7145673a6d61211b5963b85f64f1ee",
+    "valuationRange": "e06f213d1695010c049952e3d4e41c53542ac25e",
+    "watchTimeS": "8e79c90d14cb978e9a579fe7cf515691ca56d5d4",
+    "stopSlide": "5d1878f2b01c87bcfc6503eb4669f30b75f43eaf",
+    "replayCount": "de1d164d30eb0c710547b3d060a06dc4e07f0f46",
+    "watchPerSlide": "d3d5a32a2f41f92afef63925954ce8b4430055c2",
+    "linkChannel": "630a7e2b6e488fcbbbcb9d959a50f0fbf44ed75b"
+  },
+  "orgFields": {
+    "businessId": "944f3ed621c07f17fc662541e7f86491f1aa06ed",
+    "nace": "67b972b324d77e44ee0fe62f1fbc1a11a8c39d06"
+  },
+  "personFields": {
+    "role": "9e39a45bb59fad6c14b46e17f461ec4cec9de78d"
+  }
+}

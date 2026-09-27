@@ -1,0 +1,48 @@
+{
+  "company": "Mergero",
+  "website": "https://mergero.com",
+  "privacyUrl": "https://mergero.com/privacy-policy/",
+  "email": "office@mergero.com",
+  "facts": {
+    "buyerCount": 2200,
+    "publicBuyerCount": 1700
+  },
+  "brand": {
+    "primary": "#0027FF",
+    "ink": "#111111",
+    "text": "#333333",
+    "muted": "#6B6B6B",
+    "surface": "#F5F5F5",
+    "white": "#FFFFFF",
+    "logoOnDark": "config/mergero-logo-white.svg",
+    "logoOnLight": "config/mergero-logo-dark.svg"
+  },
+  "offices": {
+    "helsinki": {
+      "name": "Mergero Helsinki",
+      "address": "Mannerheiminaukio 1A, 00100 Helsinki, Finland",
+      "phone": "+358 10 212 1380"
+    },
+    "zurich": {
+      "name": "Mergero Zürich",
+      "address": "Hardturmstrasse 120, 8005 Zürich, Switzerland",
+      "phone": "+41 79 558 4490"
+    },
+    "frankfurt": {
+      "name": "Mergero Frankfurt",
+      "address": "The Squaire Business Center, Am Flughafen 12, 7th Floor, 60549 Frankfurt am Main, Germany",
+      "phone": "+41 79 558 4490"
+    }
+  },
+  "officeByCountry": {
+    "FI": "helsinki",
+    "SE": "helsinki",
+    "NO": "helsinki",
+    "DK": "helsinki",
+    "IS": "helsinki",
+    "DE": "frankfurt",
+    "AT": "zurich",
+    "CH": "zurich"
+  },
+  "defaultOffice": "helsinki"
+}

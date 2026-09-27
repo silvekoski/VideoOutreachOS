@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fi">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kivirannan Konepaja Oy | Koneistusta Kangasalta vuodesta 1978</title>
+    <meta name="description" content="Kivirannan Konepaja valmistaa vaativia koneistettuja osia ja kokoonpanoja teollisuudelle.">
+    <link rel="icon" href="data:,">
+    <style>
+      :root {
+        --accent: #1f5f8b;
+        --accent-dark: #123e5c;
+        --ink: #1b2228;
+        --muted: #56626c;
+        --surface: #f3f5f7;
+        --line: #dce3e8;
+        --body-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        --heading-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: var(--body-font); font-size: 17px; line-height: 1.6; color: var(--ink); background: #fff; }
+      h1, h2, h3 { font-family: var(--heading-font); line-height: 1.15; margin: 0 0 0.5em; }
+      h2 { font-size: 32px; }
+      a { color: var(--accent-dark); }
+      .wrap { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
+      .skip { position: absolute; left: -9999px; top: 0; z-index: 200; padding: 8px 14px; background: #fff; color: var(--ink); }
+      .skip:focus { left: 12px; top: 12px; }
+      .site-header { background: #fff; border-bottom: 1px solid var(--line); }
+      .site-header .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; min-height: 76px; }
+      .brand { display: flex; align-items: center; gap: 12px; color: var(--ink); font-weight: 700; font-size: 19px; text-decoration: none; }
+      .brand-mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 10px; background: var(--accent); color: #fff; font-size: 16px; font-weight: 800; letter-spacing: 0.5px; }
+      .site-nav ul { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 0; padding: 0; list-style: none; }
+      .site-nav a { color: var(--ink); font-weight: 500; text-decoration: none; }
+      .site-nav a:hover, .site-nav a[aria-current="page"] { color: var(--accent); }
+      .hero { padding: 96px 0 104px; }
+      .hero h1 { font-size: 52px; max-width: 18ch; }
+      .hero p { font-size: 20px; max-width: 56ch; margin: 0 0 32px; }
+      .hero-dark { background: linear-gradient(120deg, var(--accent-dark), var(--accent)); color: #fff; }
+      .hero-light { background: var(--surface); }
+      .hero-light h1 { color: var(--accent-dark); }
+      .hero-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 48px; align-items: center; }
+      .btn { display: inline-block; padding: 13px 24px; border-radius: 8px; font-weight: 600; text-decoration: none; }
+      .hero-dark .btn { background: #fff; color: var(--accent-dark); }
+      .hero-light .btn { background: var(--accent); color: #fff; }
+      .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 24px; margin: 0; }
+      .facts dt { font-family: var(--heading-font); font-size: 30px; font-weight: 700; color: var(--accent-dark); }
+      .facts dd { margin: 0; color: var(--muted); }
+      .facts-panel { padding: 32px; border-radius: 14px; background: #fff; box-shadow: 0 12px 32px rgba(20, 30, 40, 0.1); }
+      .facts-panel .facts { grid-template-columns: 1fr 1fr; }
+      .hero-dark .facts-panel { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.28); box-shadow: none; }
+      .hero-dark .facts dt { color: #fff; }
+      .hero-dark .facts dd { color: rgba(255, 255, 255, 0.86); }
+      section { padding: 64px 0; }
+      .band { background: var(--surface); }
+      .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; margin-top: 32px; }
+      .card { padding: 28px; border-top: 4px solid var(--accent); border-radius: 12px; background: var(--surface); }
+      .band .card { background: #fff; }
+      .card h3 { font-size: 21px; }
+      .card p { margin: 0; color: var(--muted); }
+      .text > * { max-width: 70ch; }
+      .text li { margin-bottom: 8px; }
+      .contact-list { margin: 16px 0 0; padding: 0; list-style: none; }
+      .contact-list li { margin-bottom: 6px; }
+      .page-head { padding: 72px 0 40px; background: var(--surface); }
+      .page-head h1 { font-size: 44px; color: var(--accent-dark); max-width: 22ch; }
+      .page-head p { font-size: 20px; max-width: 60ch; margin: 0; }
+      .site-footer { padding: 40px 0 150px; background: var(--ink); color: #d6dce1; font-size: 15px; }
+      .site-footer p { margin: 0 0 6px; }
+      .site-footer a { color: #fff; }
+      .cookie-banner { position: fixed; left: 0; right: 0; bottom: 0; z-index: 100; background: #fff; border-top: 1px solid var(--line); box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.14); }
+      .cookie-banner .wrap { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-top: 20px; padding-bottom: 20px; }
+      .cookie-banner h2 { font-family: var(--body-font); font-size: 17px; margin: 0 0 4px; }
+      .cookie-banner p { margin: 0; max-width: 72ch; color: var(--muted); font-size: 15px; }
+      .cookie-actions { display: flex; flex-shrink: 0; gap: 12px; }
+      .cookie-actions button { padding: 11px 20px; border: 2px solid var(--accent); border-radius: 8px; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+      .cookie-accept { background: var(--accent); color: #fff; }
+      .cookie-necessary { background: #fff; color: var(--accent-dark); }
+      :focus-visible { outline: 3px solid #e8a200; outline-offset: 2px; }
+      @media (max-width: 780px) {
+        body { font-size: 16px; }
+        .hero { padding: 56px 0 64px; }
+        .hero h1 { font-size: 36px; }
+        .hero p { font-size: 18px; }
+        .hero-grid { grid-template-columns: 1fr; }
+        .page-head h1 { font-size: 32px; }
+        .cookie-banner .wrap { flex-direction: column; align-items: stretch; }
+        .cookie-actions { flex-direction: column; }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#main">Siirry sisältöön</a>
+    <header class="site-header">
+      <div class="wrap">
+        <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">KK</span>Kivirannan Konepaja</a>
+        <nav class="site-nav">
+          <ul>
+            <li><a href="./" aria-current="page">Etusivu</a></li>
+            <li><a href="./#palvelut">Palvelut</a></li>
+            <li><a href="meista/">Meistä</a></li>
+            <li><a href="./#yhteystiedot">Yhteystiedot</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+    <main id="main">
+      <div class="hero hero-dark">
+        <div class="wrap hero-grid">
+          <div>
+            <h1>Tarkkaa koneistusta Kangasalta vuodesta 1978</h1>
+            <p>Olemme perheyritys, joka valmistaa vaativia koneistettuja osia ja kokoonpanoja suomalaiselle ja pohjoismaiselle teollisuudelle. Teemme pienet ja suuret sarjat samalla huolellisuudella.</p>
+            <a class="btn" href="#yhteystiedot">Pyydä tarjous</a>
+          </div>
+          <div class="facts-panel" role="group" aria-label="Avainluvut">
+            <dl class="facts">
+              <div><dt>1978</dt><dd>perustettu</dd></div>
+              <div><dt>46</dt><dd>ammattilaista</dd></div>
+              <div><dt>24</dt><dd>CNC-työstökonetta</dd></div>
+              <div><dt>ISO 9001</dt><dd>sertifioitu laatu</dd></div>
+            </dl>
+          </div>
+        </div>
+      </div>
+      <section id="palvelut">
+        <div class="wrap">
+          <h2>Palvelumme</h2>
+          <div class="cards">
+            <article class="card">
+              <h3>CNC-sorvaus</h3>
+              <p>Sorvaamme akseleita, laippoja ja holkkeja aina 900 millimetrin halkaisijaan asti. Sarjakoot vaihtelevat yksittäisistä prototyypeistä tuhansien kappaleiden sarjoihin.</p>
+            </article>
+            <article class="card">
+              <h3>CNC-jyrsintä</h3>
+              <p>Viisiakseliset työstökeskuksemme koneistavat monimutkaiset rungot ja kotelot yhdellä kiinnityksellä. Se lyhentää toimitusaikaa ja parantaa mittatarkkuutta.</p>
+            </article>
+            <article class="card">
+              <h3>Kokoonpano ja alihankinta</h3>
+              <p>Toimitamme myös valmiiksi kootut moduulit. Pintakäsittelyn, lämpökäsittelyn ja tarkastukset hoidamme luotettavien kumppaniemme kanssa.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+      <section class="band">
+        <div class="wrap text">
+          <h2>Asiakkaamme</h2>
+          <p>Asiakkaitamme ovat paperikoneiden, kaivoslaitteiden ja energiateollisuuden valmistajat Suomessa, Ruotsissa ja Saksassa. Moni asiakkuus on jatkunut yli kaksikymmentä vuotta, ja noin kolmannes tuotannostamme menee vientiin.</p>
+        </div>
+      </section>
+      <section>
+        <div class="wrap text">
+          <h2>Miksi Kiviranta?</h2>
+          <ul>
+            <li>Pysymme sovituissa toimitusajoissa. Viime vuonna toimitusvarmuutemme oli 98 prosenttia.</li>
+            <li>Jokainen sarja tarkastetaan koordinaattimittauskoneella ennen lähetystä.</li>
+            <li>Sama yhteyshenkilö palvelee sinua tarjouksesta toimitukseen.</li>
+          </ul>
+        </div>
+      </section>
+      <section class="band">
+        <div class="wrap text">
+          <h2>Laatu ja ympäristö</h2>
+          <p>Laatujärjestelmämme on sertifioitu standardin ISO 9001 mukaisesti. Kierrätämme kaikki metallilastut ja leikkuunesteet, ja uusi lämmöntalteenotto lämmittää tuotantohallimme talvella ilman öljyä. Näin pidämme sekä laadun että ympäristön kunnossa.</p>
+        </div>
+      </section>
+      <section id="yhteystiedot">
+        <div class="wrap text">
+          <h2>Yhteystiedot</h2>
+          <p>Lähetä piirustukset tai kysy lisää. Vastaamme yleensä saman päivän aikana.</p>
+          <ul class="contact-list">
+            <li>Kivirannan Konepaja Oy, Teollisuustie 14, 36220 Kangasala</li>
+            <li>Puhelin <a href="tel:+35833562140">+358 3 356 2140</a></li>
+            <li>Sähköposti <a href="mailto:myynti@kivirannankonepaja.fi">myynti@kivirannankonepaja.fi</a></li>
+          </ul>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <div class="wrap">
+        <p><strong>Kivirannan Konepaja Oy</strong></p>
+        <p>Teollisuustie 14, 36220 Kangasala</p>
+        <p>Y-tunnus 0712834-9</p>
+      </div>
+    </footer>
+    <section id="cookie-banner" class="cookie-banner" aria-label="Evästeet">
+      <div class="wrap">
+        <div>
+          <h2>Tämä sivusto käyttää evästeitä</h2>
+          <p>Käytämme evästeitä, jotta sivusto toimii oikein ja voimme kehittää sitä kävijätilastojen avulla. Voit hyväksyä kaikki evästeet tai sallia vain välttämättömät.</p>
+        </div>
+        <div class="cookie-actions">
+          <button type="button" class="cookie-necessary" data-consent="necessary">Vain välttämättömät</button>
+          <button type="button" id="cookie-accept" class="cookie-accept" data-consent="all">Hyväksy kaikki evästeet</button>
+        </div>
+      </div>
+    </section>
+    <script>
+      (function () {
+        var banner = document.getElementById('cookie-banner');
+        if (/(?:^|;\s*)cookie_consent=/.test(document.cookie)) {
+          banner.remove();
+          return;
+        }
+        banner.querySelectorAll('button[data-consent]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            document.cookie = 'cookie_consent=' + button.getAttribute('data-consent') + '; max-age=31536000; path=/sites/kivirannan-konepaja/; SameSite=Lax';
+            banner.remove();
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>

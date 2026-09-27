@@ -1,0 +1,848 @@
+[
+ {
+  "area": "pipeline",
+  "coverage": "Read PRD.md, .planning/architecture.md, api.md, shared-exports.md, fix-list.md and the build reports core, providers, scene, worker, shared. Read in full: apps/server/src/domain/{pipeline,ensure,timelines}.ts; jobs/{write-script,render,audio,scrape,ask-model,prompts,runner,storage,types}.ts and worker.ts; providers/{featherless,model-fake,elevenlabs,speech-fake,firecrawl,scraper-local,mgx,asiakastieto,linkedin,index}.ts; media/ffmpeg.ts; packages/scene/src/* and all 8 templates, render/{render-timeline,child,media,job}.ts; packages/shared/src/{checks,words,slots,timeline,languages,fallback-writer,types}.ts; video/page-data.ts and video/valuation.ts where they touch the video data. Not read in depth: consent-script.ts (cookie banner script), write-brief/sweep/pipedrive-write/backup jobs (other areas), render/previews.ts. Ran pnpm vitest run --project shared (252 passed) and --project server (308 passed); did not run the scene project. GET only against the stack: /api/status, /api/deals, /api/deals/{4001,4003,4007}/review. Extracted one frame per slide from storage/deals/4001 and 4007 video-1080.v1.mp4 into /private/tmp/claude-501/-Users-veikka-prompt-marketing-hackathon-monorepo/b2795bcd-edcc-40b7-bc69-7bc26c6f5c9a/scratchpad/audit/ (f-4001-s1..s8.jpg, f-4007-s1..s8.jpg) and viewed them plus the 4007 poster: no text overflow or overlap; umlauts render; English MGX texts on slides 2, 5, 6; the demo intro is an ffmpeg test pattern, so slides 1 and 8 show color bars instead of a face (seed data, not code). Checked with ffprobe/ebur128: both videos are H.264 yuv420p + AAC, moov at the start for 1080p and 720p, 30 fps, frame count matches the timeline, integrated loudness -16.3 LUFS (intro -16.0, clips -16.3). Revideo is pinned at 0.11.0; Geist latin subset covers the required letters; DISABLE_TELEMETRY is set in worker and render child. Scratch scripts (edit-check.mts, slots-check.mts, lang-check.mts) confirmed the stale-script and long-name findings; Nordic language detection worked on samples. No files in the repository were changed and no POST, PATCH or DELETE requests were sent.",
+  "confirmed": [
+   {
+    "id": "stale-script-after-buyer-or-lines-edit",
+    "severity": "major",
+    "prd": "Where the video is built and edited (edit table: Buyer list and Three lines rows: New audio, new render); Review page slide 5",
+    "file": "apps/server/src/domain/pipeline.ts",
+    "line": 445,
+    "problem": "Removing a buyer on slide 5 (or editing the company lines on slide 3) only changes the slide variables and sets audio.status to 'new'. The slide script is not rewritten, so the audio job synthesizes the old script again. The voice-over still names the removed buyer (or quotes the old first line) while the slide no longer shows it. A buyer that the analyst removed on purpose is still named to the prospect, and the 'New audio' step makes identical audio.",
+    "evidence": "editTimeline(): `segment.variables = { ...segment.variables, buyers: kept, candidates }; markNewAudio(segment)` and markNewAudio only sets `status: 'new'`; no write-script job is enqueued (scriptWrite() adds slides only for lines or approved script_missing). Scratch run with the test fixtures: applyReviewPatch(removedBuyers ['b1']) gave `buyers [ 'Baltic Growth Fund', 'Helsinki Holding' ]`, `script Listalla on esimerkiksi Nordic Industrial Partners, Baltic Growth Fund ja Helsinki Holding. | source model | audio new`. Demo deal 4001 slide 5 script names 'Arvola Industrial Holding, Selkameri Capital ja Haukilahti Equity'; deal 4001 slide 3 script quotes line 1 ('Naein ymmaerraemme liiketoimintasi: Teemme pienet ja suuret sarjat...').",
+    "fix": "In editTimeline, when the buyer list (slide 5) or the lines (slide 3) change and the slide scriptSource is not 'analyst', clear the script and scriptSource of that slide. In scriptWrite, also enqueue write-script for an empty, non-analyst script of slide 3 or 5 when the version is not approved (key write-script:{deal}:{version}:{slide}), so that audio runs after the new script. When scriptSource is 'analyst', add a blocking review reason that asks the analyst to check the script against the new buyer list or lines.",
+    "verdict": {
+     "id": "stale-script-after-buyer-or-lines-edit",
+     "real": true,
+     "severity": "major",
+     "reason": "Confirmed in apps/server/src/domain/pipeline.ts. editTimeline() line 444 sets only the variables and calls markNewAudio() (line 403), which only sets audio.status to 'new'. The script text stays the same. scriptWrite() (line 213) rewrites slide 3 only when model lines are missing, and it rewrites other slides only on approval with script_missing. writeContent() in write-script.ts line 437 rewrites the slide 3 script only when the model writes new lines. It never does this for analyst lines. runSlides() in audio.ts then synthesizes the unchanged script. Live GET /api/deals/4001/review shows that the slide 5 script names 'Arvola Industrial Holding, Selkämeri Capital ja Haukilahti Equity' and the slide 3 script quotes line 1. When the analyst removes a buyer or edits the lines, the voice keeps the old names and the old line, and 'New audio' makes identical audio. The analyst can edit the slide 5 script by hand as a workaround, but the tool does not flag the mismatch. The PRD table effect 'New audio' is not done in substance.",
+     "fix": "In editTimeline, when the buyer list (slide 5) or the lines (slide 3) change and the slide scriptSource is not 'analyst', clear the script and scriptSource of that slide. In scriptWrite, also enqueue write-script for an empty, non-analyst script of slide 3 or 5 when the version is not approved (key write-script:{deal}:{version}:{slide}), so that audio runs after the new script. When scriptSource is 'analyst', add a blocking review reason that asks the analyst to check the script against the new buyer list or lines."
+    },
+    "reason": "Confirmed in apps/server/src/domain/pipeline.ts. editTimeline() line 444 sets only the variables and calls markNewAudio() (line 403), which only sets audio.status to 'new'. The script text stays the same. scriptWrite() (line 213) rewrites slide 3 only when model lines are missing, and it rewrites other slides only on approval with script_missing. writeContent() in write-script.ts line 437 rewrites the slide 3 script only when the model writes new lines. It never does this for analyst lines. runSlides() in audio.ts then synthesizes the unchanged script. Live GET /api/deals/4001/review shows that the slide 5 script names 'Arvola Industrial Holding, Selkämeri Capital ja Haukilahti Equity' and the slide 3 script quotes line 1. When the analyst removes a buyer or edits the lines, the voice keeps the old names and the old line, and 'New audio' makes identical audio. The analyst can edit the slide 5 script by hand as a workaround, but the tool does not flag the mismatch. The PRD table effect 'New audio' is not done in substance."
+   },
+   {
+    "id": "long-company-name-blocks-forever",
+    "severity": "minor",
+    "prd": "Video rendering > Scene (text slots, mark for review); Where the video is built and edited (Contact data is read-only)",
+    "file": "packages/shared/src/slots.ts",
+    "line": 63,
+    "problem": "The company name from Pipedrive is checked against 'your-company.company' (60 characters) and the analyst name against 'facecam.name' / 'book-meeting.name' (40). A longer value gives text_too_long, which blocks audio, render and approval. The analyst cannot edit these texts (ReviewPatch has no field for them), and ensureDeal never refreshes the snapshot, so even a rename in Pipedrive does not help. The deal stays in Review with no way out. Long DACH legal names are common.",
+    "evidence": "Scratch check on the 4007 timeline with company 'Brenner Hydraulik Maschinenbau und Anlagentechnik GmbH & Co. KG' (63 chars): checkTimelineSlots returned [{\"code\":\"text_too_long\",\"slide\":3,\"slot\":\"your-company.company\",\"detail\":\"Slide 3, company name: 63 of 60 characters\"}]. reviewPatchSchema fields: scripts, lines, removedBuyers, customQuestions, expiryDays, pageLanguage only. ensure.ts line 74-75: `const existing = getDeal(db, dealId); if (existing) return { deal: existing, created: false }`. approveDeal throws 409 while any reason remains.",
+    "fix": "Raise 'your-company.company' to the length that fits the two-line headline (measure it, about 100 characters). Also give the analyst a way to clear the reason: while the deal is not published, read the Pipedrive organization, person and owner names again on ensure (or add a 'Read from Pipedrive again' action), so a shortened name in Pipedrive gets into the snapshot and a new version. Optionally add a slide 3 display name to ReviewPatch.",
+    "verdict": {
+     "id": "long-company-name-blocks-forever",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. slots.ts line 63 checks snapshot.company against 'your-company.company' (max 60), and lines 56 and 78 check the analyst name against 40. recomputeReviewReasons() adds checkTimelineSlots() results as blocking reasons, and approveDeal() throws 409 while any reason remains. reviewPatchSchema (schemas.ts line 78) has no field for the company or analyst name. ensureDeal() returns the existing row and never reads Pipedrive again, so a rename in Pipedrive does not help. No admin route resets a deal. The deal stays in Review permanently. The PRD rule 'too long: mark for review, do not render' is implemented as written, but the analyst has no way to clear the reason. Severity is minor, not major: this affects only names longer than 60 characters, which is rare. The headline is 60 px text over 1680 px with two lines, so the 60 character limit is also stricter than the layout needs. The proposed fix to shrink or truncate instead of blocking goes against the PRD rule, so give the analyst a way to clear the reason instead.",
+     "fix": "Raise 'your-company.company' to the length that fits the two-line headline (measure it, about 100 characters). Also give the analyst a way to clear the reason: while the deal is not published, read the Pipedrive organization, person and owner names again on ensure (or add a 'Read from Pipedrive again' action), so a shortened name in Pipedrive gets into the snapshot and a new version. Optionally add a slide 3 display name to ReviewPatch."
+    },
+    "reason": "Confirmed. slots.ts line 63 checks snapshot.company against 'your-company.company' (max 60), and lines 56 and 78 check the analyst name against 40. recomputeReviewReasons() adds checkTimelineSlots() results as blocking reasons, and approveDeal() throws 409 while any reason remains. reviewPatchSchema (schemas.ts line 78) has no field for the company or analyst name. ensureDeal() returns the existing row and never reads Pipedrive again, so a rename in Pipedrive does not help. No admin route resets a deal. The deal stays in Review permanently. The PRD rule 'too long: mark for review, do not render' is implemented as written, but the analyst has no way to clear the reason. Severity is minor, not major: this affects only names longer than 60 characters, which is rare. The headline is 60 px text over 1680 px with two lines, so the 60 character limit is also stricter than the layout needs. The proposed fix to shrink or truncate instead of blocking goes against the PRD rule, so give the analyst a way to clear the reason instead."
+   },
+   {
+    "id": "mgx-texts-not-in-video-language",
+    "severity": "major",
+    "prd": "Language barrier; Slide visual look (template works in all languages); Slide order 5 (one line per buyer)",
+    "file": "apps/server/src/jobs/write-script.ts",
+    "line": 186,
+    "problem": "Buyer focus lines (slide 5) and closed deal texts (slides 2 and 6) are copied verbatim from MGX, which returns English. Finnish and German videos show English sentences on three of seven slides, and the page shows the same English focus under the video. The presentation is not in the owner's language. This is also item 4 on .planning/fix-list.md and is still not done.",
+    "evidence": "buyerItem(): `focus: buyer.focus`; dealCard(): `text: item.text`. Timeline 4001 (language fi) slide 5: \"focus\": \"Family-owned group that buys machining and metal workshops to hold long term\"; slide 6: \"Family-owned CNC machining shop with 48 staff sold to an industrial holding\". Frames f-4001-s2/s5/s6.jpg and f-4007-s2/s5/s6.jpg in the scratch audit folder show English text under Finnish and German headlines ('Kaeufer, die Unternehmen wie Ihres suchen' above 'Buys family-owned machinery makers that need a successor').",
+    "fix": "In write-script, after selectContent, send one Kimi-K3 request that translates the selected focus lines and deal texts into timeline.language. Use a JSON schema, the number check against the source texts, and SLOT_LIMITS. Store the translated texts in the slide variables. If the request fails, keep the original texts and add a non-blocking note. The fake model keeps the original, as fix-list item 4 specifies. VideoPageData.buyers then uses the translated focus from the timeline.",
+    "verdict": {
+     "id": "mgx-texts-not-in-video-language",
+     "real": true,
+     "severity": "major",
+     "reason": "Confirmed. buyerItem() (write-script.ts line 186) copies buyer.focus, and dealCard() (line 193) copies item.text from MGX unchanged. seed/mgx.json holds English texts. Live timelines: in deal 4001 (fi), the slide 5 focus is 'Family-owned group that buys machining and metal workshops to hold long term' and the slide 6 deal text is English. Deal 4007 (de) is the same. buyers.tsx line 43, who-we-are.tsx line 65 and what-is-possible.tsx line 23 render these texts, and buyer-links.tsx line 23 shows the focus on the page. No translation code exists anywhere (grep for 'translat' finds nothing). This goes against the PRD Language barrier section (the presentation is in the owner's language). The problem is item 4 in .planning/fix-list.md, and that item is still open.",
+     "fix": "In write-script, after selectContent, send one Kimi-K3 request that translates the selected focus lines and deal texts into timeline.language. Use a JSON schema, the number check against the source texts, and SLOT_LIMITS. Store the translated texts in the slide variables. If the request fails, keep the original texts and add a non-blocking note. The fake model keeps the original, as fix-list item 4 specifies. VideoPageData.buyers then uses the translated focus from the timeline."
+    },
+    "reason": "Confirmed. buyerItem() (write-script.ts line 186) copies buyer.focus, and dealCard() (line 193) copies item.text from MGX unchanged. seed/mgx.json holds English texts. Live timelines: in deal 4001 (fi), the slide 5 focus is 'Family-owned group that buys machining and metal workshops to hold long term' and the slide 6 deal text is English. Deal 4007 (de) is the same. buyers.tsx line 43, who-we-are.tsx line 65 and what-is-possible.tsx line 23 render these texts, and buyer-links.tsx line 23 shows the focus on the page. No translation code exists anywhere (grep for 'translat' finds nothing). This goes against the PRD Language barrier section (the presentation is in the owner's language). The problem is item 4 in .planning/fix-list.md, and that item is still open."
+   },
+   {
+    "id": "calculator-promise-without-range",
+    "severity": "minor",
+    "prd": "Slide order 4 (DACH asks for a range to see a valuation range); Valuation method (fewer than three deals: Mergero gives a range after the meeting)",
+    "file": "apps/server/src/jobs/write-script.ts",
+    "line": 250,
+    "problem": "For DACH deals the slide 4 variant is always 'ask-calculator' and the script says the calculator shows a value range based on real deals in the sector, also when MGX has fewer than three closed deals with the two-digit NACE code. For those deals the page calculator shows no range, so the slide and the voice promise something the page does not give.",
+    "evidence": "`{ template: 'your-figures', mode: 'ask', calculator: DACH.includes(deal.country) }`; valuation.ts line 52 returns p25/p75 null when `sorted.length < MIN_DEALS`, and calculatorFor() then returns null. Seed: NACE '10' has 2 closed deals; deal 4008 (Moosbrugger Backwaren GmbH, AT, 10.71) would get the de label 'Der Rechner zeigt dann eine Wertspanne.' and the fallback script 'zeigt Ihnen der Rechner eine Wertspanne ... Er beruht auf echten Transaktionen aus Ihrer Branche.'",
+    "fix": "In buildTimeline, set calculator: calculatorFor(updated) !== null (the same function and inputs that the page uses). Then a DACH deal with fewer than 3 multiples gets the 'ask-form' label and the form script. scriptContext then picks up the same flag from the slide variables.",
+    "verdict": {
+     "id": "calculator-promise-without-range",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. write-script.ts line 250 sets calculator: DACH.includes(deal.country) without looking at the multiples. The DE label 'ask-calculator' says 'Der Rechner zeigt dann eine Wertspanne', and the fallback script says the range 'beruht auf echten Transaktionen aus Ihrer Branche'. calculatorFor() (apps/server/src/video/valuation.ts line 19) returns null when fewer than 3 multiples exist. company-form.tsx line 171 then shows calculatorNoRange ('Mergero nennt Ihnen nach dem Gespräch eine Wertspanne'). The seed has only 2 closed deals for NACE '10', so demo deal 4008 (AT, 10.71) gets a slide and a voice that contradict its page. The proposed fix uses mgx.multiples, which are computed from sectorDeals only. The page merges sectorDeals and recentDeals, so the two counts can differ.",
+     "fix": "In buildTimeline, set calculator: calculatorFor(updated) !== null (the same function and inputs that the page uses). Then a DACH deal with fewer than 3 multiples gets the 'ask-form' label and the form script. scriptContext then picks up the same flag from the slide variables."
+    },
+    "reason": "Confirmed. write-script.ts line 250 sets calculator: DACH.includes(deal.country) without looking at the multiples. The DE label 'ask-calculator' says 'Der Rechner zeigt dann eine Wertspanne', and the fallback script says the range 'beruht auf echten Transaktionen aus Ihrer Branche'. calculatorFor() (apps/server/src/video/valuation.ts line 19) returns null when fewer than 3 multiples exist. company-form.tsx line 171 then shows calculatorNoRange ('Mergero nennt Ihnen nach dem Gespräch eine Wertspanne'). The seed has only 2 closed deals for NACE '10', so demo deal 4008 (AT, 10.71) gets a slide and a voice that contradict its page. The proposed fix uses mgx.multiples, which are computed from sectorDeals only. The page merges sectorDeals and recentDeals, so the two counts can differ."
+   },
+   {
+    "id": "intro-transcript-not-versioned",
+    "severity": "minor",
+    "prd": "Analyst setup (a new recording replaces the old one for new videos only)",
+    "file": "apps/server/src/video/page-data.ts",
+    "line": 35,
+    "problem": "The slide 1 transcript and captions of a published video come from the analyst's current intro transcript, not from the intro that was rendered into that video. After the analyst records a new intro, old published videos keep the old face-cam audio but show the new transcript and captions.",
+    "evidence": "`const intro = introTranscript(analyst, timeline.language)` reads `analyst.intros[lang]?.transcript`; startIntro() overwrites `transcript` at upload time. The timeline facecam segment stores only videoFile, analystName and durationS.",
+    "fix": "Add transcript (and recordedAt) to the facecam segment variables in withCurrentIntro() (pipeline.ts and render.ts) and in buildTimeline(). Read the transcript from the published timeline in buildPageData() and in the captions route, not from the analyst row.",
+    "verdict": {
+     "id": "intro-transcript-not-versioned",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. buildPageData() (page-data.ts line 35) and the captions route (routes/video/index.ts line 131) both call introTranscript(analyst, lang), which reads the current analysts.intros[lang].transcript. startIntro() (analysts.ts line 104) overwrites the transcript at upload time, before the transcode finishes. The facecam segment stores only videoFile, analystName and durationS. After a new recording, a published video keeps the old intro in its MP4 (architecture decision 5: published videos are not rendered again), but its captions and transcript show the new text. This goes against the PRD 'new videos only' rule and makes the slide 1 captions (WCAG 1.2.2) wrong. If the new upload fails processing, the mismatch also affects videos that are not yet published.",
+     "fix": "Add transcript (and recordedAt) to the facecam segment variables in withCurrentIntro() (pipeline.ts and render.ts) and in buildTimeline(). Read the transcript from the published timeline in buildPageData() and in the captions route, not from the analyst row."
+    },
+    "reason": "Confirmed. buildPageData() (page-data.ts line 35) and the captions route (routes/video/index.ts line 131) both call introTranscript(analyst, lang), which reads the current analysts.intros[lang].transcript. startIntro() (analysts.ts line 104) overwrites the transcript at upload time, before the transcode finishes. The facecam segment stores only videoFile, analystName and durationS. After a new recording, a published video keeps the old intro in its MP4 (architecture decision 5: published videos are not rendered again), but its captions and transcript show the new text. This goes against the PRD 'new videos only' rule and makes the slide 1 captions (WCAG 1.2.2) wrong. If the new upload fails processing, the mismatch also affects videos that are not yet published."
+   },
+   {
+    "id": "slide3-claims-website-review",
+    "severity": "minor",
+    "prd": "Website scraping (no website or failed scrape: the analyst writes the lines); Language model (use only facts)",
+    "file": "packages/shared/src/fallback-writer.ts",
+    "line": 150,
+    "problem": "All slide 3 fallback variants say that Mergero looked closely at the owner's website, also when the deal has no website or the scrape failed. The real-model prompt also tells the model that the slide shows a screenshot, even when there is none. Demo deal 4003 (no website) has a false first sentence in its slide 3 voice-over.",
+    "evidence": "Deal 4003 (website null, scrapeOk false) slide 3 script: 'Tutustuimme verkkosivuihisi huolella, Marja. Ruudulla naet kolmella lyhyella rivilla...'. prompts.ts line 16: 'The slide shows a screenshot of the website of the company and the lines in context.lines.'",
+    "fix": "Add hasWebsite (scrape.ok and a screenshot) to ScriptContext and to the slide 3 facts. Add fallback variants that do not mention the website, and select them when there is no scraped site. In slideScriptPrompt(3), mention the screenshot only when it exists, and say that the lines come from the analyst when linesSource is 'analyst'.",
+    "verdict": {
+     "id": "slide3-claims-website-review",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. All three fi and de slide 3 variants in fallback-writer.ts start with a claim that Mergero read the website ('Tutustuimme verkkosivuihisi huolella', 'Wir haben uns die Website ... genau angesehen'). ScriptContext and the slide 3 facts carry no website or scrape flag, so no variant can be chosen by that condition. Live deal 4003 (website null, scrapeOk false) has the slide 3 script 'Tutustuimme verkkosivuihisi huolella, Marja...', which is false for a company with no website. prompts.ts line 16 tells the real model that the slide shows a screenshot even when none exists. The analyst can edit the script, but the default text is wrong.",
+     "fix": "Add hasWebsite (scrape.ok and a screenshot) to ScriptContext and to the slide 3 facts. Add fallback variants that do not mention the website, and select them when there is no scraped site. In slideScriptPrompt(3), mention the screenshot only when it exists, and say that the lines come from the analyst when linesSource is 'analyst'."
+    },
+    "reason": "Confirmed. All three fi and de slide 3 variants in fallback-writer.ts start with a claim that Mergero read the website ('Tutustuimme verkkosivuihisi huolella', 'Wir haben uns die Website ... genau angesehen'). ScriptContext and the slide 3 facts carry no website or scrape flag, so no variant can be chosen by that condition. Live deal 4003 (website null, scrapeOk false) has the slide 3 script 'Tutustuimme verkkosivuihisi huolella, Marja...', which is false for a company with no website. prompts.ts line 16 tells the real model that the slide shows a screenshot even when none exists. The analyst can edit the script, but the default text is wrong."
+   },
+   {
+    "id": "fallback-lines-first-person",
+    "severity": "minor",
+    "prd": "Steps to make one video 3 (writes three lines about the company); Slide order 3 (lines on what the company does)",
+    "file": "packages/shared/src/fallback-writer.ts",
+    "line": 640,
+    "problem": "In fake mode (the demo mode) the company lines are copied verbatim from the website, so they are in the company's first person. On a Mergero slide and in the analyst's voice ('This is how we understand your business: We make ...') they read as Mergero speaking about itself.",
+    "evidence": "Deal 4001 lines: 'Teemme pienet ja suuret sarjat samalla huolellisuudella.', 'Sorvaamme akseleita, laippoja ja holkkeja ...'; frame f-4001-s3.jpg; slide 3 script: 'Naein ymmaerraemme liiketoimintasi: Teemme pienet ja suuret sarjat samalla huolellisuudella.'",
+    "fix": "In fallbackLines(), drop sentences that start with a first-person verb or pronoun (a small per-language list, for example me, meillä, teemme, wir, unser, vi, we, our), or fill with the generic third-person lines when fewer than three sentences remain. In fallbackScript, use the {line} variant only when the line is third person.",
+    "verdict": {
+     "id": "fallback-lines-first-person",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed for the fake writer only, which is the mode the demo runs in. fallbackLines() takes website sentences unchanged, so live deal 4001 has the lines 'Teemme pienet ja suuret sarjat...' and 'Sorvaamme akseleita...' (first person plural). The slide 3 voice then says 'Näin ymmärrämme liiketoimintasi: Teemme pienet ja suuret sarjat...', which sounds like Mergero speaking about itself. The real model prompt (companyLinesPrompt) requires third-person lines, so the fake output does not match the design. Real mode is not affected, so the severity stays minor.",
+     "fix": "In fallbackLines(), drop sentences that start with a first-person verb or pronoun (a small per-language list, for example me, meillä, teemme, wir, unser, vi, we, our), or fill with the generic third-person lines when fewer than three sentences remain. In fallbackScript, use the {line} variant only when the line is third person."
+    },
+    "reason": "Confirmed for the fake writer only, which is the mode the demo runs in. fallbackLines() takes website sentences unchanged, so live deal 4001 has the lines 'Teemme pienet ja suuret sarjat...' and 'Sorvaamme akseleita...' (first person plural). The slide 3 voice then says 'Näin ymmärrämme liiketoimintasi: Teemme pienet ja suuret sarjat...', which sounds like Mergero speaking about itself. The real model prompt (companyLinesPrompt) requires third-person lines, so the fake output does not match the design. Real mode is not affected, so the severity stays minor."
+   },
+   {
+    "id": "scene-not-one-file",
+    "severity": "minor",
+    "prd": "Video rendering > Scene (the scene is one TypeScript file); Where the video is built (the layout lives in one scene file)",
+    "file": "packages/scene/src/scene.tsx",
+    "line": 10,
+    "problem": "The layout is split over scene.tsx, components.tsx, brand.ts and eight template files. The PRD asks for one scene file with one fixed layout per slide, so a developer changes the layout in one place. The scene report records this as a known PRD conflict, and architecture.md does not decide it.",
+    "evidence": "scene.tsx imports bookMeetingSlide, buyersSlide, facecamSlide, privacySlide, whatIsPossibleSlide, whoWeAreSlide, yourCompanySlide, yourFiguresSlide from ./templates/*.tsx. .planning/build-reports/scene.md: 'PRD conflict: the PRD says the scene is one TypeScript file. The task asked for one file per template, so I did that'.",
+    "fix": "Record the decision in .planning/architecture.md 'Decisions on gaps in PRD.md' (one Revideo scene in scene.tsx that imports one layout module per template) and get the user's confirmation, as the CLAUDE.md 'User override' rule requires. Merge the files into scene.tsx only if the user rejects the change.",
+    "verdict": {
+     "id": "scene-not-one-file",
+     "real": true,
+     "severity": "minor",
+     "reason": "The PRD says twice that the scene is one TypeScript file ('Scene' and 'Where the video is built and edited'). packages/scene/src has scene.tsx, components.tsx, brand.ts, assets.ts, timing.ts and 8 template files. .planning/build-reports/scene.md line 52 records this as a PRD conflict, and architecture.md 'Decisions on gaps' does not decide it. There is no functional effect: the layout is still code in one package, and only a developer can change it. The literal PRD statement is not met, and the decision is not recorded (fix-list item 15 is still open).",
+     "fix": "Record the decision in .planning/architecture.md 'Decisions on gaps in PRD.md' (one Revideo scene in scene.tsx that imports one layout module per template) and get the user's confirmation, as the CLAUDE.md 'User override' rule requires. Merge the files into scene.tsx only if the user rejects the change."
+    },
+    "reason": "The PRD says twice that the scene is one TypeScript file ('Scene' and 'Where the video is built and edited'). packages/scene/src has scene.tsx, components.tsx, brand.ts, assets.ts, timing.ts and 8 template files. .planning/build-reports/scene.md line 52 records this as a PRD conflict, and architecture.md 'Decisions on gaps' does not decide it. There is no functional effect: the layout is still code in one package, and only a developer can change it. The literal PRD statement is not met, and the decision is not recorded (fix-list item 15 is still open)."
+   }
+  ],
+  "rejected": [
+   {
+    "id": "portrait-intro-pillarboxed",
+    "reason": "The code is as the finding describes: transcodeIntro pads to 1920x1080, so the scene cover logic in facecam.tsx never crops. But no PRD sentence requires the face-cam to fill the frame, so this is a design preference. The in-browser recorder uses a 16:9 preview (recorder-panel.tsx), so only a portrait phone upload is affected. The proposed cover crop is not clearly better. A 1080x1920 input cropped to 16:9 keeps only about 32 % of the frame height, which can cut off the face. The unused PORTRAIT_TOP_BIAS branch is dead code, not a user-facing defect."
+   },
+   {
+    "id": "slide4-exact-figures-voice",
+    "reason": "The PRD sentence 'Revenue and profit at a high level' describes the scope of slide 4 (only the headline figures, no detailed financials). It does not set a rounding precision. The slide shows rounded values, and the voice reads the public Asiakastieto figures, which are already round numbers (7 450 000). That is a wording choice, not a broken requirement. No concrete failure: the number check passes, and the figures are correct public data."
+   },
+   {
+    "id": "render-missing-file-retried",
+    "reason": "The code is as described: checkFiles() throws a plain Error, and isRetryable() returns true for it, so the job runs 3 times (30 s, then 2 min) before it fails. That is exactly the PRD Job queue rule ('If a job fails, the worker sets a later run time with backoff. After three attempts, the worker sets the job to Failed'). The PRD does not require immediate failure for a missing file. The only effect is a delay of about 2.5 minutes before the deal shows Failed. This is a tracked improvement (fix-list item 9), not a defect."
+   }
+  ]
+ },
+ {
+  "area": "video-page",
+  "coverage": "I checked each PRD sentence in Link, Page, Video page, Form, Valuation method, Session recordings, Data privacy and Analytics against the code: apps/server/src/routes/video/index.ts, apps/server/src/video/*.ts, apps/server/src/html/*.ts, all of apps/web/src/video/*, and shared analytics.ts, valuation.ts, schemas.ts and i18n.ts (all six languages, page and slide strings, spot check of brief strings). I also read parts of timeline.ts, format.ts, types.ts, write-script.ts, deal-header.tsx and the analyst domain. Live GET checks on http://localhost:3000: the /v/Xylj4MhEzvcEBvSr5mSftA HTML (<!DOCTYPE html>, lang, Open Graph tags, og:image 1200 x 630, meta robots, X-Robots-Tag and Referrer-Policy headers, no-store, bootstrap JSON with < escaped); media range requests (206, suffix, open end, over-long, 416, invalid range gives 200, HEAD-free); other versions and files give 404; captions WebVTT; the 404 page of an unpublished deal in fi; the preview page of an unpublished deal. In a Chrome preview (?preview=1, so no POST) at 1440 px and at 390 px iPhone emulation: 1080p vs 720p choice, playsinline, no controls, no fullscreen or volume on iPhone, form left on desktop and below on phone, no horizontal scroll, accessible names of all controls and form fields. Read-only SQLite checks of the recorded events (no form values in data, gapless seq, channel per event, one session) and of analyst time zones. Tests: web 187 passed, shared 252 passed, server test/video 58 passed. Verified: range handling, noindex, OG tags, link code (16 random bytes, base64url), R-7 percentiles (5.275 and 5.9 match the seed data), the DACH-only calculator, the fewer-than-3 text, the sendBeacon path (text/plain accepted), seq dedup via ON CONFLICT, the 10 s batch, the global prefers-reduced-motion rule, and no em dash, en dash or emoji in my area or in seed/config. Not tested in a real browser: WebKit/iOS Safari, a live form or booking POST (not allowed), and an expired link (no expired demo deal). I did not report: the opens count (open events per session instead of sessions, which differs from architecture.md but matches the PRD wording), form answers kept in deals.form (architecture decision 9), and the unauthenticated admin API itself (the demo has no sign-in by PRD).",
+  "confirmed": [
+   {
+    "id": "preview-form-and-booking-write",
+    "severity": "major",
+    "prd": "Video page / Form / Pipedrive integration (architecture: ?preview=1 from the admin panel turns off the recorder)",
+    "file": "apps/web/src/video/company-form.tsx",
+    "line": 223,
+    "problem": "The admin panel shows a 'Preview video page' button only for published deals. In preview mode only the recorder is off. The form Send and the calendar Book buttons still send real requests. The server cannot tell that they come from a preview. So when an analyst previews a live deal and tries the form or the calendar, the tool sends a real submit_form to MGX, moves the stage to form_sent or meeting_booked, adds Pipedrive jobs, closes open tasks, can set the deal to Lost ('not interested'), and books a slot in the analyst calendar.",
+    "evidence": "deal-detail.ts:78 `previewUrl: published ? `${videoLink(deal.linkCode)}?preview=1` : null`; deal-header.tsx:84 renders 'Preview video page'. grep 'preview' in apps/web/src/video finds only main.tsx:38/51 (recorder) and urls.ts:3. company-form.tsx:223 `await requestJson(pageUrl(data.code, 'form'), { method: 'POST', body })` and calendar.tsx:57 POST 'book' have no preview check. routes/video/index.ts:153-169 accept form and book with no preview check. Live: GET /v/Xylj4MhEzvcEBvSr5mSftA?preview=1 bootstraps a full page with \"preview\":true. The videoApi and videoWeb build reports both list this as an open issue.",
+    "fix": "Server: in POST /v/:code/form and /v/:code/book, return 403 when isPreview(c) is true. Web: when data.preview is true, disable the Send and Book buttons, show a short 'Preview: not sent' note, and add ?preview=1 to the form and book URLs so that the server check also applies.",
+    "verdict": {
+     "id": "preview-form-and-booking-write",
+     "real": true,
+     "severity": "major",
+     "reason": "Confirmed. deal-detail.ts:78 gives previewUrl only for published deals, and deal-header.tsx:84 shows 'Preview video page'. In apps/web/src/video, 'preview' appears only in main.tsx:38/51 (recorder) and urls.ts:3. company-form.tsx:223 and calendar.tsx:57 POST with no preview check. routes/video/index.ts:153-169 (form, book) call requirePublishedLink and do not look at isPreview; only /events (line 147) ignores preview. submitForm (form.ts:65-76) calls MGX submit_form, moves the stage to form_sent, adds a pipedrive-write job and can call markLost. bookMeeting (booking.ts:52-63) sets meeting_at, moves to meeting_booked, closes tasks and adds write-brief. The stage only moves forward and Lost is terminal, so one test click in a preview corrupts the real deal and sends analyst test data to MGX. Both the videoApi report (open issue 1) and the videoWeb report (open issue 3) list it. For deal 4007 the form and calendar are hidden because formSent and meetingAt are set, but every published deal without them is exposed.",
+     "fix": "Server: in POST /v/:code/form and /v/:code/book, return 403 when isPreview(c) is true. Web: when data.preview is true, disable the Send and Book buttons, show a short 'Preview: not sent' note, and add ?preview=1 to the form and book URLs so that the server check also applies."
+    },
+    "reason": "Confirmed. deal-detail.ts:78 gives previewUrl only for published deals, and deal-header.tsx:84 shows 'Preview video page'. In apps/web/src/video, 'preview' appears only in main.tsx:38/51 (recorder) and urls.ts:3. company-form.tsx:223 and calendar.tsx:57 POST with no preview check. routes/video/index.ts:153-169 (form, book) call requirePublishedLink and do not look at isPreview; only /events (line 147) ignores preview. submitForm (form.ts:65-76) calls MGX submit_form, moves the stage to form_sent, adds a pipedrive-write job and can call markLost. bookMeeting (booking.ts:52-63) sets meeting_at, moves to meeting_booked, closes tasks and adds write-brief. The stage only moves forward and Lost is terminal, so one test click in a preview corrupts the real deal and sends analyst test data to MGX. Both the videoApi report (open issue 1) and the videoWeb report (open issue 3) list it. For deal 4007 the form and calendar are hidden because formSent and meetingAt are set, but every published deal without them is exposed."
+   },
+   {
+    "id": "buyer-focus-not-localized",
+    "severity": "major",
+    "prd": "Video page (buyer links under the video on slide 5) / Slide order 5 / Language barrier",
+    "file": "apps/server/src/video/page-data.ts",
+    "line": 43,
+    "problem": "The buyer links on the video page (and slide 5 in the video) show the MGX 'focus' line in English on pages and videos in other languages. MGX gives the focus in English. write-script.ts selectContent copies the text without a change, and page-data.ts passes it to the page. So a German owner sees an English line for each buyer, but the PRD requires the presentation in the owner's language.",
+    "evidence": "Live bootstrap of /v/Xylj4MhEzvcEBvSr5mSftA (pageLanguage \"de\"): buyers[0].focus = \"Buys family-owned machinery makers that need a successor\", buyers[1].focus = \"Industrial holding for hydraulics, drives and automation firms\". seed/mgx.json buyers have only an English `focus` field. write-script.ts:139 `buyers: mgx.buyers.filter(...)` does not translate.",
+    "fix": "Give the buyer focus and the closed-deal text in the video language. The smallest fix inside the current MGX contract: in the write-script job, translate the focus lines and deal texts that are not in the timeline language with a new checked model task. Apply the language check, the number check and the slot check, and use the English original with a review reason when the check fails. Store the result in the slide 2, 5 and 6 variables, so the page and the scene use the same text. If MGX can give localized text, add per-language fields to the seed and a language input to search_buyers and list_closed_deals instead.",
+    "verdict": {
+     "id": "buyer-focus-not-localized",
+     "real": true,
+     "severity": "major",
+     "reason": "Confirmed. The live bootstrap of the DE deal 4007 (pageLanguage de, German scripts) has buyers[].focus in English, for example 'Buys family-owned machinery makers that need a successor'. seed/mgx.json has only an English focus. The mock MGX tool has no language input. write-script.ts:139-141 copies mgx.buyers without a change. page-data.ts:43 passes focus to the page, and packages/scene/src/templates/buyers.tsx:43 renders it on slide 5 of the video. The PRD 'Language barrier' section requires the presentation in the owner's language ('generates presentations natively'). The auditor missed that the closed-deal 'text' of seed/mgx.json is also English, and that it shows on slides 2 and 6 through the same selectContent path. The proposed fix partly conflicts with the PRD 'Language model' section, which limits Kimi-K3 to the company lines and the slide scripts, and it adds Review page editing that the PRD does not ask for.",
+     "fix": "Give the buyer focus and the closed-deal text in the video language. The smallest fix inside the current MGX contract: in the write-script job, translate the focus lines and deal texts that are not in the timeline language with a new checked model task. Apply the language check, the number check and the slot check, and use the English original with a review reason when the check fails. Store the result in the slide 2, 5 and 6 variables, so the page and the scene use the same text. If MGX can give localized text, add per-language fields to the seed and a language input to search_buyers and list_closed_deals instead."
+    },
+    "reason": "Confirmed. The live bootstrap of the DE deal 4007 (pageLanguage de, German scripts) has buyers[].focus in English, for example 'Buys family-owned machinery makers that need a successor'. seed/mgx.json has only an English focus. The mock MGX tool has no language input. write-script.ts:139-141 copies mgx.buyers without a change. page-data.ts:43 passes focus to the page, and packages/scene/src/templates/buyers.tsx:43 renders it on slide 5 of the video. The PRD 'Language barrier' section requires the presentation in the owner's language ('generates presentations natively'). The auditor missed that the closed-deal 'text' of seed/mgx.json is also English, and that it shows on slides 2 and 6 through the same selectContent path. The proposed fix partly conflicts with the PRD 'Language model' section, which limits Kimi-K3 to the company lines and the slide scripts, and it adds Review page editing that the PRD does not ask for."
+   },
+   {
+    "id": "intro-captions-missing-without-transcript",
+    "severity": "minor",
+    "prd": "Rule: WCAG 2.2 level A (1.2.2 Captions, prerecorded); architecture decision 6",
+    "file": "apps/server/src/video/page-data.ts",
+    "line": 37,
+    "problem": "The captions and the transcript for the face-cam intro (slide 1, about 30 s of speech) come only from the optional analyst transcript. If the analyst uploads an intro without a transcript, the published video has no captions and no transcript for slide 1. Nothing blocks approval.",
+    "evidence": "page-data.ts:37 `const text = segment.template === 'facecam' ? intro : segment.script.trim()` and `return text ? [...] : []`; shared timeline.ts:108 `segment.template === 'facecam' ? (introTranscript ?? '') : segment.script` then `if (cues.length === 0) continue`. Admin intro-section.tsx:101 labels it 'Transcript for the captions (optional)'. No review reason checks for it (blocking reasons: lines_missing, script_missing, model_failed, text_too_long, audio_failed, no_intro, no_voice).",
+    "fix": "Make the transcript required in the intro upload (admin form and POST handler in routes/admin/analysts.ts), or add a blocking review reason intro_transcript_missing when the analyst intro of the video language has no transcript.",
+    "verdict": {
+     "id": "intro-captions-missing-without-transcript",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. buildCaptions (packages/shared/src/timeline.ts:108-110) uses introTranscript ?? '' for the facecam segment and skips a segment with no cues. page-data.ts:37-38 drops slide 1 from the transcript when the text is null. intro-section.tsx:101 labels the field 'Transcript for the captions (optional)'. There is no automatic transcription, and no review reason checks for a missing transcript. Architecture says 'when it exists', but WCAG 2.2 A 1.2.2 (a user rule) needs captions for all prerecorded speech, and slide 1 is about 30 s of speech.",
+     "fix": "Make the transcript required in the intro upload (admin form and POST handler in routes/admin/analysts.ts), or add a blocking review reason intro_transcript_missing when the analyst intro of the video language has no transcript."
+    },
+    "reason": "Confirmed. buildCaptions (packages/shared/src/timeline.ts:108-110) uses introTranscript ?? '' for the facecam segment and skips a segment with no cues. page-data.ts:37-38 drops slide 1 from the transcript when the text is null. intro-section.tsx:101 labels the field 'Transcript for the captions (optional)'. There is no automatic transcription, and no review reason checks for a missing transcript. Architecture says 'when it exists', but WCAG 2.2 A 1.2.2 (a user rule) needs captions for all prerecorded speech, and slide 1 is about 30 s of speech."
+   },
+   {
+    "id": "intro-transcript-stale-after-rerecord",
+    "severity": "minor",
+    "prd": "Analyst setup (a new recording replaces the old one for new videos only); WCAG 1.2.2 caption accuracy",
+    "file": "apps/server/src/video/page-data.ts",
+    "line": 22,
+    "problem": "The captions route and the page transcript read the analyst's current intro transcript for each request. The timeline does not store it. After the analyst records a new intro, published videos still play the old intro, but their captions and transcript show the text of the new recording.",
+    "evidence": "page-data.ts:22-24 `introTranscript(analyst, lang)` returns `analyst.intros[lang]?.transcript`; routes/video/index.ts:131 `buildCaptions(row.timeline, introTranscript(requireAnalyst(db, deal.analystId), row.timeline.language))`. FacecamSegment variables are only `{ template, videoFile, analystName }` (types.ts:193). The videoApi report lists this as open issue 4.",
+    "fix": "Store the intro transcript in the facecam segment variables when the timeline version is rendered (or approved). Use that stored text in buildCaptions and buildPageData, and use the analyst's current transcript only for timelines that have none stored.",
+    "verdict": {
+     "id": "intro-transcript-stale-after-rerecord",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. page-data.ts:22-24 and routes/video/index.ts:131 read analyst.intros[lang].transcript for each request. FacecamSegment variables (types.ts:193) hold only template, videoFile and analystName. startIntro replaces the transcript when the analyst records again. Architecture decision 5 says published videos are not rendered again, so the published MP4 keeps the old intro, while its captions and page transcript show the new text (or nothing, if the new recording has no transcript). The videoApi report lists this as open issue 4.",
+     "fix": "Store the intro transcript in the facecam segment variables when the timeline version is rendered (or approved). Use that stored text in buildCaptions and buildPageData, and use the analyst's current transcript only for timelines that have none stored."
+    },
+    "reason": "Confirmed. page-data.ts:22-24 and routes/video/index.ts:131 read analyst.intros[lang].transcript for each request. FacecamSegment variables (types.ts:193) hold only template, videoFile and analystName. startIntro replaces the transcript when the analyst records again. Architecture decision 5 says published videos are not rendered again, so the published MP4 keeps the old intro, while its captions and page transcript show the new text (or nothing, if the new recording has no transcript). The videoApi report lists this as open issue 4."
+   },
+   {
+    "id": "analytics-remapped-on-republish",
+    "severity": "minor",
+    "prd": "Video page / Session recordings (the server computes watch time per slide, stop slide, replays)",
+    "file": "apps/server/src/video/ingest.ts",
+    "line": 79,
+    "problem": "Events carry no video version. Each batch recomputes the analytics of all sessions with the slide times of the current published_version. After the analyst edits and republishes a live video (a new version with different slide lengths), the per-slide watch time, the stop slide, and the signals of older sessions are computed against the wrong slide boundaries.",
+    "evidence": "ingest.ts:79 `recomputeAnalytics(db, dealId, batch.sessionId, deal.publishedVersion, now)`; ingest.ts:36-46 maps `listEvents(db, dealId)` for every session with `slideTimes(row.timeline)` of that one version. The events table has no version column, and the page does not send data.version in EventBatch.",
+    "fix": "Send data.version in EventBatch.session, store it in a new sessions.version column, and compute each session with the slide times of its own timeline version (group sessions by version in recomputeAnalytics).",
+    "verdict": {
+     "id": "analytics-remapped-on-republish",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. ingest.ts:79 calls recomputeAnalytics with deal.publishedVersion, and lines 36-46 compute every session's events with slideTimes of that one version. The events table and EventBatch (schemas.ts:36-46) carry no version. Republish is a normal flow: pipeline.ts:344-349 publishes a later version after the first. After a republish with different slide lengths, the deal analytics (watch time per slide, stop slide, signals) of older sessions use the wrong slide boundaries. A page that is still open on the old version also sends events that the server maps to the new times.",
+     "fix": "Send data.version in EventBatch.session, store it in a new sessions.version column, and compute each session with the slide times of its own timeline version (group sessions by version in recomputeAnalytics)."
+    },
+    "reason": "Confirmed. ingest.ts:79 calls recomputeAnalytics with deal.publishedVersion, and lines 36-46 compute every session's events with slideTimes of that one version. The events table and EventBatch (schemas.ts:36-46) carry no version. Republish is a normal flow: pipeline.ts:344-349 publishes a later version after the first. After a republish with different slide lengths, the deal analytics (watch time per slide, stop slide, signals) of older sessions use the wrong slide boundaries. A page that is still open on the old version also sends events that the server maps to the new times."
+   },
+   {
+    "id": "error-identification-missing",
+    "severity": "minor",
+    "prd": "Rule: WCAG 2.2 level A (3.3.1 Error Identification); Form",
+    "file": "apps/web/src/video/company-form.tsx",
+    "line": 101,
+    "problem": "(1) An invalid exact value (for example 0, or more than 1e12) sets only aria-invalid and a red border. No text tells the owner what is wrong, and toAmount silently drops the field from the submit body. (2) Booking with an email that passes the browser's type=email check but fails zod (for example hans@firma) gets a 400. The page then shows only the generic 'Booking failed. Please try again.', so the owner keeps retrying and does not know that the email is the cause.",
+    "evidence": "company-form.tsx:47 `const invalid = value.kind === 'exact' && value.exact.trim() !== '' && exact === null` and :101 `aria-invalid={invalid || undefined}` with no message element. valuation.ts:31 returns null for an invalid exact value. calendar.tsx:61-67 treats every non-409 error as `setStatus('error')`. `bookSchema.safeParse({..., email: 'hans@firma'}).success` is false.",
+    "fix": "Add an i18n text for an invalid exact value in all six languages, render it under the field, link it with aria-describedby, and disable Send while a field is invalid. In the calendar, check the email on the client with the same rule as bookSchema (or map a 400 response) and show an email error text next to the email field, linked with aria-describedby and aria-invalid.",
+    "verdict": {
+     "id": "error-identification-missing",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. company-form.tsx:47 and :101 mark an invalid exact value only with aria-invalid and a red border (aria-invalid:border-danger). There is no error text, which fails WCAG 3.3.1 and 1.4.1 (color only) for sighted users. parseAmount (web valuation.ts:25) rejects 0 and values over 1e12, and toAmount then drops the field from the body without telling the user. For the email, `z.email().safeParse('hans@firma')` is false (checked in packages/shared), but the browser type=email check accepts it. The server returns 400, and calendar.tsx:61-67 shows only the generic bookError, so the owner is not told which field is wrong. The videoWeb report (open issue 4) also names the missing 'invalid exact value' message.",
+     "fix": "Add an i18n text for an invalid exact value in all six languages, render it under the field, link it with aria-describedby, and disable Send while a field is invalid. In the calendar, check the email on the client with the same rule as bookSchema (or map a 400 response) and show an email error text next to the email field, linked with aria-describedby and aria-invalid."
+    },
+    "reason": "Confirmed. company-form.tsx:47 and :101 mark an invalid exact value only with aria-invalid and a red border (aria-invalid:border-danger). There is no error text, which fails WCAG 3.3.1 and 1.4.1 (color only) for sighted users. parseAmount (web valuation.ts:25) rejects 0 and values over 1e12, and toAmount then drops the field from the body without telling the user. For the email, `z.email().safeParse('hans@firma')` is false (checked in packages/shared), but the browser type=email check accepts it. The server returns 400, and calendar.tsx:61-67 shows only the generic bookError, so the owner is not told which field is wrong. The videoWeb report (open issue 4) also names the missing 'invalid exact value' message."
+   },
+   {
+    "id": "timezone-abbreviation-on-page",
+    "severity": "minor",
+    "prd": "Rule: IANA time zone names, dates in ISO 8601; Video page calendar",
+    "file": "apps/web/src/video/slots.ts",
+    "line": 48,
+    "problem": "The booking confirmation names the time zone with an abbreviation or offset (OESZ, MESZ, CEST, GMT+3). The dates are not in ISO 8601. In en-US the time shows a leading zero ('03:00 PM') because of hour '2-digit'.",
+    "evidence": "slots.ts:41-49 `timeZoneName: 'short'`, `hour: '2-digit'`. Live preview of deal 4007: 'Ihr Termin ist gebucht: Montag, 28. September um 15:00 OESZ mit Jonas Weber.' Node Intl output: en-US 'Monday, September 28 at 03:00 PM GMT+3'.",
+    "fix": "In formatMeeting, remove timeZoneName and add the IANA name from Intl.DateTimeFormat().resolvedOptions().timeZone (for example 'Europe/Berlin') after the time. Use hour 'numeric' in formatMeeting and in the groupSlotsByDay time format. Show the same IANA name in the calendar zone label (timeZoneLabel).",
+    "verdict": {
+     "id": "timezone-abbreviation-on-page",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. slots.ts:40-49 formatMeeting uses timeZoneName 'short' and hour '2-digit'. Node output: de-DE with Europe/Berlin gives 'Montag, 28. September um 14:00 MESZ'. en-US gives 'Monday, September 28 at 03:00 PM GMT+3', with a leading zero and a GMT offset. The task lists IANA time zone names as a code rule, and the confirmation names the zone with an abbreviation. The en-US leading zero also affects the slot buttons (slots.ts:19). The ISO 8601 date part applies only if the prose rule applies to localized owner text, so that part is optional.",
+     "fix": "In formatMeeting, remove timeZoneName and add the IANA name from Intl.DateTimeFormat().resolvedOptions().timeZone (for example 'Europe/Berlin') after the time. Use hour 'numeric' in formatMeeting and in the groupSlotsByDay time format. Show the same IANA name in the calendar zone label (timeZoneLabel)."
+    },
+    "reason": "Confirmed. slots.ts:40-49 formatMeeting uses timeZoneName 'short' and hour '2-digit'. Node output: de-DE with Europe/Berlin gives 'Montag, 28. September um 14:00 MESZ'. en-US gives 'Monday, September 28 at 03:00 PM GMT+3', with a leading zero and a GMT offset. The task lists IANA time zone names as a code rule, and the confirmation names the zone with an abbreviation. The en-US leading zero also affects the slot buttons (slots.ts:19). The ISO 8601 date part applies only if the prose rule applies to localized owner text, so that part is optional."
+   }
+  ],
+  "rejected": [
+   {
+    "id": "forward-keeps-channel",
+    "reason": "The PRD asks for 'The channel of the link: email, LinkedIn, SMS, or WhatsApp'. A forwarded link is the same link, so recording the channel that the analyst used (c=whatsapp) matches the PRD. Removing c would record 'direct', which is also not the real channel of the recipient. The second-channel rule uses the channel of the first session, and that is almost always the owner's own session, because a forward happens after an open. This is an attribution preference, not a defect with a concrete failure."
+   },
+   {
+    "id": "analyst-time-zone-fixed-helsinki",
+    "reason": "The PRD does not mention analyst time zones, and the profile menu list in the PRD does not include one. Architecture decision 3 and the analysts schema in architecture.md set Europe/Helsinki as the default on purpose, and PATCH /api/analysts accepts timeZone. No file in the repo says that Jonas Weber works in Berlin, so the claimed failure is based on an assumption. The result for the German owner (slots from 08:00 to 15:00 in Berlin) is still within business hours. This is an admin panel improvement and not a video page defect."
+   },
+   {
+    "id": "bootstrap-exposes-deal-id",
+    "reason": "PRD line 267 says 'The demo has no sign-in ... Run the demo on a private address only', so the open admin API is a PRD decision. The deal ID adds no access: GET http://localhost:3000/api/deals (checked) lists every deal ID without authentication, and the Pipedrive IDs (4001 to 4007) are sequential and easy to guess. The PRD requires only that the link code is not the deal ID, and that is true. An unused field in VideoPageData is a cleanup, not a privacy defect."
+   },
+   {
+    "id": "captions-track-unlabeled",
+    "reason": "The claimed failure path does not exist. player.tsx:54 canFullscreen returns false on iPhone, the video has no controls attribute and has playsInline, and the player never calls webkitEnterFullscreen. So the iPhone never shows the native player or its captions menu with the unnamed track. On other platforms the custom captions toggle (setCaptionMode on textTracks[0]) turns the captions on and off, and they render. WCAG 2.2 A and HTML do not require srclang or label for kind=captions (the language of parts is 3.1.2, level AA). Adding videoLanguage is a small improvement, not a defect."
+   },
+   {
+    "id": "i18n-unnatural-phrases",
+    "reason": "These are style preferences, and no string is wrong. 'Kuka Mergero on' is an understandable calque of the English heading. 'Keskeytä video' is a normal Finnish label for pause. 'Alaraja {low}, yläraja {high}' is correct and clear. The filled Nordic texts are grammatical: Intl gives 'Ditt möte är bokat måndag 28 september kl. 14:00 ... med X', and a date after 'bokat' or 'booket' with no preposition is normal in Swedish, Norwegian and Danish. The contact addresses are the real addresses from mergero.com (config/mergero.json), and the Finnish and Swiss addresses are also written in English, so this is a consistent choice and not an error on the German page only."
+   }
+  ]
+ },
+ {
+  "area": "pipedrive-jobs",
+  "coverage": "Read PRD.md in full, .planning/architecture.md, api.md, shared-exports.md, research/pipedrive.md, and the build reports core, worker, mocks and providers. Read in full: apps/server/src/queue/{types,keys,queue,index}.ts, worker.ts, jobs/{runner,types,sweep,pipedrive-write,backup,write-brief}.ts, domain/{stages,tasks,retention,events,deals,ensure}.ts plus the advance/publish part of pipeline.ts, providers/{pipedrive-real,pipedrive-fake,pipedrive-config,types,index,mgx,asiakastieto,errors}.ts, routes/mock/index.ts, routes/video/index.ts, video/{form,ingest,booking}.ts, db/{schema.sql,index.ts}, env.ts, paths.ts, log.ts, apps/mgx-mock/src/*, scripts/{pipedrive-api,pipedrive-setup,pipedrive-seed}.ts, seed/{pipedrive,linkedin,asiakastieto}.json, samples of seed/mgx.json and text-sequence.json, one demo site. Checked each real Pipedrive request (auth header, v1/v2 paths, custom_fields shapes, stage/lost PATCH, activities POST/PATCH, notes POST/PUT, users, cursor paging, 429 backoff, non-JSON 403) against research/pipedrive.md: all match. Verified against the running stack with GET only: /api/status, /api/deals, /api/deals/4007, /api/inbox, /deals/4002, /mock/asiakastieto (hit and 404), mock MGX /mcp (405), /health, static paths and traversal; read storage/data/app.sqlite read-only (jobs table), fake-pipedrive.json and mgx-submissions.jsonl. Confirmed DISABLE_TELEMETRY in the render child env, WAL and backup API use, 14-backup rotation, idempotency keys, claim order, backoff (30 s, 2 min, fail on attempt 3), sweep steps, task dedupe, name_public filter, Asiakastieto 404 path. Tests run: server project files for sweep, pipedrive-write, backup, runner, queue, stages, retention, pipedrive-real/fake, mgx (68 passed) and the mgx-mock project (66 passed). Rule scans of my area (em and en dashes, DOCTYPE case, kebab-case names, comments, British spellings, emojis) were clean. Not reported on purpose: architecture decisions (call task only for no open, stage skip order, fake Pipedrive single-process writes), valuation and lost_reason kept after expiry (the same values go to Pipedrive by PRD), backups keeping purged rows for 14 days.",
+  "confirmed": [
+   {
+    "id": "pipedrive-analytics-no-per-slide-watch-time",
+    "severity": "major",
+    "prd": "Session recordings: \"From the events, the server computes the watch time per slide, the stop slide, and the replay count. It writes these numbers to the deal. Pipedrive gets only the computed numbers, the stage change, and the task.\" Analytics: \"It writes this data to Pipedrive ... The slide where the owner stops, and the watch time for each slide. The channel of the link\"",
+    "file": "apps/server/src/jobs/pipedrive-write.ts",
+    "line": 96,
+    "problem": "The analytics write to Pipedrive sends only the total watch time, the stop slide and the replay count. The watch time for each slide (and the channel of the link) never reaches Pipedrive, although DealAnalytics already holds perSlide. The setup script creates no field for it, so PipedriveConfig, the fake store and the real client cannot carry it either.",
+    "evidence": "pipedrive-write.ts:96-102: `case 'analytics': ... return pipedrive.setDealFields(deal.id, { watchTimeS: Math.round(deal.analytics.totalWatchS), stopSlide: deal.analytics.stopSlide, replayCount: deal.analytics.replays })`. scripts/pipedrive-setup.ts:47-56 DEAL_FIELDS has only video, revenueRange, profitRange, staffRange, valuationRange, watchTimeS, stopSlide, replayCount. packages/shared/src/types.ts:277-286 DealAnalytics has `perSlide: SlideAnalytics[]`. Live fake store for deal 4007 after sessions: `fields: {..., 'watchTimeS': 114, 'stopSlide': 8, 'replayCount': 9}` and no per-slide value or channel.",
+    "fix": "Add the per-slide watch time to Pipedrive. Either eight numeric deal fields (watchSlide1S to watchSlide8S, type double, better for Pipedrive filters) or one varchar field watchPerSlide such as '1: 31 s, 2: 18 s, ... 8: 15 s' (under 255 characters). Add the keys to PipedriveConfig.dealFields, the zod schema in providers/pipedrive-config.ts, DEAL_FIELDS in scripts/pipedrive-setup.ts, PipedriveDealFields, the fake store schema and the real client field mapping. In the analytics op, build the values from deal.analytics.perSlide (Math.round(watchS)). Leave out the channel field, or add it only if the product owner confirms it, because the Session recordings section limits Pipedrive to computed numbers.",
+    "verdict": {
+     "id": "pipedrive-analytics-no-per-slide-watch-time",
+     "real": true,
+     "severity": "major",
+     "reason": "Confirmed. pipedrive-write.ts:96-102 sends only watchTimeS, stopSlide and replayCount. scripts/pipedrive-setup.ts DEAL_FIELDS, PipedriveConfig.dealFields (providers/types.ts:12-14), PipedriveDealFields (types.ts:66-68) and the fake store schema (pipedrive-fake.ts:58-60) have no per-slide field. The live fake store for deal 4007 has fields {revenueRange, profitRange, staffRange, valuationRange, watchTimeS: 114, stopSlide: 8, replayCount: 9} and nothing per slide. PRD Session recordings says the server computes 'the watch time per slide, the stop slide, and the replay count' and 'Pipedrive gets only the computed numbers', and PRD Analytics lists 'the watch time for each slide' in the data written to Pipedrive. DealAnalytics.perSlide (watchS per slide) already exists, so only the write is missing. This is not in 'Decisions on gaps in PRD.md' (architecture.md:285 narrows the op without a gap decision). The channel part is weaker: 'Pipedrive gets only the computed numbers, the stage change, and the task' excludes non-computed data, so the channel field is optional, not a clear requirement.",
+     "fix": "Add the per-slide watch time to Pipedrive. Either eight numeric deal fields (watchSlide1S to watchSlide8S, type double, better for Pipedrive filters) or one varchar field watchPerSlide such as '1: 31 s, 2: 18 s, ... 8: 15 s' (under 255 characters). Add the keys to PipedriveConfig.dealFields, the zod schema in providers/pipedrive-config.ts, DEAL_FIELDS in scripts/pipedrive-setup.ts, PipedriveDealFields, the fake store schema and the real client field mapping. In the analytics op, build the values from deal.analytics.perSlide (Math.round(watchS)). Leave out the channel field, or add it only if the product owner confirms it, because the Session recordings section limits Pipedrive to computed numbers."
+    },
+    "reason": "Confirmed. pipedrive-write.ts:96-102 sends only watchTimeS, stopSlide and replayCount. scripts/pipedrive-setup.ts DEAL_FIELDS, PipedriveConfig.dealFields (providers/types.ts:12-14), PipedriveDealFields (types.ts:66-68) and the fake store schema (pipedrive-fake.ts:58-60) have no per-slide field. The live fake store for deal 4007 has fields {revenueRange, profitRange, staffRange, valuationRange, watchTimeS: 114, stopSlide: 8, replayCount: 9} and nothing per slide. PRD Session recordings says the server computes 'the watch time per slide, the stop slide, and the replay count' and 'Pipedrive gets only the computed numbers', and PRD Analytics lists 'the watch time for each slide' in the data written to Pipedrive. DealAnalytics.perSlide (watchS per slide) already exists, so only the write is missing. This is not in 'Decisions on gaps in PRD.md' (architecture.md:285 narrows the op without a gap decision). The channel part is weaker: 'Pipedrive gets only the computed numbers, the stage change, and the task' excludes non-computed data, so the channel field is optional, not a clear requirement."
+   },
+   {
+    "id": "lost-form-skips-form-sent-stage",
+    "severity": "minor",
+    "prd": "Pipedrive integration: \"Four stages: Link sent, Opened, Form sent, Meeting booked. The tool moves the deal. ... If the owner marks 'not interested' in the form, the tool sets the deal to Lost with the reason.\"",
+    "file": "apps/server/src/jobs/pipedrive-write.ts",
+    "line": 86,
+    "problem": "When the owner sends the form with \"not interested\", submitForm moves the local status to form_sent and then to lost in one transaction. When the queued `stage: form_sent` job runs, the deal is already `lost` (rank 4), so the job is skipped. Pipedrive gets the deal as Lost at the earlier stage (Link sent or Opened), not at Form sent, so Pipedrive lost reports show the wrong stage although the owner did send the form.",
+    "evidence": "video/form.ts:72-76: `moveStage(db, dealId, 'form_sent', ...)` then `markLost(db, dealId, ...)` in the same transaction. pipedrive-write.ts:86: `if (stageRank(payload.stage) < stageRank(deal.status)) return skip(payload, ...)`; stages.ts:13-22 gives `form_sent: 2`, `lost: 4`.",
+    "fix": "In the stage op of pipedrive-write.ts, for a lost deal compare against the highest stage the deal reached, not against 'lost'. For example: const reached = deal.status !== 'lost' ? deal.status : deal.meetingAt ? 'meeting_booked' : deal.formSentAt ? 'form_sent' : deal.firstOpenAt ? 'opened' : 'link_sent'; skip only when stageRank(payload.stage) < stageRank(reached). The stage job has a lower job ID than the lost job with the same run_at, so it runs first.",
+    "verdict": {
+     "id": "lost-form-skips-form-sent-stage",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. video/form.ts:70-76 runs moveStage(form_sent) (which enqueues a stage job, stages.ts:57) and then markLost (which sets status lost and enqueues a lost job) in one transaction. When the stage job runs, deal.status is 'lost', and pipedrive-write.ts:86 skips because stageRank('form_sent') = 2 < stageRank('lost') = 4. The lost job then PATCHes only status lost (pipedrive-real.ts:169-171 sends no stage_id). The Pipedrive deal stays Lost at the Opened stage, although the owner sent the form and the PRD says the deal stage moves with each event. The impact is limited to Pipedrive stage reports for lost deals.",
+     "fix": "In the stage op of pipedrive-write.ts, for a lost deal compare against the highest stage the deal reached, not against 'lost'. For example: const reached = deal.status !== 'lost' ? deal.status : deal.meetingAt ? 'meeting_booked' : deal.formSentAt ? 'form_sent' : deal.firstOpenAt ? 'opened' : 'link_sent'; skip only when stageRank(payload.stage) < stageRank(reached). The stage job has a lower job ID than the lost job with the same run_at, so it runs first."
+    },
+    "reason": "Confirmed. video/form.ts:70-76 runs moveStage(form_sent) (which enqueues a stage job, stages.ts:57) and then markLost (which sets status lost and enqueues a lost job) in one transaction. When the stage job runs, deal.status is 'lost', and pipedrive-write.ts:86 skips because stageRank('form_sent') = 2 < stageRank('lost') = 4. The lost job then PATCHes only status lost (pipedrive-real.ts:169-171 sends no stage_id). The Pipedrive deal stays Lost at the Opened stage, although the owner sent the form and the PRD says the deal stage moves with each event. The impact is limited to Pipedrive stage reports for lost deals."
+   },
+   {
+    "id": "media-written-after-purge-never-deleted",
+    "severity": "minor",
+    "prd": "Hourly sweep: \"It deletes the media files, session rows, event rows, and meeting briefs of each expired link.\" Storage / Data privacy (retention).",
+    "file": "apps/server/src/domain/retention.ts",
+    "line": 13,
+    "problem": "purgeExpired selects only deals with `expired_at IS NULL`, deletes `deals/{id}` once and sets `expired_at`. The audio and render handlers have no expiry check, so an audio job (or a render retry) that was queued before expiry and runs after the purge (busy queue, or retry backoff of 30 s and 2 min) writes new MP3 or MP4 files into `deals/{id}/`. The sweep never looks at that deal again, so those files stay on disk for good.",
+    "evidence": "retention.ts:13: `'SELECT id FROM deals WHERE expired_at IS NULL AND expires_at IS NOT NULL AND expires_at <= ? ORDER BY id'`. jobs/audio.ts:85 and jobs/render.ts:67 call `requireDeal` with no `isExpired` guard (only write-brief.ts:15 checks expiry). The sweep job for hour H has run_at H:00. A job enqueued at H:05 for a link that expires at H:07 has a later run_at, so it runs after the sweep purges at H:10.",
+    "fix": "In runSlides (jobs/audio.ts), return early with a log line when isExpired(deal, ctx.now()). Also reject a retry of a deal job for an expired deal in POST /api/jobs/:id/retry (409 'The link has expired'). Optionally make the purge idempotent: on each sweep, rm -r deals/{id} for deals with expired_at IS NOT NULL when the folder exists. The render guard is not needed.",
+    "verdict": {
+     "id": "media-written-after-purge-never-deleted",
+     "real": true,
+     "severity": "minor",
+     "reason": "Partly confirmed. purgeExpired (retention.ts:11-14) selects only deals with expired_at IS NULL, so it removes deals/{id} once. The audio slides handler (audio.ts:76-108) has no expiry check and writes MP3 files through loudnormToMp3, which calls mkdir recursive (media/ffmpeg.ts:54). A concrete trigger exists in addition to the queue race: the deal page shows FailedJobsCard with a Retry button for each failed job (deal-detail.ts:88, failed-jobs-card.tsx:26-30), and POST /api/jobs/:id/retry (routes/admin/inbox.ts:45-55) has no expiry check. A failed audio job of a post-publish script edit, retried after expiry, writes new MP3 files into deals/{id}/audio that no later sweep deletes. The render part of the finding is refuted: packages/scene/render/render-timeline.ts:106-112 throws 'Render input file is missing' before any output, because the purge deleted the audio and screenshot files, and the render writes into a temp folder first.",
+     "fix": "In runSlides (jobs/audio.ts), return early with a log line when isExpired(deal, ctx.now()). Also reject a retry of a deal job for an expired deal in POST /api/jobs/:id/retry (409 'The link has expired'). Optionally make the purge idempotent: on each sweep, rm -r deals/{id} for deals with expired_at IS NOT NULL when the folder exists. The render guard is not needed."
+    },
+    "reason": "Partly confirmed. purgeExpired (retention.ts:11-14) selects only deals with expired_at IS NULL, so it removes deals/{id} once. The audio slides handler (audio.ts:76-108) has no expiry check and writes MP3 files through loudnormToMp3, which calls mkdir recursive (media/ffmpeg.ts:54). A concrete trigger exists in addition to the queue race: the deal page shows FailedJobsCard with a Retry button for each failed job (deal-detail.ts:88, failed-jobs-card.tsx:26-30), and POST /api/jobs/:id/retry (routes/admin/inbox.ts:45-55) has no expiry check. A failed audio job of a post-publish script edit, retried after expiry, writes new MP3 files into deals/{id}/audio that no later sweep deletes. The render part of the finding is refuted: packages/scene/render/render-timeline.ts:106-112 throws 'Render input file is missing' before any output, because the purge deleted the audio and screenshot files, and the render writes into a temp folder first."
+   },
+   {
+    "id": "pipedrive-note-date-not-iso",
+    "severity": "minor",
+    "prd": "CLAUDE.md rule: dates in ISO 8601; Meeting brief delivery: \"one Pipedrive note to the deal with the meeting time\"",
+    "file": "apps/server/src/jobs/pipedrive-write.ts",
+    "line": 64,
+    "problem": "The Pipedrive note writes the meeting time in a long localized format with a 12-hour clock, not in ISO 8601. All other date output in the server (alerts, views/dates.ts) uses the YYYY-MM-DD HH:MM form.",
+    "evidence": "pipedrive-write.ts:64: `new Intl.DateTimeFormat(s.locale, { dateStyle: 'full', timeStyle: 'short', timeZone })`. Live fake store note for deal 4007: `Meeting: Monday, September 28, 2026 at 3:00 PM (Europe/Helsinki)`. The alert text for the same event uses `2026-09-28 15:00 (Europe/Helsinki)` (domain/events.ts localTime).",
+    "fix": "Move localTime from domain/events.ts to a shared server module (for example views/dates.ts next to localDate) and use it in noteHtml: `${s.brief.fields.meetingAt}: ${localTime(brief.brief.header.meetingAt, timeZone)}`. The helper already appends the IANA zone, so remove the extra '(timeZone)' in the note.",
+    "verdict": {
+     "id": "pipedrive-note-date-not-iso",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. pipedrive-write.ts:64 is the only place in server, web and shared code that formats a date with dateStyle 'full' and timeStyle 'short'. The live fake store note for deal 4007 reads 'Meeting: Monday, September 28, 2026 at 3:00 PM (Europe/Helsinki)', a 12-hour clock and not ISO 8601. The alerts use localTime in domain/events.ts:68-83 ('2026-09-28 15:00 (Europe/Helsinki)'), and views/dates.ts uses YYYY-MM-DD. The audit rules list ISO 8601 dates as a code rule. The PRD content of the note (meeting time, interest level, link) is otherwise correct.",
+     "fix": "Move localTime from domain/events.ts to a shared server module (for example views/dates.ts next to localDate) and use it in noteHtml: `${s.brief.fields.meetingAt}: ${localTime(brief.brief.header.meetingAt, timeZone)}`. The helper already appends the IANA zone, so remove the extra '(timeZone)' in the note."
+    },
+    "reason": "Confirmed. pipedrive-write.ts:64 is the only place in server, web and shared code that formats a date with dateStyle 'full' and timeStyle 'short'. The live fake store note for deal 4007 reads 'Meeting: Monday, September 28, 2026 at 3:00 PM (Europe/Helsinki)', a 12-hour clock and not ISO 8601. The alerts use localTime in domain/events.ts:68-83 ('2026-09-28 15:00 (Europe/Helsinki)'), and views/dates.ts uses YYYY-MM-DD. The audit rules list ISO 8601 dates as a code rule. The PRD content of the note (meeting time, interest level, link) is otherwise correct."
+   }
+  ],
+  "rejected": [
+   {
+    "id": "second-channel-task-misses-form-sent",
+    "reason": "Refuted. The PRD Backend section states the rule exactly: 'It makes a second-channel task for each deal in Opened with no booking after 48 hours.' architecture.md:290 repeats 'each deal in opened'. sweep.ts:34 implements this as written. The general Follow-up sentence does not override the specific sweep rule, and a Form sent owner already gave answers and triggers a form alert and the Form sent stage, so the analyst acts on that deal without a second-channel task. The behavior matches the PRD."
+   }
+  ]
+ },
+ {
+  "area": "brief",
+  "coverage": "Read in full: PRD.md (Meeting brief and all subsections, plus the related Inbox, Deal page, Profile menu, Hourly sweep, Pipedrive and retention sentences), .planning/architecture.md, api.md, shared-exports.md, and the brief parts of the build reports core, adminApi, adminWeb, shared and worker. Code read: apps/server/src/domain/brief-data.ts, retention.ts, events.ts (brief read, alerts); jobs/write-brief.ts, ask-model.ts, prompts.ts, sweep.ts, pipedrive-write.ts (note); video/booking.ts, access.ts; views/inbox.ts, deal-detail.ts; routes/admin/deals.ts (brief/read); providers upsertNote (fake and real); packages/shared/src/signals.ts, checks.ts, analytics.ts, format.ts, schemas.ts (brief schema), fallback-writer.ts (brief part), types.ts (MeetingBrief, Signal); apps/web/src/admin components/brief-view.tsx, interest-badge.tsx, slide-watch-chart.tsx, shape-icon.tsx, lib/brief.ts, lib/events.ts, lib/format.ts, deal/brief-card.tsx, deal/events-card.tsx, pages/deal-page.tsx, pages/inbox-page.tsx, shell/alerts-menu.tsx, profile/settings-section.tsx (brief language). Checked each of the ten signal rules and the three interest levels against signals.ts (all correct), the eight sections and 'No data', the 60-word summary and 3 to 5 question checks, the number check, the two-attempt retry and 'No summary', the brief language, the booking trigger and sweep 3-hour trigger with the brief:{deal}:{last event ID} key, the Pipedrive note content and upsert, the brief_written alert, the brief_read event and Events card, the Inbox Meeting today group, and deletion at expiry. Live checks (GET only): /api/deals/4007 (brief v1, events, analytics), /api/sessions/{id}/events, /api/inbox?analyst=1002, /api/alerts?analyst=1002, /api/analysts, and storage/data/fake-pipedrive.json (note). Tests run: shared signals, checks, fallback-writer (87 pass); server brief-data, write-brief, sweep (14 pass). Scans: no em or en dash and no British spelling in the brief code and strings. Not done: no browser render of the deal page, because it sends POST ensure and POST brief/read on load. Not reported on purpose: opens counted per open event (3 opens, 1 session for 4007), because it is in the analytics area and the PRD lists opens and sessions as two numbers.",
+  "confirmed": [
+   {
+    "id": "signal-evidence-shows-raw-id",
+    "severity": "major",
+    "prd": "Meeting brief, section 5 Signals: each positive and negative signal, with the event that shows it",
+    "file": "apps/web/src/admin/components/brief-view.tsx",
+    "line": 72,
+    "problem": "The brief view looks up the evidence event in deal.events, but GET /api/deals/:id returns only deal events and the session events open, buyer_link_tap, forward and calculator_result. The evidence of 'Watched to the end' is a complete event and the evidence of 'Replayed figures or buyers' is a slide_start event. Neither type is in the list, so the Signals section shows an internal row ID such as '(Evidence: #25)' instead of the event.",
+    "evidence": "deal-detail.ts line 23: `AND (session_id IS NULL OR type IN ('open', 'buyer_link_tap', 'forward', 'calculator_result'))`. brief-view.tsx line 72: `if (!event) return `#${signal.evidenceEventId}``. Deal 4007 brief: watched_to_end evidenceEventId 25, replayed_figures_or_buyers evidenceEventId 17. The events list of GET /api/deals/4007 has only ids [1, 2, 4, 6, 26, 30, 43, 44, 48]. GET /api/sessions/ff4b.../events shows id 17 = slide_start slide 5 and id 25 = complete slide 8. The brief of 4007 therefore renders 'Watched to the end (Evidence: #25)' and 'Replayed figures or buyers (Evidence: #17)'.",
+    "fix": "When the brief is written, store the evidence event in the Signal: for example `evidence: { type, slide, clientAt } | null` from the event row. Then render it without the deal events list. The evidence stays readable when the event rows change. Another fix is to add the events whose IDs brief.signals reference to DealDetailDto.events. That fix makes the Events card longer, so the first fix is better.",
+    "verdict": {
+     "id": "signal-evidence-shows-raw-id",
+     "real": true,
+     "severity": "major",
+     "reason": "Confirmed. BriefCard passes deal.events to BriefView (deal-page.tsx line 58). deal-detail.ts timelineEvents keeps session events only of the types open, buyer_link_tap, forward and calculator_result. signals.ts sets the evidence of watched_to_end to the first 'complete' event, and the evidence of replayed_figures_or_buyers to a 'slide_start' event. These event types are never in the map, so evidence() returns `#${signal.evidenceEventId}`. Live check: GET /api/deals/4007 events ids [1,2,4,6,26,30,43,44,48], brief signals evidenceEventId 25 (watched_to_end) and 17 (replayed_figures_or_buyers). The view therefore shows '(Evidence: #25)' and '(Evidence: #17)'. The requirement 'with the event that shows it' is wrong for two of the three signals of the demo deal.",
+     "fix": "When the brief is written, store the evidence event in the Signal: for example `evidence: { type, slide, clientAt } | null` from the event row. Then render it without the deal events list. The evidence stays readable when the event rows change. Another fix is to add the events whose IDs brief.signals reference to DealDetailDto.events. That fix makes the Events card longer, so the first fix is better."
+    },
+    "reason": "Confirmed. BriefCard passes deal.events to BriefView (deal-page.tsx line 58). deal-detail.ts timelineEvents keeps session events only of the types open, buyer_link_tap, forward and calculator_result. signals.ts sets the evidence of watched_to_end to the first 'complete' event, and the evidence of replayed_figures_or_buyers to a 'slide_start' event. These event types are never in the map, so evidence() returns `#${signal.evidenceEventId}`. Live check: GET /api/deals/4007 events ids [1,2,4,6,26,30,43,44,48], brief signals evidenceEventId 25 (watched_to_end) and 17 (replayed_figures_or_buyers). The view therefore shows '(Evidence: #25)' and '(Evidence: #17)'. The requirement 'with the event that shows it' is wrong for two of the three signals of the demo deal."
+   },
+   {
+    "id": "meeting-after-expiry-loses-brief",
+    "severity": "major",
+    "prd": "Meeting brief: 'The tool writes a meeting brief for the analyst before each meeting'; Inbox: 'The Meeting today group shows each deal with a meeting in the next 24 hours'; Delivery and privacy: deletion at expiry",
+    "file": "apps/server/src/video/booking.ts",
+    "line": 36,
+    "problem": "The booking offers slots up to 14 days ahead without a check against deals.expires_at. When the meeting is after the link expiry, the hourly sweep deletes the brief (and all events) at expiry, write-brief and the sweep skip expired deals, and the Inbox drops the deal from Meeting today because dealDone() treats an expired link as done. The analyst has no brief and no Inbox row for a meeting that is still booked.",
+    "evidence": "booking.ts freeSlots: `return slotGrid(analyst.timeZone, now).filter(...)` with DAYS_AHEAD = 14 and no expiry check. retention.ts line 27: `DELETE FROM briefs WHERE deal_id = ?`. write-brief.ts line 15: `if (isExpired(deal, now)) { ... return }`. inbox.ts line 24: `return deal.status === 'lost' || isExpired(deal, now) || ...` and line 142 `!dealDone(deal, now) && meetingUpcoming(...)`. Scenario: expiry 30 days (the default), the owner books on day 20 a slot on day 33. On day 30 the sweep purges the brief; on day 32 the Meeting today group is empty for this deal.",
+    "fix": "In freeSlots, keep only the slots with `Date.parse(slot.end) + MEETING_GRACE_MS <= Date.parse(deal.expiresAt)`. Pass the deal to freeSlots so that bookMeeting uses the same filter. Another fix is to set expires_at to at least meetingAt plus the grace in bookMeeting, in the same transaction. The first fix keeps the PRD retention rule unchanged.",
+    "verdict": {
+     "id": "meeting-after-expiry-loses-brief",
+     "real": true,
+     "severity": "major",
+     "reason": "Confirmed. slotGrid offers slots up to 14 days ahead (DAYS_AHEAD = 14), and freeSlots and bookMeeting do not compare them with deals.expires_at. Nothing extends expires_at at booking: the only writers are publish (pipeline.ts line 351) and setExpiry. At expiry, purgeExpired deletes the briefs and events rows. write-brief returns early when isExpired. The sweep also skips expired deals. inbox.ts dealDone() returns true for an expired deal, so the Meeting today filter `!dealDone(deal, now) && meetingUpcoming(...)` drops it. Example: the default expiry is 30 days. The owner opens the link on day 20 and books a slot on day 33. The analyst then has no brief and no Meeting today row for a meeting that is still booked. The analyst can use Change expiry by hand, but the tool gives no warning.",
+     "fix": "In freeSlots, keep only the slots with `Date.parse(slot.end) + MEETING_GRACE_MS <= Date.parse(deal.expiresAt)`. Pass the deal to freeSlots so that bookMeeting uses the same filter. Another fix is to set expires_at to at least meetingAt plus the grace in bookMeeting, in the same transaction. The first fix keeps the PRD retention rule unchanged."
+    },
+    "reason": "Confirmed. slotGrid offers slots up to 14 days ahead (DAYS_AHEAD = 14), and freeSlots and bookMeeting do not compare them with deals.expires_at. Nothing extends expires_at at booking: the only writers are publish (pipeline.ts line 351) and setExpiry. At expiry, purgeExpired deletes the briefs and events rows. write-brief returns early when isExpired. The sweep also skips expired deals. inbox.ts dealDone() returns true for an expired deal, so the Meeting today filter `!dealDone(deal, now) && meetingUpcoming(...)` drops it. Example: the default expiry is 30 days. The owner opens the link on day 20 and books a slot on day 33. The analyst then has no brief and no Meeting today row for a meeting that is still booked. The analyst can use Change expiry by hand, but the tool gives no warning."
+   },
+   {
+    "id": "custom-questions-missing-without-form",
+    "severity": "minor",
+    "prd": "Text from the language model: 'Each question comes from a gap in the data. Examples are ... an unanswered custom question'",
+    "file": "apps/server/src/domain/brief-data.ts",
+    "line": 89,
+    "problem": "formSection() returns null when the owner did not send the form, and the MeetingBrief has no other field for the custom questions. When an owner books a meeting without the form, the analyst's custom questions are not in the brief data, so the model (and the fallback writer) cannot turn them into meeting questions. This is the most common case of an unanswered custom question.",
+    "evidence": "brief-data.ts line 88 to 89: `const form: FormAnswers | null = deal.form` / `if (!form) return null`. The model input is `{ task: 'brief-text', lang, brief: data }` (write-brief.ts line 26), so deal.customQuestions never reaches the model when deal.form is null. fallback-writer.ts line 649: `if (brief.form?.custom.some((c) => c.answer.trim() === '')) keys.push('custom')` is also skipped when form is null.",
+    "fix": "In buildBriefData, add a field such as `customQuestions: { question: string; answer: string | null }[]` and fill it from deal.customQuestions also when deal.form is null. Keep form: null, so the Form answers section still shows 'No data'. In the fake writer, make briefQuestions push 'custom' when an entry of that field has no answer.",
+    "verdict": {
+     "id": "custom-questions-missing-without-form",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. The video page lets the owner book without the form: POST /v/:code/book calls bookMeeting and has no form check. When deal.form is null, formSection returns null, and MeetingBrief has no other field for deal.customQuestions. So the brief-text input has no custom question text, and neither the model nor fallback-writer line 649 can ask about an unanswered custom question. The PRD gives this gap as an example. Questions from the other gaps still work, and the feature works when the form is sent, so the severity is minor, not major.",
+     "fix": "In buildBriefData, add a field such as `customQuestions: { question: string; answer: string | null }[]` and fill it from deal.customQuestions also when deal.form is null. Keep form: null, so the Form answers section still shows 'No data'. In the fake writer, make briefQuestions push 'custom' when an entry of that field has no answer."
+    },
+    "reason": "Confirmed. The video page lets the owner book without the form: POST /v/:code/book calls bookMeeting and has no form check. When deal.form is null, formSection returns null, and MeetingBrief has no other field for deal.customQuestions. So the brief-text input has no custom question text, and neither the model nor fallback-writer line 649 can ask about an unanswered custom question. The PRD gives this gap as an example. Questions from the other gaps still work, and the feature works when the form is sent, so the severity is minor, not major."
+   },
+   {
+    "id": "model-outage-gives-no-brief",
+    "severity": "minor",
+    "prd": "Text from the language model: 'After a second failure, the meeting brief shows the data sections only and the header shows \"No summary\"'",
+    "file": "apps/server/src/jobs/write-brief.ts",
+    "line": 10,
+    "problem": "askModel() rethrows every model error that is not no_json or truncated (HTTP 5xx, 429, network, timeout). The write-brief job then fails three times and ends as failed, and the handler has no onFinalFailure. The data sections do not need the model, but the analyst gets no brief at all for the meeting while Featherless is down.",
+    "evidence": "ask-model.ts line 37: `if (!(error instanceof ModelError && REJECTED_CODES.has(error.code ?? ''))) throw error`. featherless.ts line 96 and 116 create retryable ModelErrors for network and HTTP failures. writeBriefHandler defines only `run`, no `onFinalFailure`.",
+    "fix": "Add onFinalFailure to writeBriefHandler. It calls buildBriefData and saveBrief with summary null and questions null, only when no brief covers lastEventId. The failed job stays in Review with Retry. In run(), change the skip rule to `newest && newest.lastEventId >= lastEventId && newest.brief.header.summary !== null`, so that a Retry after the outage writes a new version with the text.",
+    "verdict": {
+     "id": "model-outage-gives-no-brief",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. askModel rethrows each ModelError that is not no_json or truncated (ask-model.ts line 37). featherless.ts makes network and HTTP failures with other codes, for example http_503 or a transport code. The queue retries three times (30 s, 2 min) and then sets the job to failed. writeBriefHandler has no onFinalFailure, so the deal gets no brief. The data sections do not need the model, and the PRD says that after a second failure the brief shows the data sections and 'No summary'. PRD line 279 lists failed meeting briefs in Review with Retry, so the failed job row is expected. The missing data-only brief is the defect. The proposed fix also has a gap. If onFinalFailure saves a brief that covers the events, a later Retry returns early at 'newest.lastEventId >= lastEventId' and never writes the text.",
+     "fix": "Add onFinalFailure to writeBriefHandler. It calls buildBriefData and saveBrief with summary null and questions null, only when no brief covers lastEventId. The failed job stays in Review with Retry. In run(), change the skip rule to `newest && newest.lastEventId >= lastEventId && newest.brief.header.summary !== null`, so that a Retry after the outage writes a new version with the text."
+    },
+    "reason": "Confirmed. askModel rethrows each ModelError that is not no_json or truncated (ask-model.ts line 37). featherless.ts makes network and HTTP failures with other codes, for example http_503 or a transport code. The queue retries three times (30 s, 2 min) and then sets the job to failed. writeBriefHandler has no onFinalFailure, so the deal gets no brief. The data sections do not need the model, and the PRD says that after a second failure the brief shows the data sections and 'No summary'. PRD line 279 lists failed meeting briefs in Review with Retry, so the failed job row is expected. The missing data-only brief is the defect. The proposed fix also has a gap. If onFinalFailure saves a brief that covers the events, a later Retry returns early at 'newest.lastEventId >= lastEventId' and never writes the text."
+   },
+   {
+    "id": "pipedrive-note-date-not-iso",
+    "severity": "minor",
+    "prd": "CLAUDE.md rule: dates in ISO 8601",
+    "file": "apps/server/src/jobs/pipedrive-write.ts",
+    "line": 64,
+    "problem": "The Pipedrive note writes the meeting time with dateStyle 'full' and a 12-hour clock, not in ISO 8601. The alerts and the admin panel use the ISO form for the same time.",
+    "evidence": "pipedrive-write.ts line 64: `new Intl.DateTimeFormat(s.locale, { dateStyle: 'full', timeStyle: 'short', timeZone })`. fake-pipedrive.json note of deal 4007: 'Meeting: Monday, September 28, 2026 at 3:00 PM (Europe/Helsinki)'. The alert for the same booking: 'Booked a meeting for 2026-09-28 15:00 (Europe/Helsinki)'.",
+    "fix": "Format the time as 'YYYY-MM-DD HH:mm (IANA zone)'. Move localTime from domain/events.ts to a shared helper, for example apps/server/src/views/dates.ts, and use the helper in noteHtml.",
+    "verdict": {
+     "id": "pipedrive-note-date-not-iso",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. pipedrive-write.ts noteHtml formats with `new Intl.DateTimeFormat(s.locale, { dateStyle: 'full', timeStyle: 'short', timeZone })`. storage/data/fake-pipedrive.json note 1 of deal 4007 has 'Meeting: Monday, September 28, 2026 at 3:00 PM (Europe/Helsinki)'. No other part of the code uses dateStyle. The admin (format.ts formatDateTime) and the alerts (events.ts localTime) use 'YYYY-MM-DD HH:mm'. This breaks the ISO 8601 date rule.",
+     "fix": "Format the time as 'YYYY-MM-DD HH:mm (IANA zone)'. Move localTime from domain/events.ts to a shared helper, for example apps/server/src/views/dates.ts, and use the helper in noteHtml."
+    },
+    "reason": "Confirmed. pipedrive-write.ts noteHtml formats with `new Intl.DateTimeFormat(s.locale, { dateStyle: 'full', timeStyle: 'short', timeZone })`. storage/data/fake-pipedrive.json note 1 of deal 4007 has 'Meeting: Monday, September 28, 2026 at 3:00 PM (Europe/Helsinki)'. No other part of the code uses dateStyle. The admin (format.ts formatDateTime) and the alerts (events.ts localTime) use 'YYYY-MM-DD HH:mm'. This breaks the ISO 8601 date rule."
+   },
+   {
+    "id": "figures-table-wrong-column-header",
+    "severity": "minor",
+    "prd": "CLAUDE.md rule: WCAG 2.2 level A (text labels, 1.3.1 Info and Relationships); Meeting brief section 3 Figures",
+    "file": "apps/web/src/admin/components/brief-view.tsx",
+    "line": 178,
+    "problem": "The screen reader header of the value column in the Figures table is 'Value range' (f.valuation). The column holds the revenue, profit and valuation values, so a screen reader reads 'Revenue, Value range, 10 M EUR to 20 M EUR'.",
+    "evidence": "brief-view.tsx lines 177 to 178: `<th scope=\"col\">{b.sections.figures}</th>` / `<th scope=\"col\">{f.valuation}</th>`; the rows are FigureRow for revenue, profit and valuation.",
+    "fix": "Add a `value` string to BriefStrings.fields in each language (en 'Value', fi 'Arvo', sv 'Värde', and the other languages). Use `<th scope=\"col\">{f.value}</th>` for the second column.",
+    "verdict": {
+     "id": "figures-table-wrong-column-header",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. brief-view.tsx line 178 uses f.valuation as the sr-only header of the value column. In English the string is 'Value range' (i18n.ts line 358), and the Finnish and Swedish strings are similar. The column holds revenue and profit too, and these are sometimes exact values. So a screen reader reads a wrong column header for those rows. The header text is wrong, so this is a real bug. But a wrong label maps to WCAG 2.4.6 (level AA), not to a 1.3.1 level A failure, because the table structure is still correct. The severity is minor.",
+     "fix": "Add a `value` string to BriefStrings.fields in each language (en 'Value', fi 'Arvo', sv 'Värde', and the other languages). Use `<th scope=\"col\">{f.value}</th>` for the second column."
+    },
+    "reason": "Confirmed. brief-view.tsx line 178 uses f.valuation as the sr-only header of the value column. In English the string is 'Value range' (i18n.ts line 358), and the Finnish and Swedish strings are similar. The column holds revenue and profit too, and these are sometimes exact values. So a screen reader reads a wrong column header for those rows. The header text is wrong, so this is a real bug. But a wrong label maps to WCAG 2.4.6 (level AA), not to a 1.3.1 level A failure, because the table structure is still correct. The severity is minor."
+   }
+  ],
+  "rejected": [
+   {
+    "id": "no-summary-path-keeps-questions-section",
+    "reason": "This is not a defect. PRD section 'Meeting brief' also says: 'The meeting brief has a fixed layout with eight sections. A section with no data shows \"No data\".' When questions is null, the view keeps section 8 and shows 'No data', and the header shows 'No summary'. That fits both PRD sentences: 'data sections only' means no model-written content. If the view removed the section, it would break the fixed eight-section layout."
+   },
+   {
+    "id": "model-input-has-no-slide-names",
+    "reason": "The prompt and the input do not contain the slide names. But the PRD asks only that each question comes from a gap such as a skipped slide. The model gets perSlide with watchS 0 for the skipped slides, and the signal keys (for example replayed_figures_or_buyers), so it can write a question about a skipped slide. The fake model cannot show a concrete failure, so this is a suggestion about prompt quality, not a missing or wrong requirement."
+   },
+   {
+    "id": "fallback-questions-not-from-gaps",
+    "reason": "Only apps/server/src/providers/model-fake.ts calls fallbackBriefText. The fake model stands in for Kimi-K3 when no API key is set. The PRD rule is for the Kimi-K3 output, and briefTextPrompt tells the real model that each question must come from a gap. Also, the filler topics (goals, the people in the sale decision, succession) are data that the tool does not have, so a reader can also call them gaps. The observation about the 4007 demo brief is correct, but the demo double does not break a product requirement."
+   }
+  ]
+ },
+ {
+  "area": "admin",
+  "coverage": "I read in full: PRD.md; .planning/architecture.md, api.md, shared-exports.md; build reports adminApi.md and adminWeb.md; all of apps/server/src/routes/admin/* (index, context, http, inbox, reports, deals, analysts, send-file, uploads) and apps/server/src/views/* (inbox, jobs, dates, urls, sessions, deal-rows, deal-detail, review, metrics, templates); and all admin web code: app, main, api, analyst context and provider, lib/* (status, events, format, review, pipeline, alerts, watch, replay, brief), pages (inbox, deals, deal, review, metrics), deal/* cards, review/*, profile/*, shell/*, admin components, src/components/channel-icon and lottie-player, hooks (autosave, media recorder, reduced motion), lib (theme, clipboard, storage), index.css, index.html, vite.config, components.json and package.json. I also read the domain functions the admin relies on (ensure, setExpiry, applyReviewPatch, tasks, stages, analysts, failedJobs, alertsFor). Live checks used GET only: /, /api/status, /api/analysts, /api/inbox for the three analysts, /api/deals, /api/deals/4007, /api/deals/4001/review, /api/deals/4003/review, /api/sessions/:id/events, /api/metrics, /api/templates, the deep links, and the download headers. I opened the Deals and Metrics pages at 390 px in an isolated Chrome context (a11y snapshot, no console errors) and did not open deal pages, because they send POST ensure and brief/read. Tests: `vitest --project web` passed 187 of 187, `vitest --project server test/admin` passed 53 of 53, eslint on the area was clean, and the web typecheck was clean. `playwright test --list` found 0 tests. I scanned for em dashes, en dashes, emojis, doctype case, British spellings and comments, and found no violations. Checks that passed: status shows as a word and a unique shape for each of the 8 statuses; charts go through ChartContainer; reduced motion is handled (global CSS rule, Recharts isAnimationActive, Lottie static); Amber minimal tokens with dark as the default; Geist fonts; lottie-web is not in the video bundle; the Inbox has four groups, done-deal rules and the last-session line; the Deals columns, filters and default analyst; the Deal page header and cards (except the task case in the findings); the brief has eight sections with No data and No summary; the Sessions card columns and the Replay timeline; Metrics has five numbers per analyst and country, the date-range filter and the 100-deal chart; the Profile menu has intros, voice, consent, defaults, brief language and template previews. Not covered in depth: the generated shadcn files in components/ui (only spot-checked), and live recording (needs a camera permission and a POST).",
+  "confirmed": [
+   {
+    "id": "admin-post-csrf",
+    "severity": "minor",
+    "prd": "Admin panel (\"The demo has no sign-in ... Run the demo on a private address only\"); Data privacy",
+    "file": "apps/server/src/routes/admin/deals.ts",
+    "line": 95,
+    "problem": "The admin API has no sign-in by design, but it also has no CSRF guard. Several state-changing routes take no body, or take a multipart body, so they are CORS simple requests. Any web page that the analyst opens can send them cross-site into the private network, and the browser sends no preflight. Examples: POST /api/deals/:id/approve (publishes the prospect link and moves the Pipedrive stage), POST /api/tasks/:id/done, POST /api/jobs/:id/retry, POST /api/deals/:id/ensure, and the multipart uploads POST /api/analysts/:id/voice and /consent (these replace the voice sample or the signed consent PDF and date). The private-address rule does not protect against this, because the analyst's own browser is inside the private network.",
+    "evidence": "deals.ts:95 `dealRoutes.post('/deals/:id/approve', async (c) => { const { db, now } = adminContext(); const result = approveDeal(db, dealId(c), now) ...` reads no body and checks no header. uploads.ts:47-51 accepts any `multipart/form-data` request. index.ts registers only `jsonBodyLimit` and no Origin or Sec-Fetch-Site check. `curl -H 'Origin: https://evil.example' http://localhost:3000/api/deals` gives 200 (no CORS headers, but simple POSTs do not need them). lsof shows `node ... TCP *:3000 (LISTEN)`.",
+    "fix": "In adminRoutes, add a middleware for each non-GET/HEAD request on /api/*. It returns 403 when Sec-Fetch-Site is cross-site or same-site, and when the X-Mergero-Admin header is missing. In apps/web/src/admin/api.ts, make request() always send `X-Mergero-Admin: 1`. The custom header forces a CORS preflight, and the server does not answer it. Optional: also compare the Host header with the host of ADMIN_BASE_URL. This check stops DNS rebinding, which the custom header alone does not stop.",
+    "verdict": {
+     "id": "admin-post-csrf",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed in code. api.ts and routes/admin/index.ts register only a request logger and jsonBodyLimit. No code checks Origin, Sec-Fetch-Site, Host or a custom header. POST /deals/:id/approve, /deals/:id/ensure, /deals/:id/brief/read, /tasks/:id/done and /jobs/:id/retry read no body. uploads.ts accepts any multipart/form-data. So a cross-site HTML form or a no-cors fetch reaches these routes with no preflight. `curl -H 'Origin: https://evil.example' /api/deals` gives 200 with no Access-Control-* headers, so cross-site reads fail but writes succeed. The API listens on *:3000. The mock MGX already has an Origin check (build-reports/mocks.md), and the admin API does not. I lowered the severity from major to minor: PRD.md accepts a demo with no sign-in, CSRF cannot read data, the attacker must target the private address and guess deal IDs, and no PRD requirement is broken.",
+     "fix": "In adminRoutes, add a middleware for each non-GET/HEAD request on /api/*. It returns 403 when Sec-Fetch-Site is cross-site or same-site, and when the X-Mergero-Admin header is missing. In apps/web/src/admin/api.ts, make request() always send `X-Mergero-Admin: 1`. The custom header forces a CORS preflight, and the server does not answer it. Optional: also compare the Host header with the host of ADMIN_BASE_URL. This check stops DNS rebinding, which the custom header alone does not stop."
+    },
+    "reason": "Confirmed in code. api.ts and routes/admin/index.ts register only a request logger and jsonBodyLimit. No code checks Origin, Sec-Fetch-Site, Host or a custom header. POST /deals/:id/approve, /deals/:id/ensure, /deals/:id/brief/read, /tasks/:id/done and /jobs/:id/retry read no body. uploads.ts accepts any multipart/form-data. So a cross-site HTML form or a no-cors fetch reaches these routes with no preflight. `curl -H 'Origin: https://evil.example' /api/deals` gives 200 with no Access-Control-* headers, so cross-site reads fail but writes succeed. The API listens on *:3000. The mock MGX already has an Origin check (build-reports/mocks.md), and the admin API does not. I lowered the severity from major to minor: PRD.md accepts a demo with no sign-in, CSRF cannot read data, the attacker must target the private address and guess deal IDs, and no PRD requirement is broken."
+   },
+   {
+    "id": "playwright-e2e-missing",
+    "severity": "major",
+    "prd": "Tech stack / Stack: \"Playwright for end-to-end tests of the player and the form on mobile Chrome and mobile Safari (WebKit)\"",
+    "file": "package.json",
+    "line": 20,
+    "problem": "The repository has no Playwright configuration and no end-to-end tests. `e2e/` is empty, and `playwright.config.ts` (listed in architecture.md) does not exist. So the player and the form have no end-to-end tests on mobile Chrome or mobile Safari. `pnpm e2e` runs `playwright test` with no config: it finds 0 tests and tries to load the Vitest files.",
+    "evidence": "`ls -la e2e` shows an empty folder. `ls playwright.config.*` finds no file. `pnpm exec playwright test --list` prints errors from packages/shared/test/valuation.test.ts, then `Error: No tests found ... Total: 0 tests in 0 files`. The root package.json has `\"e2e\": \"playwright test\"` and `@playwright/test` 1.63.0.",
+    "fix": "Add playwright.config.ts with `testDir: 'e2e'`, the projects mobile-chrome (devices['Pixel 7']) and mobile-safari (devices['iPhone 15']), and a webServer that starts the API and the mock MGX with fake providers and the seed data (deal 4007 is published). Add specs for the player (poster tap, play, slide marks, 720p source below 1024 px, events batch, sendBeacon on hide) and for the form (range entry, calculator, submit, booking). With testDir set to 'e2e', Playwright does not collect the Vitest files, so testIgnore is not needed.",
+    "verdict": {
+     "id": "playwright-e2e-missing",
+     "real": true,
+     "severity": "major",
+     "reason": "Confirmed. e2e/ is empty. No playwright.config.* exists outside node_modules, but architecture.md line 13 lists playwright.config.ts. The root script `\"e2e\": \"playwright test\"` has nothing to run. .planning/fix-list.md item 13 lists the gap as open. PRD Stack requires Playwright end-to-end tests of the player and the form on mobile Chrome and mobile Safari (WebKit). This belongs to the video page area, not the admin panel, but the requirement is missing.",
+     "fix": "Add playwright.config.ts with `testDir: 'e2e'`, the projects mobile-chrome (devices['Pixel 7']) and mobile-safari (devices['iPhone 15']), and a webServer that starts the API and the mock MGX with fake providers and the seed data (deal 4007 is published). Add specs for the player (poster tap, play, slide marks, 720p source below 1024 px, events batch, sendBeacon on hide) and for the form (range entry, calculator, submit, booking). With testDir set to 'e2e', Playwright does not collect the Vitest files, so testIgnore is not needed."
+    },
+    "reason": "Confirmed. e2e/ is empty. No playwright.config.* exists outside node_modules, but architecture.md line 13 lists playwright.config.ts. The root script `\"e2e\": \"playwright test\"` has nothing to run. .planning/fix-list.md item 13 lists the gap as open. PRD Stack requires Playwright end-to-end tests of the player and the form on mobile Chrome and mobile Safari (WebKit). This belongs to the video page area, not the admin panel, but the requirement is missing."
+   },
+   {
+    "id": "second-open-task-hidden",
+    "severity": "minor",
+    "prd": "Admin panel / Deal page (\"Open task: appears when a task is open\"); Inbox (Call group)",
+    "file": "apps/server/src/views/deal-detail.ts",
+    "line": 55,
+    "problem": "A deal can have two open tasks at the same time. The sweep makes a call task at 48 h with no open. Opening the link does not close that task, because closeOpenTasks runs only on booking, lost and expiry. When the second-channel task then comes at first_open_at + 48 h, the deal page shows only the newest open task. The Inbox still lists the call task in the Call group, and its button goes to the deal page. That page shows no call task, so the analyst cannot mark the call task done until the analyst first completes the unrelated second-channel task.",
+    "evidence": "deal-detail.ts:55 `const task = openTaskFor(db, deal.id)`. tasks.ts:28-30 `export function openTaskFor(db, dealId) { return listOpenTasks(db, { dealId }).at(-1) ?? null }` (ordered by created_at, so this gives the newest only). stages.ts:58 `if (stage === 'meeting_booked') closeOpenTasks(db, dealId, now)`: the move to `opened` closes nothing. inbox.ts:166-170 pushes every open task into its group. DealDetailDto has one `openTask`, and deal-page.tsx:59 renders one OpenTaskCard.",
+    "fix": "Add `openTasks: DealTaskDto[]` to DealDetailDto, filled from `listOpenTasks(db, { dealId })`, and render one OpenTaskCard for each task. Do not close the call task automatically on the first open, because the Inbox already shows that state.",
+    "verdict": {
+     "id": "second-open-task-hidden",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed in code. sweep.ts callTasks makes a call task for a link_sent deal with no open. The first open does not close it, because moveStage closes tasks only for meeting_booked (markLost and retention also close them). secondChannelTasks then makes a second_channel task at first_open_at + 48 h. UNIQUE (deal_id, type) allows both tasks. openTaskFor returns `listOpenTasks(...).at(-1)`, which is the newest task only. DealDetailDto has one openTask, and deal-page.tsx renders one OpenTaskCard. The Inbox RowAction for a call row goes to /deals/:id. views/inbox.ts taskRow has text for a call task on an opened deal ('Opened on ..., no meeting booked'), so the code expects this state. I lowered the severity from major to minor: the state occurs only when the call task stays open for 48 h or more after the owner opens the link, and the analyst can still reach the call task after marking the newer task done.",
+     "fix": "Add `openTasks: DealTaskDto[]` to DealDetailDto, filled from `listOpenTasks(db, { dealId })`, and render one OpenTaskCard for each task. Do not close the call task automatically on the first open, because the Inbox already shows that state."
+    },
+    "reason": "Confirmed in code. sweep.ts callTasks makes a call task for a link_sent deal with no open. The first open does not close it, because moveStage closes tasks only for meeting_booked (markLost and retention also close them). secondChannelTasks then makes a second_channel task at first_open_at + 48 h. UNIQUE (deal_id, type) allows both tasks. openTaskFor returns `listOpenTasks(...).at(-1)`, which is the newest task only. DealDetailDto has one openTask, and deal-page.tsx renders one OpenTaskCard. The Inbox RowAction for a call row goes to /deals/:id. views/inbox.ts taskRow has text for a call task on an opened deal ('Opened on ..., no meeting booked'), so the code expects this state. I lowered the severity from major to minor: the state occurs only when the call task stays open for 48 h or more after the owner opens the link, and the analyst can still reach the call task after marking the newer task done."
+   },
+   {
+    "id": "voice-pending-without-consent",
+    "severity": "minor",
+    "prd": "Admin panel / Profile menu (\"The voice sample, the clone status, and the consent date\"); Analyst setup (written consent)",
+    "file": "apps/server/src/routes/admin/analysts.ts",
+    "line": 134,
+    "problem": "A voice sample upload with no consent on file sets clone_status to `pending`, but the route does not queue a clone job. The profile menu then shows \"Clone in progress\" and the toast says \"The clone starts now\", but no clone runs. useAnalysts also polls GET /api/analysts every 5 s while any clone is `pending`. So the page polls with no end until the analyst uploads consent.",
+    "evidence": "analysts.ts:134-137 `const row = setVoiceSample(db, id, voiceFile(id), now); if (row.consentFile !== null) enqueueClone(db, id, sampleAt, now)`. domain/analysts.ts:146-147 `setColumns(db, id, { voice_sample_file: file, clone_status: 'pending' }, now)`. api.ts:130 `analyst.voice.cloneStatus === 'pending'` and :139 `refetchInterval: ... ? 5000 : false`. voice-section.tsx:109 `toast.success('Voice sample uploaded. The clone starts now.')`.",
+    "fix": "In the voice route, keep clone_status 'none' when no consent file exists. Set 'pending' in the consent route at the time it queues the clone job. When voice.consentDate is null, change the toast to 'Voice sample uploaded. The clone starts after you save the written consent.'",
+    "verdict": {
+     "id": "voice-pending-without-consent",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. domain/analysts.ts setVoiceSample always sets clone_status 'pending'. routes/admin/analysts.ts:136 queues the clone only when consentFile is not null. CLONE_META.pending shows 'Clone in progress', voice-section.tsx:109 shows the toast 'The clone starts now.', and pipeline.ts gives the no_voice reason 'The voice clone of X is not ready yet'. The panel does show 'No written consent yet', but the status and the toast are wrong. useAnalysts runs in AnalystProvider for the whole app, so the 5 s poll runs on every page until the analyst uploads consent. Analyst 1003 (Sofie Lund) has no sample and no consent now, so her first upload goes into this state.",
+     "fix": "In the voice route, keep clone_status 'none' when no consent file exists. Set 'pending' in the consent route at the time it queues the clone job. When voice.consentDate is null, change the toast to 'Voice sample uploaded. The clone starts after you save the written consent.'"
+    },
+    "reason": "Confirmed. domain/analysts.ts setVoiceSample always sets clone_status 'pending'. routes/admin/analysts.ts:136 queues the clone only when consentFile is not null. CLONE_META.pending shows 'Clone in progress', voice-section.tsx:109 shows the toast 'The clone starts now.', and pipeline.ts gives the no_voice reason 'The voice clone of X is not ready yet'. The panel does show 'No written consent yet', but the status and the toast are wrong. useAnalysts runs in AnalystProvider for the whole app, so the 5 s poll runs on every page until the analyst uploads consent. Analyst 1003 (Sofie Lund) has no sample and no consent now, so her first upload goes into this state."
+   },
+   {
+    "id": "palette-button-no-name",
+    "severity": "minor",
+    "prd": "CLAUDE.md WCAG 2.2 level A (text labels, 4.1.2 Name, Role, Value); Tech stack / Command palette",
+    "file": "apps/web/src/admin/shell/command-palette.tsx",
+    "line": 54,
+    "problem": "Below the sm breakpoint (640 px), the top-bar Search button has no accessible name. Its only text is in `hidden sm:inline` spans, and the icon is aria-hidden. The button also has no aria-label. On a phone width, a screen reader announces only \"button\".",
+    "evidence": "At 390 px, the a11y snapshot of /deals shows `uid=17_7 button keyshortcuts=\"Control+K Meta+K\"` with no name. The other top-bar buttons have names (\"Alerts, 4 unread\", \"Profile menu\"). Code: `<Button ... aria-keyshortcuts=\"Control+K Meta+K\"><Search aria-hidden=\"true\" /><span className=\"hidden sm:inline\">Search</span><kbd className=\"hidden ... sm:inline\">`.",
+    "fix": "Change the span to `<span className=\"sr-only sm:not-sr-only\">Search</span>`. The name then comes from the content at each width. As an alternative, add aria-label=\"Search\" to the Button.",
+    "verdict": {
+     "id": "palette-button-no-name",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. command-palette.tsx: the trigger Button has no aria-label. The Search icon is aria-hidden, and the text span and the kbd use `hidden sm:inline`, which is display:none below 640 px. aria-keyshortcuts gives no name. On a phone width, the button has no accessible name, which fails WCAG 2.2 A 4.1.2.",
+     "fix": "Change the span to `<span className=\"sr-only sm:not-sr-only\">Search</span>`. The name then comes from the content at each width. As an alternative, add aria-label=\"Search\" to the Button."
+    },
+    "reason": "Confirmed. command-palette.tsx: the trigger Button has no aria-label. The Search icon is aria-hidden, and the text span and the kbd use `hidden sm:inline`, which is display:none below 640 px. aria-keyshortcuts gives no name. On a phone width, the button has no accessible name, which fails WCAG 2.2 A 4.1.2."
+   },
+   {
+    "id": "expiry-dialog-wrong-basis",
+    "severity": "minor",
+    "prd": "Link (\"From the admin panel, you can set how long a link remains valid\"); Deal page (change expiry)",
+    "file": "apps/web/src/admin/deal/expiry-dialog.tsx",
+    "line": 66,
+    "problem": "The Change expiry dialog says that the tool counts the days from the publish date. The server counts them from the time of the change. For a link published 20 days ago with 30 days, a save of the same value 30 (the prefilled value) moves the expiry 20 days later, not to publish date + 30.",
+    "evidence": "expiry-dialog.tsx:66 `The link expires on ${formatDate(expiresAt)}. The tool counts the days from the publish date.` domain/deals.ts:92 `const expiresAt = deal.publishedVersion === null ? null : nowIso(addDays(now, days))`.",
+    "fix": "Change the dialog text to 'The tool counts the days from today.' and keep the server rule. The success toast already shows the new date.",
+    "verdict": {
+     "id": "expiry-dialog-wrong-basis",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. expiry-dialog.tsx:66 says 'The tool counts the days from the publish date.' domain/deals.ts setExpiry uses `addDays(now, days)`, and pipeline.ts publish() also resets expiresAt to now + expiryDays on each republish. So the text is wrong in both paths. A save of the prefilled value moves the expiry date. PRD.md does not say which date is the start, so the defect is the misleading text only.",
+     "fix": "Change the dialog text to 'The tool counts the days from today.' and keep the server rule. The success toast already shows the new date."
+    },
+    "reason": "Confirmed. expiry-dialog.tsx:66 says 'The tool counts the days from the publish date.' domain/deals.ts setExpiry uses `addDays(now, days)`, and pipeline.ts publish() also resets expiresAt to now + expiryDays on each republish. So the text is wrong in both paths. A save of the prefilled value moves the expiry date. PRD.md does not say which date is the start, so the defect is the misleading text only."
+   },
+   {
+    "id": "review-marks-lost-after-edit",
+    "severity": "minor",
+    "prd": "Admin panel / Review page (\"The video plays on top with one mark per slide\")",
+    "file": "apps/web/src/admin/review/video-panel.tsx",
+    "line": 18,
+    "problem": "After the first edit on a rendered version, the Review page plays the older rendered video (videoVersion), but it computes the slide marks from the newest, unrendered timeline. That copy has its times cleared, so slideMarks returns null and the video shows no slide marks until the new render finishes. By the PRD, audio and the render wait for approval, so the marks stay missing for the whole review of the edit.",
+    "evidence": "video-panel.tsx:18 `const marks = slideMarks(review.timeline.segments)`. lib/review.ts:36 `if (segment.startS === null || segment.endS === null ...) return null`. domain/pipeline.ts:489 `createVersion(db, dealId, withoutTimes(edit.timeline), now)`, and :453 `withoutTimes` sets `startS: null, endS: null`.",
+    "fix": "Add the slide times of videoVersion to ReviewDto (for example `videoSlides: {slide, startS, endS}[]` from the timeline row of videoVersion in views/review.ts). Use these times in VideoPanel in place of review.timeline.segments.",
+    "verdict": {
+     "id": "review-marks-lost-after-edit",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. video-panel.tsx computes the marks from review.timeline, which is the newest version. An edit on a rendered version calls createVersion(withoutTimes(...)), so each startS/endS is null and slideMarks returns null. The player then shows the older videoVersion with no marks. One correction: the code does not wait for approval. nextStep in pipeline.ts queues audio and then render for a pending version with no blocking reason right after the edit. So the marks are missing while the new audio and the render run. They stay missing for longer only when a blocking reason (audio_failed, text_too_long) stops the new version.",
+     "fix": "Add the slide times of videoVersion to ReviewDto (for example `videoSlides: {slide, startS, endS}[]` from the timeline row of videoVersion in views/review.ts). Use these times in VideoPanel in place of review.timeline.segments."
+    },
+    "reason": "Confirmed. video-panel.tsx computes the marks from review.timeline, which is the newest version. An edit on a rendered version calls createVersion(withoutTimes(...)), so each startS/endS is null and slideMarks returns null. The player then shows the older videoVersion with no marks. One correction: the code does not wait for approval. nextStep in pipeline.ts queues audio and then render for a pending version with no blocking reason right after the edit. So the marks are missing while the new audio and the render run. They stay missing for longer only when a blocking reason (audio_failed, text_too_long) stops the new version."
+   },
+   {
+    "id": "more-section-silent-save",
+    "severity": "minor",
+    "prd": "Admin panel / Review page (\"A More link holds the custom form questions, the link expiry, and the language\")",
+    "file": "apps/web/src/admin/review/more-section.tsx",
+    "line": 138,
+    "problem": "The link expiry and page language controls in More save through the silent autosave mutation with `void save(...)`. They show no saving, saved or error state. When the PATCH fails (for example 409 when the deal is lost or the link has expired), no toast shows and the promise rejection is unhandled. The expiry input keeps the typed value, so it looks saved. The language select silently goes back to the old value.",
+    "evidence": "more-section.tsx:138 `if (valid && days !== review.expiryDays) void save({ expiryDays: days })` and :147 `onValueChange={(value) => void save({ pageLanguage: value as Lang })}`. review-page.tsx:38/48 `const autosavePatch = usePatchReview(dealId, { silent: true }); const save = (body) => autosavePatch.mutateAsync(body)`. app.tsx:22 skips the toast when `mutation.meta?.silent === true`. pipeline.ts:361-362 assertEditable gives 409 for a lost or expired deal.",
+    "fix": "Use the non-silent mutation (saveNow or patch.mutate) for the expiry and the language, so that errors show a toast. As an alternative, catch the promise, show SaveStatusText next to each control, and on failure reset the expiry input to review.expiryDays.",
+    "verdict": {
+     "id": "more-section-silent-save",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. more-section.tsx:138 `void save({ expiryDays: days })` and :147 `void save({ pageLanguage })` use autosavePatch.mutateAsync, which has meta.silent true, so app.tsx shows no toast. No SaveStatusText shows next to these two controls, but the questions editor has one. When the save fails (409 from assertEditable or setExpiry for a lost or expired deal, or a network error), the promise rejection is unhandled. The expiry input keeps the typed value, and the language select goes back to the old value with no message.",
+     "fix": "Use the non-silent mutation (saveNow or patch.mutate) for the expiry and the language, so that errors show a toast. As an alternative, catch the promise, show SaveStatusText next to each control, and on failure reset the expiry input to review.expiryDays."
+    },
+    "reason": "Confirmed. more-section.tsx:138 `void save({ expiryDays: days })` and :147 `void save({ pageLanguage })` use autosavePatch.mutateAsync, which has meta.silent true, so app.tsx shows no toast. No SaveStatusText shows next to these two controls, but the questions editor has one. When the save fails (409 from assertEditable or setExpiry for a lost or expired deal, or a network error), the promise rejection is unhandled. The expiry input keeps the typed value, and the language select goes back to the old value with no message."
+   },
+   {
+    "id": "review-video-no-captions",
+    "severity": "minor",
+    "prd": "CLAUDE.md WCAG 2.2 level A (1.2.2 Captions, prerecorded); Review page",
+    "file": "apps/web/src/admin/review/video-panel.tsx",
+    "line": 39,
+    "problem": "The Review page plays the rendered MP4 (speech from the intro and the cloned voice) in a native video element with no captions track. Also, the captions route exists only for the published version on /v/:code, so an unpublished review version cannot get captions. The Profile menu intro player (intro-section.tsx:91) also has no track.",
+    "evidence": "video-panel.tsx:39-51 `<video ref={videoRef} key={review.videoUrl} src={review.videoUrl} controls playsInline preload=\"metadata\" ...>` with no `<track kind=\"captions\">` child. architecture.md: `GET /v/:code/captions.v{n}.vtt` accepts only files of `published_version`.",
+    "fix": "Add GET /api/deals/:id/captions.v:n.vtt, built with the same caption builder from the timeline of version n and the intro transcript. Render `<track kind=\"captions\" srcLang={timeline.language} src=... default />` for videoVersion in VideoPanel. For the profile intro, add a track built from the intro transcript when one exists.",
+    "verdict": {
+     "id": "review-video-no-captions",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. The only <track> in apps/web/src is video/player.tsx:418. The Review page video (video-panel.tsx) and the profile intro video (intro-section.tsx) have no captions track, and the captions route serves only the published version on /v/:code. CLAUDE.md requires WCAG 2.2 A for each UI. Architecture decision 6 adds captions for the video page only and does not exempt the panel. The scripts on the Review page give a text alternative, but 1.2.2 requires captions for prerecorded synchronized media.",
+     "fix": "Add GET /api/deals/:id/captions.v:n.vtt, built with the same caption builder from the timeline of version n and the intro transcript. Render `<track kind=\"captions\" srcLang={timeline.language} src=... default />` for videoVersion in VideoPanel. For the profile intro, add a track built from the intro transcript when one exists."
+    },
+    "reason": "Confirmed. The only <track> in apps/web/src is video/player.tsx:418. The Review page video (video-panel.tsx) and the profile intro video (intro-section.tsx) have no captions track, and the captions route serves only the published version on /v/:code. CLAUDE.md requires WCAG 2.2 A for each UI. Architecture decision 6 adds captions for the video page only and does not exempt the panel. The scripts on the Review page give a text alternative, but 1.2.2 requires captions for prerecorded synchronized media."
+   }
+  ],
+  "rejected": [
+   {
+    "id": "deals-row-not-a-link",
+    "reason": "The row has tabIndex 0, and Enter and Space open the deal page (onRowKey), so the function works with a keyboard as CLAUDE.md requires. The sr-only table caption says 'Deals. Select a row to open the deal page.', so assistive technology users get the action. The PRD sentence 'A click on a row opens the deal page' is met. A real link in the company cell is a good practice, but a clickable row in a table with a caption that states the action is not a clear WCAG 2.2 A failure."
+   },
+   {
+    "id": "react-markdown-unused",
+    "reason": "The grep result is correct: no source file imports react-markdown or remark-gfm. But no sentence in PRD.md describes a screen that renders Markdown. The stack list names the libraries to use when a need comes up, and an unused dependency does not make a failure. The proposed fix adds a feature (a view of the scraped Markdown) that the PRD does not ask for. At most, this is cleanup: remove the two dependencies or record the decision in architecture.md."
+   }
+  ]
+ },
+ {
+  "area": "rules-security",
+  "coverage": "Scope: every non-ignored file in the repository (454 files, no commits yet, so all are untracked; node_modules, storage and dist skipped).\n\nRule checks:\n- Scripted scan of all files for U+2014, U+2013, U+2012, U+2015 and U+2212: none found.\n- Emojis: one, in a test (reported).\n- Lower-case doctype: none in code. Only .planning/research/ui.md quotes it as an example.\n- BOM, CRLF and missing final newline: none.\n- Kebab-case names: 4 .planning file names fail (reported).\n- Hyphens used as dashes in prose: none. All hits are arithmetic.\n- Comment density: 8 comment lines in total.\n- US spelling: clean.\n- Dates and timestamps: loggers write toISOString (UTC); admin dates are ISO; seed dates are ISO. Two deviations reported.\n- Time zones: IANA in data. One abbreviation in the UI (reported).\n- prefers-reduced-motion: a global CSS rule in both apps, plus JS guards for Lottie, Recharts (isAnimationActive) and scrollIntoView. Clean.\n- WCAG A: labels on video page fields, the player, the progress bar and the admin inputs and selects. Sampled, clean.\n\nSecurity checks:\n- Path traversal: read every file route (/api/deals/:id/files, /api/analysts/:id/files, /api/templates/:file, /assets/:file, /v/:code/media/:file, mgx-mock /sites and /logos). Probed them with GET and encoded ../, %2e%2e and backslash. All return 404.\n- Server HTML: escapeHtml escapes all 5 characters in the OG and meta attributes. The bootstrap JSON escapes `<`, which is enough inside a script of type application/json.\n- noindex and Referrer-Policy: X-Robots-Tag and Referrer-Policy: no-referrer are present on every /v/ response I tested (200, 206, 404, 410 paths, media, captions, slots, og-image).\n- Link code: 16 bytes from crypto.randomBytes, base64url, 22 characters, route pattern checked before the SQL.\n- SQL: all queries use parameters. Dynamic column lists come from fixed maps behind zod schemas that strip unknown keys.\n- Input validation: zod schemas on every POST and PATCH (events, form, book, review, analyst, expiry, alerts). Uploads: magic-byte sniffing, size limits (200/50/20 MB) and bodyLimit. The voice sample is transcoded.\n- SSRF: logo download checks the protocol, the content type and the size. The scraper allows only http(s) and same-host about pages, and Chrome keeps its sandbox. MGX and the Pipedrive website field are trusted inputs, so I found no concrete failure there.\n- Privacy: the recorder sends only field names and a has-value flag, and calculator_result sends only `available`. Nothing typed goes to browser storage. Pipedrive gets stage, ranges, computed analytics, lost reason, tasks and the brief note (meeting time, interest, link). Retention deletes media, sessions, events, briefs, form, meeting_email and scrape markdown.\n- Live stack: the video page bootstrap has no other deal data. The Vite dev server leak and the CSRF gap are reported above.\n\nTests: `pnpm vitest run --project server` on test/video and test/admin/files.test.ts passes (8 files, 67 tests).\n\nNot covered in depth: the scene package code, pipeline and worker business logic, and admin UI behavior beyond labels and motion.",
+  "confirmed": [
+   {
+    "id": "vite-dev-cors-leaks-storage",
+    "severity": "major",
+    "prd": "Data privacy (\"Prospect data stays in Mergero systems\"); Session recordings (\"The recording stays in Mergero systems\")",
+    "file": "apps/web/vite.config.ts",
+    "line": 9,
+    "problem": "The Vite dev server sets `cors: true` and keeps the default `server.fs.allow` (the pnpm workspace root). STORAGE_DIR is `./storage` inside the repository, so the dev server serves the SQLite database, the fake Pipedrive contact data and the MGX form submissions to any origin with `Access-Control-Allow-Origin: *`. A web page that the analyst opens while `pnpm dev` runs can read the full database (deals, form answers, session events, meeting briefs). The absolute path that the attacker needs leaks from the module source of `/src/video/main.tsx`, which is also readable cross-origin.",
+    "evidence": "vite.config.ts:9 `server: { port: 5173, strictPort: true, cors: true, origin: 'http://localhost:5173' }`. `curl http://localhost:5173/@fs/Users/veikka/prompt-marketing-hackathon-monorepo/storage/data/app.sqlite -H 'Origin: https://evil.example'` gives `HTTP/1.1 200 OK`, `Access-Control-Allow-Origin: *`, body starts with `SQLite format 3`. The same for `storage/data/fake-pipedrive.json` (users, persons, emails) and `storage/data/mgx-submissions.jsonl` (owner message \"Wir ueberlegen eine Nachfolge...\"). `curl http://localhost:5173/src/video/main.tsx -H 'Origin: https://evil.example'` contains `/@fs/Users/veikka/prompt-marketing-hackathon-monorepo/packages/shared/src/i18n.ts`.",
+    "fix": "Delete `cors: true` from `server` in apps/web/vite.config.ts, so that the Vite default (localhost origins only) applies. Also add `fs: { deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/storage/**'] }` (or set `fs.allow` to apps/web, packages/shared and node_modules). The web app does not load media through /@fs, because Hono serves the media files. The render uses its own Vite server (packages/scene), so this change does not affect it.",
+    "verdict": {
+     "id": "vite-dev-cors-leaks-storage",
+     "real": true,
+     "severity": "major",
+     "reason": "Confirmed. apps/web/vite.config.ts:9 sets `cors: true`, which replaces the Vite 7.3.6 default (`defaultAllowedOrigins = /^https?:\\/\\/(?:(?:[^:]+\\.)?localhost|127\\.0\\.0\\.1|\\[::1\\])(?::\\d+)?$/`, the fix for CVE-2025-24010) with `*`. STORAGE_DIR defaults to `<repo>/storage` (apps/server/src/env.ts:24), which is inside the default fs.allow (workspace root), and the default fs.deny covers only .env, certs and .git. GET with `Origin: https://evil.example` to `/@fs/Users/veikka/prompt-marketing-hackathon-monorepo/storage/data/app.sqlite` gives 200, `Access-Control-Allow-Origin: *`, body `SQLite format 3`; the same for fake-pipedrive.json. `/src/video/main.tsx` fetched cross-origin contains `/@fs/Users/veikka/prompt-marketing-hackathon-monorepo/packages/shared/src/i18n.ts`, so the path leaks. The issue is dev only (architecture.md: Vite on 5173 is dev only), but the stack runs with `pnpm dev`. `cors: true` is not necessary: the Hono page at http://localhost:3000 is already in the Vite default allow list.",
+     "fix": "Delete `cors: true` from `server` in apps/web/vite.config.ts, so that the Vite default (localhost origins only) applies. Also add `fs: { deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/storage/**'] }` (or set `fs.allow` to apps/web, packages/shared and node_modules). The web app does not load media through /@fs, because Hono serves the media files. The render uses its own Vite server (packages/scene), so this change does not affect it."
+    },
+    "reason": "Confirmed. apps/web/vite.config.ts:9 sets `cors: true`, which replaces the Vite 7.3.6 default (`defaultAllowedOrigins = /^https?:\\/\\/(?:(?:[^:]+\\.)?localhost|127\\.0\\.0\\.1|\\[::1\\])(?::\\d+)?$/`, the fix for CVE-2025-24010) with `*`. STORAGE_DIR defaults to `<repo>/storage` (apps/server/src/env.ts:24), which is inside the default fs.allow (workspace root), and the default fs.deny covers only .env, certs and .git. GET with `Origin: https://evil.example` to `/@fs/Users/veikka/prompt-marketing-hackathon-monorepo/storage/data/app.sqlite` gives 200, `Access-Control-Allow-Origin: *`, body `SQLite format 3`; the same for fake-pipedrive.json. `/src/video/main.tsx` fetched cross-origin contains `/@fs/Users/veikka/prompt-marketing-hackathon-monorepo/packages/shared/src/i18n.ts`, so the path leaks. The issue is dev only (architecture.md: Vite on 5173 is dev only), but the stack runs with `pnpm dev`. `cors: true` is not necessary: the Hono page at http://localhost:3000 is already in the Vite default allow list."
+   },
+   {
+    "id": "admin-api-csrf",
+    "severity": "major",
+    "prd": "Admin panel (\"The demo has no sign-in ... Run the demo on a private address only\"); Review (\"The analyst reviews the video and approves it\")",
+    "file": "apps/server/src/routes/admin/deals.ts",
+    "line": 95,
+    "problem": "The admin API has no Origin or Sec-Fetch-Site check, and the state-changing routes that read no JSON body accept a cross-site simple request. Any web page that the analyst opens can send `fetch(url, { method: 'POST', mode: 'no-cors' })` to the private address and the side effect happens: approve and publish a deal without review (moves the Pipedrive stage to Link sent), ensure deals, retry jobs, close tasks. A `no-cors` fetch with a FormData body (multipart is a CORS-safelisted type) can replace an analyst face-cam intro, voice sample or consent PDF, which then goes into every new video of that analyst. The private-address rule does not stop this, because the request comes from the analyst's own browser.",
+    "evidence": "deals.ts:95 `dealRoutes.post('/deals/:id/approve', async (c) => { ... approveDeal(db, dealId(c), now)` reads no body and checks no header. analysts.ts:91 `analystRoutes.post('/analysts/:id/intros/:lang', uploadLimit('video'), ...)` accepts `multipart/form-data`. `grep -rn \"cors\\|csrf\\|Sec-Fetch\\|Origin\" apps/server/src` returns nothing. Only the routes that use `readJson` are safe, because `application/json` needs a preflight.",
+    "fix": "In apps/server/src/routes/admin/index.ts add `import { csrf } from 'hono/csrf'` and `adminRoutes.use('/api/*', csrf())` before the routes. Hono 4.13.9 csrf treats a missing Content-Type as text/plain, so it also covers the POST routes without a body. It accepts `Sec-Fetch-Site: same-origin` or an Origin equal to the request origin. Update the server tests that send a bodyless or multipart POST: add the header `Sec-Fetch-Site: same-origin` or a matching `Origin`.",
+    "verdict": {
+     "id": "admin-api-csrf",
+     "real": true,
+     "severity": "major",
+     "reason": "Confirmed. `grep -rn -i \"csrf|sec-fetch|origin|cors\" apps/server/src` finds nothing. adminRoutes (routes/admin/index.ts) adds only jsonBodyLimit. POST routes that read no body: /deals/:id/ensure, /deals/:id/approve (deals.ts:95), /deals/:id/brief/read, /tasks/:id/done, /jobs/:id/retry, /alerts/seen. The upload routes /analysts/:id/intros/:lang, /voice and /consent accept multipart/form-data, which is CORS-safelisted. A cross-site `fetch(..., {method:'POST', mode:'no-cors'})` needs no preflight, and the server does not check it. No cookie is in use, so SameSite gives no protection. approveDeal (pipeline.ts:371) checks only the open review reasons, so a third-party page can approve a deal without the analyst, and it can replace an analyst intro that then goes into new prospect videos. PRD says 'Run the demo on a private address only', but the requests come from the analyst's own browser, so the private address does not stop them. Only the routes that use readJson or PATCH need a preflight, and those routes are safe.",
+     "fix": "In apps/server/src/routes/admin/index.ts add `import { csrf } from 'hono/csrf'` and `adminRoutes.use('/api/*', csrf())` before the routes. Hono 4.13.9 csrf treats a missing Content-Type as text/plain, so it also covers the POST routes without a body. It accepts `Sec-Fetch-Site: same-origin` or an Origin equal to the request origin. Update the server tests that send a bodyless or multipart POST: add the header `Sec-Fetch-Site: same-origin` or a matching `Origin`."
+    },
+    "reason": "Confirmed. `grep -rn -i \"csrf|sec-fetch|origin|cors\" apps/server/src` finds nothing. adminRoutes (routes/admin/index.ts) adds only jsonBodyLimit. POST routes that read no body: /deals/:id/ensure, /deals/:id/approve (deals.ts:95), /deals/:id/brief/read, /tasks/:id/done, /jobs/:id/retry, /alerts/seen. The upload routes /analysts/:id/intros/:lang, /voice and /consent accept multipart/form-data, which is CORS-safelisted. A cross-site `fetch(..., {method:'POST', mode:'no-cors'})` needs no preflight, and the server does not check it. No cookie is in use, so SameSite gives no protection. approveDeal (pipeline.ts:371) checks only the open review reasons, so a third-party page can approve a deal without the analyst, and it can replace an analyst intro that then goes into new prospect videos. PRD says 'Run the demo on a private address only', but the requests come from the analyst's own browser, so the private address does not stop them. Only the routes that use readJson or PATCH need a preflight, and those routes are safe."
+   },
+   {
+    "id": "no-playwright-e2e",
+    "severity": "major",
+    "prd": "Tech stack, Stack (\"Playwright for end-to-end tests of the player and the form on mobile Chrome and mobile Safari (WebKit)\")",
+    "file": "package.json",
+    "line": 16,
+    "problem": "There are no end-to-end tests. The `e2e/` folder is empty and there is no `playwright.config.ts`, although the root script calls `playwright test` and architecture.md lists the config with the projects mobile-chrome and mobile-safari. Without a config, `pnpm e2e` uses the Playwright default testMatch and picks up the Vitest files instead.",
+    "evidence": "`ls -la e2e` shows only `.` and `..`. `ls playwright.config.*` gives no match. package.json:16 `\"e2e\": \"playwright test\"`. No file in the repository imports `@playwright/test`.",
+    "fix": "Add playwright.config.ts with `testDir: 'e2e'`, the projects `mobile-chrome` (devices['Pixel 7']) and `mobile-safari` (devices['iPhone 15']), and a `webServer` that starts the stack on the fake providers. Add e2e specs for play and pause, the slide marks, the 720p source on a narrow viewport, the event batch, the form submit (ranges and exact values) and the booking.",
+    "verdict": {
+     "id": "no-playwright-e2e",
+     "real": true,
+     "severity": "major",
+     "reason": "Confirmed. e2e/ is empty, the repository has no playwright.config.* or *.spec.ts, and no source file imports @playwright/test. Only the root devDependency and the script `\"e2e\": \"playwright test\"` exist. PRD Stack requires 'Playwright for end-to-end tests of the player and the form on mobile Chrome and mobile Safari (WebKit)'. architecture.md lists playwright.config.ts and the e2e folder. .planning/fix-list.md item 13 lists the tests as missing, so the gap is known and still open.",
+     "fix": "Add playwright.config.ts with `testDir: 'e2e'`, the projects `mobile-chrome` (devices['Pixel 7']) and `mobile-safari` (devices['iPhone 15']), and a `webServer` that starts the stack on the fake providers. Add e2e specs for play and pause, the slide marks, the 720p source on a narrow viewport, the event batch, the form submit (ranges and exact values) and the booking."
+    },
+    "reason": "Confirmed. e2e/ is empty, the repository has no playwright.config.* or *.spec.ts, and no source file imports @playwright/test. Only the root devDependency and the script `\"e2e\": \"playwright test\"` exist. PRD Stack requires 'Playwright for end-to-end tests of the player and the form on mobile Chrome and mobile Safari (WebKit)'. architecture.md lists playwright.config.ts and the e2e folder. .planning/fix-list.md item 13 lists the tests as missing, so the gap is known and still open."
+   },
+   {
+    "id": "meeting-time-zone-abbreviation",
+    "severity": "minor",
+    "prd": "User rule: IANA time zone names, no abbreviations",
+    "file": "apps/web/src/video/slots.ts",
+    "line": 48,
+    "problem": "The booking confirmation on the video page names the time zone with an abbreviation (`timeZoneName: 'short'`). German prospects see \"MESZ\", English viewers see \"GMT+3\". The rule says to use the IANA name and never an abbreviation such as EET.",
+    "evidence": "slots.ts:40-49 `formatMeeting(...)` with `timeZoneName: 'short'`. test/video/slots.test.ts:67-70 expects 'Tuesday, September 29 at 09:00 AM GMT+3' and 'Dienstag, 29. September um 08:00 MESZ'.",
+    "fix": "Remove `timeZoneName: 'short'` from formatMeeting and append the IANA name of the viewer, for example `${formatted} (${timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone})`, as pipedrive-write.ts does. Update the two expectations in apps/web/test/video/slots.test.ts.",
+    "verdict": {
+     "id": "meeting-time-zone-abbreviation",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. slots.ts:48 `timeZoneName: 'short'` in formatMeeting, which calendar.tsx:107 uses for the booked confirmation. apps/web/test/video/slots.test.ts expects 'Tuesday, September 29 at 09:00 AM GMT+3' and 'Dienstag, 29. September um 08:00 MESZ'. The rule list says to use IANA time zone names and not abbreviations such as EET. MESZ is that kind of abbreviation. The auditor's fix suggests the long localized name, but a long localized name is also not the IANA name. The Pipedrive note already writes `(${timeZone})` with the IANA name, so the codebase already has a pattern to follow.",
+     "fix": "Remove `timeZoneName: 'short'` from formatMeeting and append the IANA name of the viewer, for example `${formatted} (${timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone})`, as pipedrive-write.ts does. Update the two expectations in apps/web/test/video/slots.test.ts."
+    },
+    "reason": "Confirmed. slots.ts:48 `timeZoneName: 'short'` in formatMeeting, which calendar.tsx:107 uses for the booked confirmation. apps/web/test/video/slots.test.ts expects 'Tuesday, September 29 at 09:00 AM GMT+3' and 'Dienstag, 29. September um 08:00 MESZ'. The rule list says to use IANA time zone names and not abbreviations such as EET. MESZ is that kind of abbreviation. The auditor's fix suggests the long localized name, but a long localized name is also not the IANA name. The Pipedrive note already writes `(${timeZone})` with the IANA name, so the codebase already has a pattern to follow."
+   },
+   {
+    "id": "pipedrive-note-date-not-iso",
+    "severity": "minor",
+    "prd": "User rule: dates in ISO 8601",
+    "file": "apps/server/src/jobs/pipedrive-write.ts",
+    "line": 64,
+    "problem": "The Pipedrive note of the meeting brief writes the meeting date in a long localized form (for example \"Monday, September 28, 2026 at 3:00 PM\"), while the admin panel writes all dates as YYYY-MM-DD HH:MM. The note is prose that the tool writes for the analyst.",
+    "evidence": "pipedrive-write.ts:64 `new Intl.DateTimeFormat(s.locale, { dateStyle: 'full', timeStyle: 'short', timeZone }).format(new Date(brief.brief.header.meetingAt))`. apps/web/src/admin/lib/format.ts:25 formats as `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`.",
+    "fix": "In noteHtml build the date from formatToParts of an en-US formatter with year numeric, month and day 2-digit, hour and minute 2-digit, hourCycle 'h23' and the analyst timeZone. Write `${year}-${month}-${day} ${hour}:${minute} (${timeZone})`. Update the pipedrive-write test expectation.",
+    "verdict": {
+     "id": "pipedrive-note-date-not-iso",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. pipedrive-write.ts:64 formats the meeting time with `{ dateStyle: 'full', timeStyle: 'short', timeZone }` in the brief locale. The same analyst-facing data in the admin panel uses formatDateTime (apps/web/src/admin/lib/format.ts:23-25, `YYYY-MM-DD HH:MM`, hourCycle h23). The note is the only analyst-facing date that does not use ISO 8601, so it breaks the rule 'dates in ISO 8601'. The note already appends the IANA zone.",
+     "fix": "In noteHtml build the date from formatToParts of an en-US formatter with year numeric, month and day 2-digit, hour and minute 2-digit, hourCycle 'h23' and the analyst timeZone. Write `${year}-${month}-${day} ${hour}:${minute} (${timeZone})`. Update the pipedrive-write test expectation."
+    },
+    "reason": "Confirmed. pipedrive-write.ts:64 formats the meeting time with `{ dateStyle: 'full', timeStyle: 'short', timeZone }` in the brief locale. The same analyst-facing data in the admin panel uses formatDateTime (apps/web/src/admin/lib/format.ts:23-25, `YYYY-MM-DD HH:MM`, hourCycle h23). The note is the only analyst-facing date that does not use ISO 8601, so it breaks the rule 'dates in ISO 8601'. The note already appends the IANA zone."
+   },
+   {
+    "id": "build-report-names-not-kebab",
+    "severity": "minor",
+    "prd": "User rule: kebab-case file names",
+    "file": ".planning/build-reports/adminApi.md",
+    "line": 1,
+    "problem": "Four build report files use camelCase names.",
+    "evidence": ".planning/build-reports/adminApi.md, adminWeb.md, videoApi.md, videoWeb.md. All other files and folders pass the kebab-case check.",
+    "fix": "Rename .planning/build-reports/adminApi.md, adminWeb.md, videoApi.md and videoWeb.md to admin-api.md, admin-web.md, video-api.md and video-web.md. Also change the workflow that writes the reports, so that it uses kebab-case area names.",
+    "verdict": {
+     "id": "build-report-names-not-kebab",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. A scan of all names outside node_modules, dist, storage and .git finds only adminApi.md, adminWeb.md, videoApi.md and videoWeb.md (and PRD.md, the user's file) with capital letters. CLAUDE.md says to use kebab-case for each file. No file in the repository refers to these four names, so a rename is safe.",
+     "fix": "Rename .planning/build-reports/adminApi.md, adminWeb.md, videoApi.md and videoWeb.md to admin-api.md, admin-web.md, video-api.md and video-web.md. Also change the workflow that writes the reports, so that it uses kebab-case area names."
+    },
+    "reason": "Confirmed. A scan of all names outside node_modules, dist, storage and .git finds only adminApi.md, adminWeb.md, videoApi.md and videoWeb.md (and PRD.md, the user's file) with capital letters. CLAUDE.md says to use kebab-case for each file. No file in the repository refers to these four names, so a rename is safe."
+   },
+   {
+    "id": "emoji-in-test",
+    "severity": "minor",
+    "prd": "User rule: no emojis",
+    "file": "packages/shared/test/slots.test.ts",
+    "line": 100,
+    "problem": "A test contains an emoji character literally.",
+    "evidence": "slots.test.ts:100 `expect(textLength('<U+1F600 grinning face>')).toBe(1)`. It is the only emoji in the repository (U+2715 in consent-script.ts:103 is a close-button glyph, not an emoji).",
+    "fix": "Change the line to `expect(textLength('\\u{1F600}')).toBe(1)`.",
+    "verdict": {
+     "id": "emoji-in-test",
+     "real": true,
+     "severity": "minor",
+     "reason": "Confirmed. A repository scan finds U+1F600 GRINNING FACE as a literal at packages/shared/test/slots.test.ts:100 (`expect(textLength('<emoji>')).toBe(1)`). The only other match is U+2715 MULTIPLICATION X in consent-script.ts:103. U+2715 is a dingbat and not an emoji, so the auditor is correct to skip it. The rule 'no emojis' applies to code. An escape sequence keeps the same test value.",
+     "fix": "Change the line to `expect(textLength('\\u{1F600}')).toBe(1)`."
+    },
+    "reason": "Confirmed. A repository scan finds U+1F600 GRINNING FACE as a literal at packages/shared/test/slots.test.ts:100 (`expect(textLength('<emoji>')).toBe(1)`). The only other match is U+2715 MULTIPLICATION X in consent-script.ts:103. U+2715 is a dingbat and not an emoji, so the auditor is correct to skip it. The rule 'no emojis' applies to code. An escape sequence keeps the same test value."
+   }
+  ],
+  "rejected": [
+   {
+    "id": "page-bootstrap-unused-pipedrive-data",
+    "reason": "The evidence is correct: page-data.ts:47-65 puts dealId, ownerFirstName, country and expiresAt into the bootstrap, and apps/web/src/video and html/pages.ts do not use these fields. But the privacy harm is not concrete. PRD says the forward button is for the case 'if the CEO isn't the owner', so the recipient is at the same company and knows the CEO's first name. The deal ID gives no new access: the Pipedrive IDs are sequential, and the unauthenticated GET /api/deals on the same server lists all deals. The page is served by Mergero, so 'Prospect data stays in Mergero systems' is not broken. The remaining issue is dead fields in a payload, which is a cleanup and not a PRD or rule defect."
+   }
+  ]
+ }
+]

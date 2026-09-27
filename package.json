@@ -1,0 +1,33 @@
+{
+  "name": "mergero-video-tool",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.13.1",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n api,worker,mgx,web -c blue,magenta,green,cyan \"pnpm --filter @mergero/server dev:api\" \"pnpm --filter @mergero/server dev:worker\" \"pnpm --filter @mergero/mgx-mock dev\" \"pnpm --filter @mergero/web dev\"",
+    "build": "pnpm --filter @mergero/web build",
+    "start": "concurrently -k -n api,worker,mgx -c blue,magenta,green \"pnpm --filter @mergero/server start:api\" \"pnpm --filter @mergero/server start:worker\" \"pnpm --filter @mergero/mgx-mock start\"",
+    "lint": "eslint .",
+    "typecheck": "pnpm -r --no-bail typecheck && tsc -p e2e",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "setup:pipedrive": "node scripts/pipedrive-setup.ts",
+    "seed:pipedrive": "node scripts/pipedrive-seed.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@playwright/test": "1.63.0",
+    "@types/node": "26.6.3",
+    "concurrently": "10.0.5",
+    "eslint": "9.39.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "0.5.7",
+    "globals": "17.12.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.70.1",
+    "vitest": "4.1.11"
+  }
+}

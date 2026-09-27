@@ -1,0 +1,26 @@
+{
+  "name": "@mergero/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:api": "node --watch --env-file-if-exists=../../.env src/api.ts",
+    "dev:worker": "node --watch --env-file-if-exists=../../.env src/worker.ts",
+    "start:api": "NODE_ENV=production node --env-file-if-exists=../../.env src/api.ts",
+    "start:worker": "NODE_ENV=production node --env-file-if-exists=../../.env src/worker.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.1.1",
+    "@mergero/scene": "workspace:*",
+    "@mergero/shared": "workspace:*",
+    "@modelcontextprotocol/sdk": "1.30.1",
+    "better-sqlite3": "13.0.3",
+    "hono": "4.13.9",
+    "puppeteer-core": "25.12.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "9.6.0"
+  }
+}

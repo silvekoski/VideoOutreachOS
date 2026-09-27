@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "jussi.kiviranta@kivirannankonepaja.fi": { "languages": ["fi", "en"], "staffCount": 46 },
+    "henrik.lindholm@skargardslogistik.fi": { "languages": ["sv", "en"], "staffCount": 38 },
+    "marja.hautala@lakeudenpuutuote.fi": { "languages": ["fi", "en", "sv"], "staffCount": 27 },
+    "per.holmgren@wasterbyror.se": { "languages": ["sv", "en"], "staffCount": 52 },
+    "ingrid.solheim@fjordkystsjomat.no": { "languages": ["nb", "en"], "staffCount": 64 },
+    "mads@hvidstenmobler.dk": { "languages": ["da", "en", "de"], "staffCount": 23 },
+    "t.brenner@brenner-hydraulik.de": { "languages": ["de", "en"], "staffCount": 88 },
+    "k.moosbrugger@moosbrugger-backwaren.at": { "languages": ["de", "en"], "staffCount": 71 },
+    "beat.zuercher@aaretal-praezision.ch": { "languages": ["de", "en"], "staffCount": 57 },
+    "gunnar@straumnesmarine.is": { "languages": ["en"], "staffCount": 34 }
+  }
+}

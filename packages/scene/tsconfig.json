@@ -1,0 +1,19 @@
+{
+  "extends": "@revideo/2d/tsconfig.project.json",
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "sourceMap": false,
+    "allowJs": false,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": [],
+    "paths": {
+      "@mergero/shared": ["../shared/src/types.ts"]
+    }
+  },
+  "include": ["src", "types"]
+}

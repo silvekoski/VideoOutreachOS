@@ -1,0 +1,45 @@
+{
+  "users": [
+    { "id": 1001, "name": "Linnea Aaltonen", "email": "linnea.aaltonen@mergero.com", "active": true, "timeZone": "Europe/Helsinki" },
+    { "id": 1002, "name": "Jonas Weber", "email": "jonas.weber@mergero.com", "active": true, "timeZone": "Europe/Berlin" },
+    { "id": 1003, "name": "Sofie Lund", "email": "sofie.lund@mergero.com", "active": true, "timeZone": "Europe/Oslo" }
+  ],
+  "organizations": [
+    { "id": 2001, "name": "Kivirannan Konepaja Oy", "website": "http://localhost:3100/sites/kivirannan-konepaja/", "countryCode": "FI", "businessId": "0712834-9", "nace": "25.62" },
+    { "id": 2002, "name": "Skärgårds Logistik Ab", "website": "http://localhost:3100/sites/skargards-logistik/", "countryCode": "FI", "businessId": "0985126-6", "nace": "49.41" },
+    { "id": 2003, "name": "Lakeuden Puutuote Oy", "website": null, "countryCode": "FI", "businessId": "1049382-2", "nace": "16.23" },
+    { "id": 2004, "name": "Wästerby Rör & Ventilation AB", "website": "http://localhost:3100/sites/wasterby-ror/", "countryCode": "SE", "businessId": "556284-7318", "nace": "43.22" },
+    { "id": 2005, "name": "Fjordkyst Sjømat AS", "website": "http://localhost:3100/sites/fjordkyst-sjomat/", "countryCode": "NO", "businessId": "986 174 028", "nace": "10.20" },
+    { "id": 2006, "name": "Hvidsten Møbelsnedkeri ApS", "website": "http://localhost:3100/sites/hvidsten-mobelsnedkeri/", "countryCode": "DK", "businessId": "16542873", "nace": "31.09" },
+    { "id": 2007, "name": "Brenner Hydraulik GmbH", "website": "http://localhost:3100/sites/brenner-hydraulik/", "countryCode": "DE", "businessId": "Ulm HRB 734512", "nace": "28.12" },
+    { "id": 2008, "name": "Moosbrugger Backwaren GmbH", "website": "http://localhost:3100/sites/moosbrugger-backwaren/", "countryCode": "AT", "businessId": "FN 238471d", "nace": "10.71" },
+    { "id": 2009, "name": "Aaretal Präzisionstechnik AG", "website": "http://localhost:3100/sites/aaretal-praezision/", "countryCode": "CH", "businessId": "CHE-107.348.195", "nace": "25.62" },
+    { "id": 2010, "name": "Straumnes Marine ehf.", "website": "http://localhost:3100/sites/straumnes-marine/", "countryCode": "IS", "businessId": "620314-1180", "nace": "25.62" }
+  ],
+  "persons": [
+    { "id": 3001, "name": "Jussi Kiviranta", "firstName": "Jussi", "jobTitle": "CEO", "email": "jussi.kiviranta@kivirannankonepaja.fi", "phone": "+358 40 718 2254", "orgId": 2001 },
+    { "id": 3002, "name": "Henrik Lindholm", "firstName": "Henrik", "jobTitle": "CEO", "email": "henrik.lindholm@skargardslogistik.fi", "phone": "+358 50 364 9120", "orgId": 2002 },
+    { "id": 3003, "name": "Marja Hautala", "firstName": "Marja", "jobTitle": "Chair of the Board", "email": "marja.hautala@lakeudenpuutuote.fi", "phone": "+358 44 512 7703", "orgId": 2003 },
+    { "id": 3004, "name": "Per Holmgren", "firstName": "Per", "jobTitle": "CEO", "email": "per.holmgren@wasterbyror.se", "phone": "+46 70 318 44 72", "orgId": 2004 },
+    { "id": 3005, "name": "Ingrid Solheim", "firstName": "Ingrid", "jobTitle": "CEO", "email": "ingrid.solheim@fjordkystsjomat.no", "phone": "+47 913 48 226", "orgId": 2005 },
+    { "id": 3006, "name": "Mads Kjærgaard", "firstName": "Mads", "jobTitle": "CEO", "email": "mads@hvidstenmobler.dk", "phone": "+45 21 47 83 90", "orgId": 2006 },
+    { "id": 3007, "name": "Thomas Brenner", "firstName": "Thomas", "jobTitle": "Managing Director", "email": "t.brenner@brenner-hydraulik.de", "phone": "+49 7161 948 210", "orgId": 2007 },
+    { "id": 3008, "name": "Katharina Moosbrugger", "firstName": "Katharina", "jobTitle": "CEO", "email": "k.moosbrugger@moosbrugger-backwaren.at", "phone": "+43 5572 238 41", "orgId": 2008 },
+    { "id": 3009, "name": "Beat Zürcher", "firstName": "Beat", "jobTitle": "Chairman of the Board", "email": "beat.zuercher@aaretal-praezision.ch", "phone": "+41 33 225 48 10", "orgId": 2009 },
+    { "id": 3010, "name": "Gunnar Einarsson", "firstName": "Gunnar", "jobTitle": "Managing Director", "email": "gunnar@straumnesmarine.is", "phone": "+354 555 4120", "orgId": 2010 }
+  ],
+  "deals": [
+    { "id": 4001, "title": "Kivirannan Konepaja Oy", "ownerId": 1001, "personId": 3001, "orgId": 2001, "stage": null, "status": "open", "videoUrl": null },
+    { "id": 4002, "title": "Skärgårds Logistik Ab", "ownerId": 1001, "personId": 3002, "orgId": 2002, "stage": null, "status": "open", "videoUrl": null },
+    { "id": 4003, "title": "Lakeuden Puutuote Oy", "ownerId": 1001, "personId": 3003, "orgId": 2003, "stage": null, "status": "open", "videoUrl": null },
+    { "id": 4004, "title": "Wästerby Rör & Ventilation AB", "ownerId": 1001, "personId": 3004, "orgId": 2004, "stage": null, "status": "open", "videoUrl": null },
+    { "id": 4005, "title": "Fjordkyst Sjømat AS", "ownerId": 1003, "personId": 3005, "orgId": 2005, "stage": null, "status": "open", "videoUrl": null },
+    { "id": 4006, "title": "Hvidsten Møbelsnedkeri ApS", "ownerId": 1003, "personId": 3006, "orgId": 2006, "stage": null, "status": "open", "videoUrl": null },
+    { "id": 4007, "title": "Brenner Hydraulik GmbH", "ownerId": 1002, "personId": 3007, "orgId": 2007, "stage": null, "status": "open", "videoUrl": null },
+    { "id": 4008, "title": "Moosbrugger Backwaren GmbH", "ownerId": 1002, "personId": 3008, "orgId": 2008, "stage": null, "status": "open", "videoUrl": null },
+    { "id": 4009, "title": "Aaretal Präzisionstechnik AG", "ownerId": 1002, "personId": 3009, "orgId": 2009, "stage": null, "status": "open", "videoUrl": null },
+    { "id": 4010, "title": "Straumnes Marine ehf.", "ownerId": 1003, "personId": 3010, "orgId": 2010, "stage": null, "status": "open", "videoUrl": null }
+  ],
+  "activities": [],
+  "notes": []
+}
