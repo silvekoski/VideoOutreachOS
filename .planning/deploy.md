@@ -15,7 +15,7 @@ The tool runs on a Verda CPU instance, `86.38.238.174` (Ubuntu 26.04, location F
 |---|---|
 | Repo | `/srv/mergero`, owned by the `mergero` user |
 | Secrets | `/srv/mergero/.env`, copied by hand, not in git |
-| Host settings | `/etc/mergero.env` (`PUBLIC_BASE_URL`, `ASIAKASTIETO_URL`) |
+| Host settings | `/etc/mergero.env` (`PUBLIC_BASE_URL`, `ADMIN_BASE_URL`, `ASIAKASTIETO_URL`) |
 | Data | `/srv/mergero-data/storage` |
 | Proxy | Caddy, `/etc/caddy/Caddyfile` |
 
