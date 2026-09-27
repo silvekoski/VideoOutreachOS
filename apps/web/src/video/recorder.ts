@@ -40,6 +40,7 @@ export interface Recorder {
   tick(): Promise<void>
   hide(): void
   setPlayhead(read: (() => Playhead) | null): void
+  sessionId(): string | null
   start(): () => void
 }
 
@@ -62,6 +63,7 @@ export const noopRecorder: Recorder = {
   tick: async () => {},
   hide: () => {},
   setPlayhead: () => {},
+  sessionId: () => null,
   start: () => () => {},
 }
 
@@ -161,6 +163,9 @@ export function createRecorder(options: RecorderOptions): Recorder {
     },
     setPlayhead(read) {
       playhead = read
+    },
+    sessionId() {
+      return state?.id ?? null
     },
     start() {
       const timer = setInterval(() => void tick(), options.intervalMs ?? BATCH_INTERVAL_MS)

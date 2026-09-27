@@ -23,7 +23,7 @@ server.on('error', (error) => {
 server.listen(port, '127.0.0.1', () => {
   const address = server.address()
   const url = `http://localhost:${typeof address === 'object' && address ? address.port : port}`
-  log.info('listening', { mcp: `${url}/mcp`, sites: `${url}/sites/`, storageDir })
+  log.info('listening', { mcp: `${url}/mcp`, storageDir })
 })
 
 let stopping = false

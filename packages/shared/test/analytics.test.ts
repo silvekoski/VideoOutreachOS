@@ -193,6 +193,26 @@ describe('computeDealAnalytics', () => {
     expect(result.days).toBe(2)
     expect(result.lastEventId).toBe(40)
     expect(result.channel).toBe('linkedin')
+    expect(result.firstChannel).toBe('email')
+  })
+
+  it('counts the buyer link taps, calculator results and forwards of all sessions', () => {
+    const first = sessionEvents('s1', 1, [
+      ['buyer_link_tap', null],
+      ['calculator_result', null],
+    ])
+    const second = sessionEvents('s2', 10, [
+      ['buyer_link_tap', null],
+      ['forward', null],
+    ])
+    const result = computeDealAnalytics(
+      [
+        { localDay: '2026-09-25', channel: 'sms', events: first },
+        { localDay: '2026-09-26', channel: 'email', events: second },
+      ],
+      SLIDE_TIMES,
+    )
+    expect(result).toMatchObject({ buyerLinkTaps: 2, calculatorResults: 1, forwards: 1, firstChannel: 'sms', channel: 'email' })
   })
 
   it('counts each page load of a session as an open', () => {
@@ -209,6 +229,6 @@ describe('computeDealAnalytics', () => {
 
   it('returns empty numbers without sessions', () => {
     const result = computeDealAnalytics([], SLIDE_TIMES)
-    expect(result).toMatchObject({ opens: 0, sessions: 0, totalWatchS: 0, stopSlide: null, days: 0, lastEventId: null, channel: null })
+    expect(result).toMatchObject({ opens: 0, sessions: 0, totalWatchS: 0, stopSlide: null, days: 0, lastEventId: null, channel: null, firstChannel: null, buyerLinkTaps: 0 })
   })
 })

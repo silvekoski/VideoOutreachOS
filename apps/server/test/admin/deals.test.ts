@@ -1,5 +1,5 @@
 import { rmSync } from 'node:fs'
-import type { ApiError, DealDetailDto, DealRowDto, MeetingBrief, ReviewDto, ReviewReason } from '@mergero/shared'
+import type { ApiError, DealDetailDto, DealRowDto, GenerateResultDto, MeetingBrief, OutreachDto, ProspectDto, ReviewDto, ReviewReason } from '@mergero/shared'
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Harness } from './harness.ts'
 
@@ -63,6 +63,37 @@ describe('POST /api/deals/:id/ensure', () => {
   })
 })
 
+describe('GET /api/prospects', () => {
+  it('lists the open Pipedrive deals of the analyst that have no video yet', async () => {
+    insertAnalyst(h.db, { id: 1001, name: 'Linnea Aaltonen' })
+    await h.request('/api/deals/4001/ensure', { method: 'POST' })
+    const { status, body } = await h.json<ProspectDto[]>('/api/prospects?analyst=1001')
+    expect(status).toBe(200)
+    expect(body.map((prospect) => prospect.dealId)).toEqual([4002, 4003, 4004, 4011, 4012, 4013, 4014, 4015, 4016, 4017, 4018, 4019])
+    expect(body[0]).toEqual({ dealId: 4002, company: 'Ab Ahlskog Transport - Kuljetus Oy', ownerName: 'Daniel Sundqvist', ownerRole: 'CEO', country: 'FI' })
+  })
+
+  it('needs a known analyst', async () => {
+    expect((await h.request('/api/prospects')).status).toBe(400)
+  })
+})
+
+describe('POST /api/deals/generate', () => {
+  it('starts one video per deal and reports each deal that failed', async () => {
+    const { status, body } = await h.json<GenerateResultDto[]>('/api/deals/generate', jsonBody('POST', { dealIds: [4002, 4002, 999999] }))
+    expect(status).toBe(200)
+    expect(body).toEqual([
+      { dealId: 4002, created: true, error: null },
+      { dealId: 999999, created: false, error: 'Pipedrive has no deal 999999' },
+    ])
+    expect(requireDeal(h.db, 4002).status).toBe('draft')
+  })
+
+  it('rejects an empty list', async () => {
+    expect((await h.request('/api/deals/generate', jsonBody('POST', { dealIds: [] }))).status).toBe(400)
+  })
+})
+
 describe('GET /api/deals', () => {
   beforeEach(() => {
     insertAnalyst(h.db)
@@ -83,6 +114,17 @@ describe('GET /api/deals', () => {
     expect(rows[100]).toMatchObject({ analystName: 'Aino Analyst', status: 'review', nextAction: 'Review the video', watchS: 0 })
     expect(rows[101]).toMatchObject({ analystId: 11, analystName: 'Jonas Weber', status: 'link_sent', watchS: 42.5, nextAction: 'Call the owner' })
     expect(rows[102]?.nextAction).toBe('Prepare the meeting')
+    expect(rows[100]).toMatchObject({ reached: 'review', ownerName: 'Matti Meikäläinen', interest: null, stopSlide: null })
+    expect(rows[101]).toMatchObject({ reached: 'link_sent', language: 'fi', completed: false })
+    expect(rows[100]).toMatchObject({ video: null, lastActivity: null })
+    expect(rows[101]?.video).toEqual({ posterUrl: '/api/deals/101/files/poster.v1.jpg', durationS: expect.any(Number) })
+    expect(rows[101]?.video?.durationS).toBeGreaterThan(0)
+  })
+
+  it('shows the newest session as the last activity', async () => {
+    addSession(h.db, 101, { id: 'session-1', startedAt: later(5), channel: 'direct', analytics: null })
+    const { body } = await h.json<DealRowDto[]>('/api/deals')
+    expect(body.find((row) => row.id === 101)?.lastActivity).toEqual({ text: 'Opened from a direct link', at: later(5).toISOString() })
   })
 
   it('asks for a review of a new rendered version of a published video', async () => {
@@ -104,9 +146,24 @@ describe('GET /api/deals', () => {
   })
 
   it('rejects bad filters', async () => {
-    expect((await h.request('/api/deals?status=won')).status).toBe(400)
+    expect((await h.request('/api/deals?status=shipped')).status).toBe(400)
     expect((await h.request('/api/deals?country=FIN')).status).toBe(400)
     expect((await h.request('/api/deals?analyst=x')).status).toBe(400)
+  })
+})
+
+describe('PATCH /api/deals/:id/contact', () => {
+  it('saves the contact change in Pipedrive and returns the deal read again', async () => {
+    insertAnalyst(h.db, { id: 1001, name: 'Linnea Aaltonen' })
+    await h.request('/api/deals/4001/ensure', { method: 'POST' })
+    const { status, body } = await h.json<DealDetailDto>('/api/deals/4001/contact', jsonBody('PATCH', { ownerRole: 'Chair of the Board', ownerPhone: '' }))
+    expect(status).toBe(200)
+    expect(body).toMatchObject({ ownerRole: 'Chair of the Board', ownerPhone: null })
+  })
+
+  it('rejects a bad NACE code and a bad email', async () => {
+    expect((await h.request('/api/deals/4001/contact', jsonBody('PATCH', { nace: 'x' }))).status).toBe(400)
+    expect((await h.request('/api/deals/4001/contact', jsonBody('PATCH', { ownerEmail: 'no-at-sign' }))).status).toBe(400)
   })
 })
 
@@ -304,6 +361,35 @@ describe('POST /api/deals/:id/expiry', () => {
   })
 })
 
+describe('POST /api/deals/:id/outreach', () => {
+  it('writes a message for the channel with the personal link', async () => {
+    insertAnalyst(h.db)
+    const deal = publishedDeal(h.db)
+    const email = await h.json<OutreachDto>('/api/deals/100/outreach', jsonBody('POST', { channel: 'email' }))
+    expect(email.status).toBe(200)
+    expect(email.body).toMatchObject({ channel: 'email', lang: deal.pageLanguage, drafted: 'model' })
+    expect(email.body.subject).toContain('Acme Oy')
+    expect(email.body.message).toContain(`${PUBLIC_BASE_URL}/v/${deal.linkCode}?c=email`)
+    expect(email.body.message).not.toContain('{link}')
+    const sms = await h.json<OutreachDto>('/api/deals/100/outreach', jsonBody('POST', { channel: 'sms' }))
+    expect(sms.body).toMatchObject({ channel: 'sms', subject: null })
+    expect(sms.body.message).toContain(`${PUBLIC_BASE_URL}/v/${deal.linkCode}?c=sms`)
+  })
+
+  it('rejects an unknown channel, a draft and an expired link', async () => {
+    insertAnalyst(h.db)
+    insertDeal(h.db, { id: 101 })
+    publishedDeal(h.db)
+    expect((await h.request('/api/deals/100/outreach', jsonBody('POST', { channel: 'fax' }))).status).toBe(400)
+    expect(await h.json('/api/deals/101/outreach', jsonBody('POST', { channel: 'email' }))).toEqual({
+      status: 409,
+      body: { error: 'The link exists after publication' },
+    })
+    h.setNow(later(31 * DAY))
+    expect(await h.json('/api/deals/100/outreach', jsonBody('POST', { channel: 'email' }))).toEqual({ status: 409, body: { error: 'The link has expired' } })
+  })
+})
+
 describe('POST /api/deals/:id/brief/read', () => {
   it('writes one brief_read event per brief version in 10 minutes', async () => {
     insertAnalyst(h.db)
@@ -321,5 +407,5 @@ describe('POST /api/deals/:id/brief/read', () => {
 })
 
 function emptyAnalytics() {
-  return { opens: 0, sessions: 0, totalWatchS: 0, perSlide: [], stopSlide: null, replays: 0, completed: false, days: 0, lastEventId: null, channel: null }
+  return { opens: 0, sessions: 0, totalWatchS: 0, perSlide: [], stopSlide: null, replays: 0, completed: false, days: 0, lastEventId: null, channel: null, firstChannel: null, buyerLinkTaps: 0, calculatorResults: 0, forwards: 0 }
 }

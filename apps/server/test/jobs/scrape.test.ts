@@ -5,7 +5,7 @@ import { getDeal, updateDeal } from '../../src/domain/deals.ts'
 import { advance } from '../../src/domain/pipeline.ts'
 import { createVersion } from '../../src/domain/timelines.ts'
 import { runJob } from '../../src/jobs/runner.ts'
-import { normalizeWebsite, pickAboutPage } from '../../src/jobs/scrape.ts'
+import { normalizeWebsite, rankCompanyPages } from '../../src/jobs/scrape.ts'
 import { paths } from '../../src/paths.ts'
 import { ScrapeError } from '../../src/providers/errors.ts'
 import { claimNext, enqueue, getJob, jobKeys, jobsForDeal } from '../../src/queue/index.ts'
@@ -61,10 +61,12 @@ function writeScriptJobs() {
   return jobsForDeal(t.db, DEAL_ID, ['write-script'])
 }
 
-describe('pickAboutPage', () => {
-  it('picks the about page of a demo site under a sub path', () => {
-    const home = 'http://localhost:3100/sites/kivirannan-konepaja/'
-    const links = [home, `${home}#palvelut`, 'mailto:myynti@kivirannankonepaja.fi', `${home}meista/`, 'data:,']
+const pickAboutPage = (home: string, links: string[]) => rankCompanyPages(home, links, 'Acme Oy')[0] ?? null
+
+describe('rankCompanyPages', () => {
+  it('picks the about page of a site under a sub path', () => {
+    const home = 'https://acme.fi/fi/'
+    const links = [home, `${home}#palvelut`, 'mailto:myynti@acme.fi', `${home}meista/`, 'data:,']
     expect(pickAboutPage(home, links)).toBe(`${home}meista/`)
   })
 
@@ -95,6 +97,19 @@ describe('pickAboutPage', () => {
   it('returns null without an about link', () => {
     expect(pickAboutPage('https://acme.fi/', ['https://acme.fi/', 'https://acme.fi/tuotteet', 'https://acme.fi/#top'])).toBeNull()
   })
+
+  it('ranks top-level pages named after the company below the about page and ignores legal forms', () => {
+    const links = ['/rekrytointi/', '/ahlskog-air-cargo/', '/oy/', '/uutiset/ahlskog-messuilla', '/ahlskog-transport/', '/meista/', '/yhteystiedot/']
+    expect(rankCompanyPages('https://ahlskog.fi/', links, 'Ab Ahlskog Transport - Kuljetus Oy')).toEqual([
+      'https://ahlskog.fi/meista/',
+      'https://ahlskog.fi/ahlskog-air-cargo/',
+      'https://ahlskog.fi/ahlskog-transport/',
+    ])
+    expect(rankCompanyPages('https://acme.fi/', ['https://acme.fi/meista', 'https://acme.fi/meista/'], 'Acme Oy')).toEqual(['https://acme.fi/meista'])
+    expect(rankCompanyPages('https://moebel.dk/', ['/kobenhavns-historie/'], 'Københavns Møbelsnedkeri ApS')).toEqual([
+      'https://moebel.dk/kobenhavns-historie/',
+    ])
+  })
 })
 
 describe('normalizeWebsite', () => {
@@ -124,7 +139,7 @@ describe('scrape job', () => {
       { kind: 'markdown', url: 'https://acme.test/meista', country: 'FI' },
     ])
     const scrape = getDeal(t.db, DEAL_ID)?.scrape
-    expect(scrape).toMatchObject({ ok: true, reason: null, aboutUrl: 'https://acme.test/meista', siteLanguage: 'fi', screenshot: true })
+    expect(scrape).toMatchObject({ ok: true, reason: null, pageUrls: ['https://acme.test/meista'], siteLanguage: 'fi', screenshot: true })
     expect(scrape?.words).toBeGreaterThanOrEqual(200)
     expect(scrape?.markdown).toContain('# Meistä')
     expect((await stat(paths.screenshot(DEAL_ID))).size).toBeGreaterThan(0)
@@ -145,11 +160,34 @@ describe('scrape job', () => {
     expect(getDeal(t.db, DEAL_ID)?.scrape).toMatchObject({
       ok: false,
       reason: 'too_few_words',
-      aboutUrl: null,
+      pageUrls: [],
       screenshot: false,
       markdown: 'Tervetuloa Acme Oy:n sivuille.',
     })
     expect(writeScriptJobs()[0]?.payload).toMatchObject({ lines: false })
+  })
+
+  it('reads more company pages until the text has enough words', async () => {
+    ctx.stub.scraper.pages['https://acme.test/'] = page('https://acme.test/', 'Tervetuloa Acme Oy:n sivuille.', {
+      links: ['https://acme.test/acme-teras/', 'https://acme.test/yritys/', 'https://acme.test/acme-hitsaus/', 'https://acme.test/acme-koneet/'],
+    })
+    ctx.stub.scraper.pages['https://acme.test/yritys/'] = page('https://acme.test/yritys/', '', { statusCode: 404 })
+    ctx.stub.scraper.pages['https://acme.test/acme-teras/'] = page('https://acme.test/acme-teras/', FINNISH.repeat(3))
+    ctx.stub.scraper.pages['https://acme.test/acme-koneet/'] = page('https://acme.test/acme-koneet/', FINNISH.repeat(3))
+
+    await runScrape()
+
+    expect(ctx.stub.scraper.calls.map((call) => call.url)).toEqual([
+      'https://acme.test/',
+      'https://acme.test/yritys/',
+      'https://acme.test/acme-teras/',
+      'https://acme.test/acme-koneet/',
+    ])
+    expect(getDeal(t.db, DEAL_ID)?.scrape).toMatchObject({
+      ok: true,
+      pageUrls: ['https://acme.test/acme-teras/', 'https://acme.test/acme-koneet/'],
+    })
+    expect(writeScriptJobs()[0]?.payload).toMatchObject({ lines: true })
   })
 
   it('writes no_website without a scrape when the organization has no website', async () => {

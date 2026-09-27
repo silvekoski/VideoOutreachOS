@@ -3,7 +3,8 @@ import path from 'node:path'
 import type { DealAnalytics } from '@mergero/shared'
 import { afterEach, beforeEach, expect, it } from 'vitest'
 import { sql } from '../../src/db/index.ts'
-import { requireDeal } from '../../src/domain/deals.ts'
+import { dealInterest } from '../../src/domain/brief-data.ts'
+import { requireDeal, updateDeal } from '../../src/domain/deals.ts'
 import { addDealEvent } from '../../src/domain/events.ts'
 import { purgeExpired } from '../../src/domain/retention.ts'
 import { createTask, getTask } from '../../src/domain/tasks.ts'
@@ -31,7 +32,7 @@ function count(table: string, dealId: number): number {
 }
 
 function seedDeal(id: number, expiresAt: Date) {
-  const analytics: DealAnalytics = { opens: 1, sessions: 1, totalWatchS: 80, perSlide: [], stopSlide: 5, replays: 0, completed: false, days: 1, lastEventId: 1, channel: 'email' }
+  const analytics: DealAnalytics = { opens: 1, sessions: 1, totalWatchS: 80, perSlide: [], stopSlide: 5, replays: 0, completed: false, days: 1, lastEventId: 1, channel: 'email', firstChannel: 'email', buyerLinkTaps: 0, calculatorResults: 0, forwards: 0 }
   insertDeal(t.db, {
     id,
     patch: {
@@ -108,4 +109,19 @@ it('deletes media files that a late job wrote after the purge', async () => {
 
   expect(existsSync(path.join(storage, 'deals', String(DEAL_ID)))).toBe(false)
   expect(existsSync(path.join(storage, 'deals', '101', 'video-720.v1.mp4'))).toBe(true)
+})
+
+it('keeps the interest level of an opened deal after the events are deleted', async () => {
+  seedDeal(DEAL_ID, later(10))
+  updateDeal(t.db, DEAL_ID, { firstOpenAt: T0.toISOString() }, T0)
+  sql(t.db, `INSERT INTO events (deal_id, session_id, seq, type, at) VALUES (?, ?, 1, 'complete', ?)`).run(DEAL_ID, `s-${DEAL_ID}`, T0.toISOString())
+  const before = dealInterest(t.db, requireDeal(t.db, DEAL_ID))
+  expect(before).toBe('medium')
+
+  await purgeExpired(t.db, later(30), storage)
+
+  const deal = requireDeal(t.db, DEAL_ID)
+  expect(count('events', DEAL_ID)).toBe(0)
+  expect(deal.analytics).toMatchObject({ interest: 'medium', signals: ['watched_to_end'], saleTiming: 'later' })
+  expect(dealInterest(t.db, deal)).toBe('medium')
 })

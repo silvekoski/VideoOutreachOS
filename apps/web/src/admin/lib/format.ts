@@ -76,3 +76,16 @@ export function isValidRange(from: string, to: string): boolean {
 export function pluralize(count: number, one: string, many: string): string {
   return `${count} ${count === 1 ? one : many}`
 }
+
+export function initials(name: string): string {
+  const letters = name.trim().split(/\s+/).map((word) => Array.from(word)[0] ?? '')
+  return (letters.length > 1 ? [letters[0], letters.at(-1)] : letters).join('').toLocaleUpperCase()
+}
+
+const LEGAL_FORMS = new Set(['&', 'a/s', 'ab', 'abp', 'ag', 'aps', 'as', 'asa', 'ehf', 'ehf.', 'gmbh', 'kg', 'ltd', 'oy', 'oyj', 'oü', 'sa'])
+
+export function companyInitials(name: string): string {
+  const words = name.trim().split(/\s+/).filter((word) => !LEGAL_FORMS.has(word.toLocaleLowerCase()))
+  if (words.length === 1) return Array.from(words[0] ?? '').slice(0, 2).join('').toLocaleUpperCase()
+  return initials(words.length === 0 ? name : words.join(' '))
+}

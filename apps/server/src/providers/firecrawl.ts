@@ -2,7 +2,6 @@ import { z } from 'zod'
 import { log } from '../log.ts'
 import {
   CONSENT_AFTER_CLICK_MS,
-  CONSENT_EXCLUDE_TAGS,
   CONSENT_SETTLE_MS,
   consentScript,
   scrapeLocale,
@@ -11,6 +10,8 @@ import { ScrapeError, fetchFailure, isRetryableStatus } from './errors.ts'
 import type { ScrapePageResult, ScraperClient } from './types.ts'
 
 const ENDPOINT = 'https://api.firecrawl.dev/v2/scrape'
+const MAP_ENDPOINT = 'https://api.firecrawl.dev/v2/map'
+const MAP_LIMIT = 500
 const API_TIMEOUT_MS = 90_000
 const CLIENT_TIMEOUT_MS = 120_000
 const DOWNLOAD_TIMEOUT_MS = 30_000
@@ -40,6 +41,8 @@ type FirecrawlDocument = z.infer<typeof documentSchema>
 
 const responseSchema = z.object({ success: z.literal(true), data: documentSchema })
 
+const mapSchema = z.object({ success: z.literal(true), links: z.array(z.object({ url: z.string() })) })
+
 const errorSchema = z.object({ code: z.string().optional(), error: z.string().optional() })
 
 export class FirecrawlScraper implements ScraperClient {
@@ -51,9 +54,10 @@ export class FirecrawlScraper implements ScraperClient {
   }
 
   async scrapeHome(url: string, country?: string): Promise<ScrapePageResult> {
+    const siteLinks = this.#map(url)
     const request = {
       ...baseRequest(url, country),
-      formats: ['markdown', 'links', { type: 'screenshot', fullPage: false, viewport: VIEWPORT }],
+      formats: ['markdown', 'links', { type: 'screenshot', fullPage: true, viewport: VIEWPORT }],
     }
     let doc: FirecrawlDocument
     try {
@@ -71,13 +75,31 @@ export class FirecrawlScraper implements ScraperClient {
       consent,
     })
     const screenshotPng = doc.screenshot ? await this.#download(doc.screenshot, url) : null
-    return toResult(url, doc, screenshotPng)
+    const page = toResult(url, doc, screenshotPng)
+    return { ...page, links: [...new Set([...page.links, ...(await siteLinks)])] }
   }
 
   async scrapeMarkdown(url: string, country?: string): Promise<ScrapePageResult> {
     const doc = await this.#scrape({ ...baseRequest(url, country), formats: ['markdown'] })
     log.info('firecrawl page scraped', { url, statusCode: doc.metadata?.statusCode ?? null })
     return toResult(url, doc, null)
+  }
+
+  async #map(url: string): Promise<string[]> {
+    try {
+      const res = await fetch(MAP_ENDPOINT, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${this.#apiKey}`, 'content-type': 'application/json' },
+        body: JSON.stringify({ url, limit: MAP_LIMIT, includeSubdomains: false }),
+        signal: AbortSignal.timeout(CLIENT_TIMEOUT_MS),
+      })
+      const parsed = mapSchema.safeParse(await res.json().catch(() => null))
+      if (!res.ok || !parsed.success) throw new Error(`HTTP ${res.status}`)
+      return parsed.data.links.map((link) => link.url)
+    } catch (error) {
+      log.warn('firecrawl map failed, the home page links are used alone', { url, error: error instanceof Error ? error.message : String(error) })
+      return []
+    }
   }
 
   async #scrape(body: Record<string, unknown>): Promise<FirecrawlDocument> {
@@ -154,7 +176,6 @@ function baseRequest(url: string, country: string | undefined): Record<string, u
   return {
     url,
     onlyMainContent: true,
-    excludeTags: CONSENT_EXCLUDE_TAGS,
     maxAge: 0,
     timeout: API_TIMEOUT_MS,
     ...(locale ? { location: { country: locale.country, languages: [locale.locale] } } : {}),

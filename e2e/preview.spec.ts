@@ -24,7 +24,6 @@ test('preview mode shows the video, disables the form and the booking, and recor
   await expect(send).toBeDisabled()
   await expect(send).toHaveAccessibleDescription(s.previewNote)
 
-  await page.getByRole('button', { name: s.calendarHeading, exact: true }).click()
   const calendar = page.locator('[data-region="calendar"]')
   const slot = calendar.locator('label[data-track="slot-time"]').first()
   await slot.click()

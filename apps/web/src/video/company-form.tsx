@@ -273,7 +273,7 @@ export function CompanyForm({ data, strings }: { data: VideoPageData; strings: S
           {page.sent}
         </p>
       ) : (
-        <form onSubmit={submit} className="mt-2">
+        <form onSubmit={submit} data-private className="mt-2">
           <p className="text-sm text-muted">{page.formIntro}</p>
           <fieldset disabled={locked} className="mt-5 min-w-0 space-y-6">
             <AmountFieldset

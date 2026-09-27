@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { isClosedStatus } from '@mergero/shared'
 import type { ReviewDto, ReviewPatch, ReviewReason } from '@mergero/shared'
 import { CircleCheck, TriangleAlert } from 'lucide-react'
 import { Link, useParams } from 'react-router'
@@ -9,7 +10,7 @@ import {
   ApiRequestError,
   errorMessage,
   isReviewReasonList,
-  reviewNeedsPolling,
+  reviewIsWorking,
   useApprove,
   useDeal,
   usePatchReview,
@@ -53,7 +54,7 @@ function ReviewContent({ dealId, review, company }: { dealId: number; review: Re
   const [approvedHere, setApprovedHere] = useState(false)
   const approvedRef = useRef<HTMLSpanElement>(null)
   const published = versionPublished(review)
-  const working = reviewNeedsPolling(review)
+  const working = reviewIsWorking(review)
   const approval = approvalState(review)
   const blocked = currentBlock(block, review.reviewReasons)
   const intro = review.timeline.segments.find((segment) => segment.template === 'facecam')
@@ -157,8 +158,8 @@ function ReviewContent({ dealId, review, company }: { dealId: number; review: Re
           <TriangleAlert aria-hidden="true" />
           <AlertTitle>{`Version ${review.version} is not published`}</AlertTitle>
           <AlertDescription>
-            {review.status === 'lost'
-              ? 'The deal is lost, so the tool does not publish the video.'
+            {isClosedStatus(review.status)
+              ? `The deal is ${review.status}, so the tool does not publish the video.`
               : 'The link has expired, so the tool does not publish the video.'}
           </AlertDescription>
         </Alert>

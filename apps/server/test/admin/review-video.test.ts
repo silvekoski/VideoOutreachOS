@@ -47,6 +47,7 @@ describe('review video', () => {
     expect(edit.body.video).toEqual({
       version: 1,
       url: '/api/deals/100/files/video-1080.v1.mp4',
+      posterUrl: '/api/deals/100/files/poster.v1.jpg',
       captionsUrl: '/api/deals/100/captions.v1.vtt',
       language: 'fi',
       slides: SLIDE_TIMES,

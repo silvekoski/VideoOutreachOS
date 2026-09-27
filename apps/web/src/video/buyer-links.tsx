@@ -27,8 +27,17 @@ export function BuyerLinks({
           const href = safeHttpUrl(buyer.website)
           return (
             <li key={buyer.id} className="flex flex-col rounded-xl border border-line bg-white p-4">
-              <p className="font-semibold text-ink">{buyer.name}</p>
-              <p className="mt-1 flex-1 text-sm text-muted">{buyer.focus}</p>
+              <div className="flex items-center gap-3">
+                {buyer.logoUrl ? (
+                  <img src={buyer.logoUrl} alt="" className="size-10 shrink-0 rounded-lg border border-line bg-white object-contain p-1" />
+                ) : (
+                  <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-lg border border-line font-semibold text-muted">
+                    {buyer.name.slice(0, 1)}
+                  </span>
+                )}
+                <p className="min-w-0 font-semibold text-ink">{buyer.name}</p>
+              </div>
+              <p className="mt-2 flex-1 text-sm text-muted">{buyer.focus}</p>
               {href !== null && (
                 <a
                   href={href}

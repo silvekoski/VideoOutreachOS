@@ -3,11 +3,16 @@ import type { DealRowDto, DealStatus } from '@mergero/shared'
 import type { Db } from '../db/index.ts'
 import type { DealRow, TaskRow } from '../db/rows.ts'
 import { listAnalysts } from '../domain/analysts.ts'
-import { newestBrief } from '../domain/brief-data.ts'
+import { dealInterest, figures, newestBrief } from '../domain/brief-data.ts'
 import { listDeals } from '../domain/deals.ts'
+import { reachedStage } from '../domain/stages.ts'
+import { listTimelines } from '../domain/timelines.ts'
 import { listOpenTasks } from '../domain/tasks.ts'
+import { normalizeWebsite } from '../jobs/scrape.ts'
 import { failedJobs } from '../queue/index.ts'
 import { countsAsFailure, dealDone, meetingUpcoming, pendingVersion } from './inbox.ts'
+import { actualSlideTimes, latestSession, sessionSummary } from './sessions.ts'
+import { dealFileUrl } from './urls.ts'
 
 const CHANNEL_NAMES = t('en').channels
 
@@ -39,6 +44,24 @@ function nextAction(db: Db, deal: DealRow, failed: boolean, task: TaskRow | unde
   return null
 }
 
+function video(db: Db, deal: DealRow): DealRowDto['video'] {
+  const rendered = listTimelines(db, deal.id).filter((row) => row.renderStatus === 'rendered')
+  const row = rendered.find((item) => item.version === deal.publishedVersion) ?? rendered.at(-1)
+  if (!row) return null
+  const durationS = actualSlideTimes(row.timeline).reduce((end, slide) => Math.max(end, slide.endS), 0)
+  return { posterUrl: dealFileUrl(deal.id, `poster.v${row.version}.jpg`), durationS }
+}
+
+function logoUrl(deal: DealRow): string | null {
+  const home = deal.scrape?.homeUrl ?? (deal.snapshot.website ? normalizeWebsite(deal.snapshot.website) : null)
+  return home ? `https://icons.duckduckgo.com/ip3/${new URL(home).hostname}.ico` : null
+}
+
+function lastActivity(db: Db, deal: DealRow): DealRowDto['lastActivity'] {
+  const session = latestSession(db, deal.id)
+  return session ? { text: sessionSummary(session), at: session.startedAt } : null
+}
+
 export function dealRowDtos(db: Db, filter: DealListFilter, now: Date): DealRowDto[] {
   const query = filter.q ? searchText(filter.q.trim()) : ''
   const deals = listDeals(db, { analystId: filter.analystId, country: filter.country, status: filter.status }).filter(
@@ -57,11 +80,30 @@ export function dealRowDtos(db: Db, filter: DealListFilter, now: Date): DealRowD
   return deals.map((deal) => ({
     id: deal.id,
     company: deal.snapshot.company,
+    logoUrl: logoUrl(deal),
     country: deal.country,
     analystId: deal.analystId,
     analystName: analysts.get(deal.analystId) ?? `Analyst ${deal.analystId}`,
     status: deal.status,
+    reached: reachedStage(deal),
+    ownerName: deal.snapshot.ownerName,
+    ownerRole: deal.snapshot.ownerRole,
+    language: deal.language,
+    staffCount: deal.snapshot.staffCount,
+    revenue: figures(deal).revenue,
+    askInForm: deal.financials?.source === 'ask_in_form',
+    buyers:
+      deal.mgx === null
+        ? null
+        : deal.mgx.buyers
+            .filter((buyer) => !deal.removedBuyers.includes(buyer.id))
+            .map(({ id, name, focus, logoUrl }) => ({ id, name, focus, logoUrl })),
+    interest: dealInterest(db, deal),
     watchS: deal.analytics?.totalWatchS ?? 0,
+    stopSlide: deal.analytics?.stopSlide ?? null,
+    completed: deal.analytics?.completed ?? false,
+    video: video(db, deal),
+    lastActivity: lastActivity(db, deal),
     nextAction: nextAction(db, deal, failed.has(deal.id), tasks.get(deal.id), now),
     updatedAt: deal.updatedAt,
   }))

@@ -1,6 +1,6 @@
 import { MutationCache, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from 'next-themes'
-import { createBrowserRouter, RouterProvider } from 'react-router'
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -9,7 +9,6 @@ import { ApiRequestError, errorMessage } from './api'
 import { AnalystProvider } from './analyst-provider'
 import { DealPage } from './pages/deal-page'
 import { DealsPage } from './pages/deals-page'
-import { InboxPage } from './pages/inbox-page'
 import { MetricsPage } from './pages/metrics-page'
 import { NotFoundPage } from './pages/not-found-page'
 import { ReviewPage } from './pages/review-page'
@@ -37,8 +36,8 @@ const router = createBrowserRouter([
     element: <AppShell />,
     errorElement: <RouteError />,
     children: [
-      { index: true, element: <InboxPage /> },
-      { path: 'deals', element: <DealsPage /> },
+      { index: true, element: <DealsPage /> },
+      { path: 'deals', element: <Navigate to="/" replace /> },
       { path: 'deals/:id', element: <DealPage /> },
       { path: 'deals/:id/review', element: <ReviewPage /> },
       { path: 'metrics', element: <MetricsPage /> },

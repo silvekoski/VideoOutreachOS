@@ -1,23 +1,32 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import type {
   AlertDto,
   AnalystDto,
   AnalystPatch,
   ApiError,
+  Channel,
+  ContactPatch,
   DealDetailDto,
   DealRowDto,
+  GenerateResultDto,
   InboxDto,
   Lang,
+  LiveEvent,
   MetricsDto,
+  OutreachDto,
+  ProspectDto,
   ProviderStatus,
+  QueueItemDto,
   ReviewDto,
   ReviewPatch,
   ReviewReason,
+  RecordingEvent,
   SessionEventsDto,
   TemplatePreviewDto,
   VoiceIdBody,
 } from '@mergero/shared'
-import { ADMIN_REQUEST_HEADER } from '@mergero/shared'
+import { ADMIN_REQUEST_HEADER, isClosedStatus } from '@mergero/shared'
 import { approvalState } from './lib/review'
 
 export class ApiRequestError extends Error {
@@ -106,16 +115,53 @@ export const queryKeys = {
   analysts: ['analysts'] as const,
   inbox: (analyst: number) => ['inbox', analyst] as const,
   deals: ['deals'] as const,
+  prospects: (analyst: number) => ['prospects', analyst] as const,
   ensure: (id: number) => ['ensure', id] as const,
   deal: (id: number) => ['deal', id] as const,
   review: (id: number) => ['review', id] as const,
+  outreach: (deal: DealDetailDto, channel: Channel) => ['outreach', deal.id, channel, deal.pageLanguage, deal.expiresAt] as const,
   sessionEvents: (id: string) => ['session-events', id] as const,
+  sessionRecording: (id: string) => ['session-recording', id] as const,
   alerts: (analyst: number) => ['alerts', analyst] as const,
-  metrics: (from: string, to: string, timeZone: string) => ['metrics', from, to, timeZone] as const,
+  metrics: (from: string, to: string, timeZone: string, source: MetricsSource) => ['metrics', from, to, timeZone, source] as const,
   templates: ['templates'] as const,
+  queue: ['queue'] as const,
 }
 
-const POLL_MS = 3000
+const LIVE_QUERY_ROOTS: ReadonlySet<string> = new Set(['analysts', 'inbox', 'deals', 'deal', 'review', 'alerts', 'queue', 'session-events'])
+const LIVE_BATCH_MS = 250
+
+// The server sends an event when the database or Pipedrive changes. Prospects read Pipedrive, so only a Pipedrive event refreshes them.
+export function useLiveUpdates(): void {
+  const client = useQueryClient()
+  useEffect(() => {
+    const source = new EventSource('/api/events')
+    let timer: number | undefined
+    let prospects = false
+    let connected = false
+    const refresh = (withProspects: boolean) => {
+      prospects ||= withProspects
+      timer ??= window.setTimeout(() => {
+        const root = (key: readonly unknown[]) => String(key[0])
+        void client.invalidateQueries({
+          predicate: (query) => LIVE_QUERY_ROOTS.has(root(query.queryKey)) || (prospects && root(query.queryKey) === 'prospects'),
+        })
+        timer = undefined
+        prospects = false
+      }, LIVE_BATCH_MS)
+    }
+    source.addEventListener('ready', () => {
+      if (connected) refresh(true)
+      connected = true
+    })
+    source.addEventListener('db', () => refresh(false))
+    source.addEventListener('pipedrive', (event) => refresh((JSON.parse(event.data as string) as Extract<LiveEvent, { type: 'pipedrive' }>).prospects))
+    return () => {
+      source.close()
+      window.clearTimeout(timer)
+    }
+  }, [client])
+}
 
 export function useProviderStatus() {
   return useQuery({
@@ -125,21 +171,10 @@ export function useProviderStatus() {
   })
 }
 
-function analystsBusy(analysts: AnalystDto[] | undefined): boolean {
-  return (
-    analysts?.some(
-      (analyst) =>
-        analyst.voice.cloneStatus === 'pending' ||
-        analyst.intros.some((intro) => intro.status === 'processing' || intro.pending?.status === 'processing'),
-    ) ?? false
-  )
-}
-
 export function useAnalysts() {
   return useQuery({
     queryKey: queryKeys.analysts,
     queryFn: ({ signal }) => request<AnalystDto[]>('GET', '/api/analysts', { signal }),
-    refetchInterval: (query) => (analystsBusy(query.state.data) ? 5000 : false),
   })
 }
 
@@ -193,6 +228,18 @@ export function useUploadVoice(analystId: number) {
   })
 }
 
+export function useUploadPhoto(analystId: number) {
+  const store = useStoreAnalyst()
+  return useMutation({
+    mutationFn: (file: File) => {
+      const form = new FormData()
+      form.append('file', file, file.name)
+      return request<AnalystDto>('POST', `/api/analysts/${analystId}/photo`, { form })
+    },
+    onSuccess: store,
+  })
+}
+
 export function useUploadConsent(analystId: number) {
   const store = useStoreAnalyst()
   return useMutation({
@@ -224,6 +271,28 @@ export function useDeals(enabled = true) {
   })
 }
 
+export function useProspects(analystId: number | null) {
+  return useQuery({
+    queryKey: queryKeys.prospects(analystId ?? 0),
+    queryFn: ({ signal }) => request<ProspectDto[]>('GET', '/api/prospects', { query: { analyst: analystId }, signal }),
+    enabled: analystId !== null,
+    staleTime: 60_000,
+  })
+}
+
+export function useGenerateVideos() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (dealIds: number[]) => request<GenerateResultDto[]>('POST', '/api/deals/generate', { json: { dealIds } }),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ['prospects'] })
+      void client.invalidateQueries({ queryKey: ['inbox'] })
+      void client.invalidateQueries({ queryKey: queryKeys.deals })
+      void client.invalidateQueries({ queryKey: queryKeys.queue })
+    },
+  })
+}
+
 export function useEnsureDeal(dealId: number) {
   return useQuery({
     queryKey: queryKeys.ensure(dealId),
@@ -240,20 +309,30 @@ export function useDeal(dealId: number, enabled = true) {
     queryKey: queryKeys.deal(dealId),
     queryFn: ({ signal }) => request<DealDetailDto>('GET', `/api/deals/${dealId}`, { signal }),
     enabled,
-    refetchInterval: (query) => (query.state.data?.pipeline.running ? POLL_MS : false),
   })
 }
 
-export function reviewNeedsPolling(review: ReviewDto | undefined): boolean {
-  if (!review || review.status === 'lost' || review.expired) return false
+export function reviewIsWorking(review: ReviewDto | undefined): boolean {
+  if (!review || isClosedStatus(review.status) || review.expired) return false
   return review.pipeline.running || review.renderStatus === 'rendering' || approvalState(review) === 'waiting'
+}
+
+export function useUpdateContact(dealId: number) {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (patch: ContactPatch) => request<DealDetailDto>('PATCH', `/api/deals/${dealId}/contact`, { json: patch }),
+    onSuccess: (deal) => {
+      client.setQueryData(queryKeys.deal(dealId), deal)
+      void client.invalidateQueries({ queryKey: queryKeys.review(dealId) })
+      void client.invalidateQueries({ queryKey: ['prospects'] })
+    },
+  })
 }
 
 export function useReview(dealId: number) {
   return useQuery({
     queryKey: queryKeys.review(dealId),
     queryFn: ({ signal }) => request<ReviewDto>('GET', `/api/deals/${dealId}/review`, { signal }),
-    refetchInterval: (query) => (reviewNeedsPolling(query.state.data) ? POLL_MS : false),
   })
 }
 
@@ -294,6 +373,16 @@ export function useSetExpiry(dealId: number) {
   })
 }
 
+export function useOutreach(deal: DealDetailDto, channel: Channel) {
+  return useQuery({
+    queryKey: queryKeys.outreach(deal, channel),
+    queryFn: ({ signal }) => request<OutreachDto>('POST', `/api/deals/${deal.id}/outreach`, { json: { channel }, signal }),
+    staleTime: Infinity,
+    retry: false,
+    refetchOnWindowFocus: false,
+  })
+}
+
 export function useMarkBriefRead(dealId: number) {
   const client = useQueryClient()
   return useMutation({
@@ -308,6 +397,14 @@ export function useSessionEvents(sessionId: string | null) {
     queryKey: queryKeys.sessionEvents(sessionId ?? ''),
     queryFn: ({ signal }) => request<SessionEventsDto>('GET', `/api/sessions/${encodeURIComponent(sessionId ?? '')}/events`, { signal }),
     enabled: sessionId !== null,
+  })
+}
+
+export function useSessionRecording(sessionId: string) {
+  return useQuery({
+    queryKey: queryKeys.sessionRecording(sessionId),
+    queryFn: ({ signal }) =>
+      request<RecordingEvent[]>('GET', `/api/sessions/${encodeURIComponent(sessionId)}/recording`, { signal }),
   })
 }
 
@@ -341,7 +438,6 @@ export function useAlerts(analystId: number | null) {
     queryKey: queryKeys.alerts(analystId ?? 0),
     queryFn: ({ signal }) => request<AlertDto[]>('GET', '/api/alerts', { query: { analyst: analystId }, signal }),
     enabled: analystId !== null,
-    refetchInterval: 30_000,
   })
 }
 
@@ -353,10 +449,12 @@ export function useMarkAlertsSeen() {
   })
 }
 
-export function useMetrics(from: string, to: string, timeZone: string, enabled: boolean) {
+export type MetricsSource = 'real' | 'mock'
+
+export function useMetrics(from: string, to: string, timeZone: string, source: MetricsSource, enabled: boolean) {
   return useQuery({
-    queryKey: queryKeys.metrics(from, to, timeZone),
-    queryFn: ({ signal }) => request<MetricsDto>('GET', '/api/metrics', { query: { from, to, tz: timeZone }, signal }),
+    queryKey: queryKeys.metrics(from, to, timeZone, source),
+    queryFn: ({ signal }) => request<MetricsDto>('GET', '/api/metrics', { query: { from, to, tz: timeZone, source }, signal }),
     enabled,
     placeholderData: (previous) => previous,
   })
@@ -368,5 +466,12 @@ export function useTemplates(enabled: boolean) {
     queryFn: ({ signal }) => request<TemplatePreviewDto[]>('GET', '/api/templates', { signal }),
     enabled,
     staleTime: 10 * 60_000,
+  })
+}
+
+export function useQueue() {
+  return useQuery({
+    queryKey: queryKeys.queue,
+    queryFn: ({ signal }) => request<QueueItemDto[]>('GET', '/api/queue', { signal }),
   })
 }

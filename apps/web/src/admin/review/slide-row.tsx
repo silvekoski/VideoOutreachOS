@@ -18,7 +18,7 @@ interface SlideRowProps {
   savingNow: boolean
 }
 
-function Financials({ financials }: { financials: ReviewDto['financials'] }) {
+export function Financials({ financials }: { financials: ReviewDto['financials'] }) {
   if (financials.mode === 'ask') {
     return (
       <p className="flex items-center gap-2 text-sm">
@@ -51,7 +51,7 @@ export function SlideRow({ slide, review, analystName, save, saveNow, savingNow 
   const headingId = `slide-${slide.slide}-heading`
 
   return (
-    <li id={`slide-${slide.slide}`} aria-labelledby={headingId} className="grid scroll-mt-16 gap-4 rounded-xl border bg-card p-4 md:grid-cols-[13rem_1fr]">
+    <li id={`slide-${slide.slide}`} aria-labelledby={headingId} className="grid scroll-mt-32 gap-4 md:scroll-mt-28 rounded-xl border bg-card p-4 md:grid-cols-[13rem_1fr]">
       <div className="grid content-start gap-2">
         <h3 id={headingId} className="text-sm font-semibold">{`${slide.slide}. ${slide.name}`}</h3>
         {slide.slide === 1 ? (
@@ -93,7 +93,7 @@ export function SlideRow({ slide, review, analystName, save, saveNow, savingNow 
               <img
                 src={review.screenshotUrl}
                 alt="Screenshot of the company website"
-                className="w-full max-w-md rounded-lg border object-cover"
+                className="w-full max-w-md rounded-lg border object-cover object-top aspect-[16/10]"
               />
             ) : (
               <p className="text-sm text-muted-foreground">No screenshot of the website.</p>

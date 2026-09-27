@@ -1,6 +1,6 @@
 import { stat } from 'node:fs/promises'
 import path from 'node:path'
-import { bookSchema, buildCaptions, eventBatchSchema, formSubmitSchema, t } from '@mergero/shared'
+import { bookSchema, buildCaptions, eventBatchSchema, formSubmitSchema, recordingChunkSchema, t } from '@mergero/shared'
 import type { BookResult } from '@mergero/shared'
 import { Hono } from 'hono'
 import type { Context } from 'hono'
@@ -16,11 +16,13 @@ import { denyFraming } from '../../html/routes.ts'
 import { sendFile } from '../../http/send-file.ts'
 import type { AssetTags } from '../../html/vite.ts'
 import type { MgxClient } from '../../providers/types.ts'
+import { insideDir } from '../../paths.ts'
 import { findLink, pageVersion, requireLiveLink, requirePublishedLink } from '../../video/access.ts'
 import { bookMeeting, dealSlots } from '../../video/booking.ts'
 import { MgxSubmitError, submitForm } from '../../video/form.ts'
 import { ingestBatch } from '../../video/ingest.ts'
 import { buildPageData, introTranscript } from '../../video/page-data.ts'
+import { saveRecordingChunk } from '../../video/recording.ts'
 
 export interface VideoRouteDeps {
   db: Db
@@ -32,7 +34,15 @@ export interface VideoRouteDeps {
 }
 
 const MAX_BODY_BYTES = 256 * 1024
+const MAX_RECORDING_BODY_BYTES = 2 * 1024 * 1024
 const MEDIA_CACHE = 'private, max-age=86400'
+const LOGO_TYPES = new Map([
+  ['.svg', 'image/svg+xml'],
+  ['.png', 'image/png'],
+  ['.jpg', 'image/jpeg'],
+  ['.webp', 'image/webp'],
+  ['.gif', 'image/gif'],
+])
 
 function mediaTypes(version: number): Map<string, string> {
   return new Map([
@@ -74,6 +84,17 @@ export function createVideoRoutes(deps: VideoRouteDeps): Hono {
     if (isPreview(c)) throw new HTTPException(403, { message: 'A preview does not send anything' })
   }
 
+  const smallBody = bodyLimit({ maxSize: MAX_BODY_BYTES })
+
+  const trackedLink = (c: Context, at: Date): DealRow | null => {
+    const link = findLink(db, c.req.param('code') ?? '', at)
+    if (link.kind === 'missing') throw new DomainError(404, 'The link does not exist')
+    if (isPreview(c)) return null
+    if (link.kind === 'expired') throw new DomainError(410, 'The link has expired')
+    if (link.deal.publishedVersion === null) throw new DomainError(404, 'The link does not exist')
+    return link.deal
+  }
+
   const pageRow = (c: Context) => {
     const deal = requireLiveLink(db, c.req.param('code') ?? '', now())
     const row = pageVersion(db, deal, isPreview(c))
@@ -87,7 +108,6 @@ export function createVideoRoutes(deps: VideoRouteDeps): Hono {
     c.header('Referrer-Policy', 'no-referrer')
   })
   app.use('/v/*', denyFraming)
-  app.use('/v/:code/*', bodyLimit({ maxSize: MAX_BODY_BYTES }))
 
   app.get('/v/:code', async (c) => {
     c.header('Cache-Control', 'no-store')
@@ -130,6 +150,18 @@ export function createVideoRoutes(deps: VideoRouteDeps): Hono {
     return response ?? c.notFound()
   })
 
+  app.get('/v/:code/logos/:index{[0-9]+}', async (c) => {
+    const { row } = pageRow(c)
+    const variables = row.timeline.segments.find((segment) => segment.slide === 5)?.variables
+    const logoFile = variables?.template === 'buyers' ? variables.buyers[Number(c.req.param('index'))]?.logoFile : null
+    const file = logoFile ? insideDir(path.join(deps.storageDir, 'cache', 'logos'), path.basename(logoFile)) : null
+    const contentType = file ? LOGO_TYPES.get(path.extname(file).toLowerCase()) : undefined
+    if (!file || !contentType) return c.notFound()
+    c.header('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox")
+    const response = await sendFile(c, file, { contentType, cacheControl: MEDIA_CACHE })
+    return response ?? c.notFound()
+  })
+
   app.get('/v/:code/:file{captions\\.v[0-9]+\\.vtt}', (c) => {
     const { row } = pageRow(c)
     if (c.req.param('file') !== `captions.v${row.version}.vtt`) return c.notFound()
@@ -145,19 +177,23 @@ export function createVideoRoutes(deps: VideoRouteDeps): Hono {
     return c.json(dealSlots(db, deal.id, now()))
   })
 
-  app.post('/v/:code/events', async (c) => {
+  app.post('/v/:code/events', smallBody, async (c) => {
     const at = now()
-    const link = findLink(db, c.req.param('code'), at)
-    if (link.kind === 'missing') throw new DomainError(404, 'The link does not exist')
-    if (isPreview(c)) return c.body(null, 204)
-    if (link.kind === 'expired') throw new DomainError(410, 'The link has expired')
-    if (link.deal.publishedVersion === null) throw new DomainError(404, 'The link does not exist')
-    const batch = await readBody(c, eventBatchSchema)
-    ingestBatch(db, link.deal.id, batch, at)
+    const deal = trackedLink(c, at)
+    if (deal === null) return c.body(null, 204)
+    ingestBatch(db, deal.id, await readBody(c, eventBatchSchema), at)
     return c.body(null, 204)
   })
 
-  app.post('/v/:code/form', async (c) => {
+  app.post('/v/:code/recording', bodyLimit({ maxSize: MAX_RECORDING_BODY_BYTES }), async (c) => {
+    const at = now()
+    const deal = trackedLink(c, at)
+    if (deal === null) return c.body(null, 204)
+    await saveRecordingChunk(db, deps.storageDir, deal.id, await readBody(c, recordingChunkSchema), at)
+    return c.body(null, 204)
+  })
+
+  app.post('/v/:code/form', smallBody, async (c) => {
     rejectPreview(c)
     const deal = requirePublishedLink(db, c.req.param('code'), now())
     const body = await readBody(c, formSubmitSchema)
@@ -169,7 +205,7 @@ export function createVideoRoutes(deps: VideoRouteDeps): Hono {
     }
   })
 
-  app.post('/v/:code/book', async (c) => {
+  app.post('/v/:code/book', smallBody, async (c) => {
     rejectPreview(c)
     const deal = requirePublishedLink(db, c.req.param('code'), now())
     const body = await readBody(c, bookSchema)

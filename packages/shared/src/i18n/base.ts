@@ -63,12 +63,11 @@ export interface PageStrings {
   exitFullscreen: string
   progress: string
   progressValue: string
+  previousSlide: string
+  nextSlide: string
+  slideList: string
   jumpToSlide: string
   slideNames: Record<SlideNumber, string>
-  transcriptHeading: string
-  showTranscript: string
-  hideTranscript: string
-  onScreen: string
   buyersHeading: string
   buyersHeadingFeatured: string
   visitWebsite: string
@@ -142,7 +141,15 @@ export interface SlideLabelStrings {
     'ask-form': string
   }
   buyers: { headline: string; 'headline-featured': string; empty: string }
-  'what-is-possible': { headline: string; 'headline-recent': string; empty: string }
+  'what-is-possible': {
+    headline: string
+    'headline-recent': string
+    empty: string
+    multiple: string
+    'summary-deals': string
+    'summary-low': string
+    'summary-high': string
+  }
   privacy: { headline: string; 'point-1': string; 'point-2': string; 'point-3': string }
   'book-meeting': { headline: string; line: string }
 }

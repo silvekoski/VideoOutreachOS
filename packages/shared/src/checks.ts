@@ -1,6 +1,7 @@
 import { detectLanguage } from './languages.ts'
-import { SLOT_LIMITS, textLength } from './slots.ts'
-import type { Lang } from './types.ts'
+import { MIN_COMPANY_LINES, SLOT_LIMITS, textLength } from './slots.ts'
+import { OUTREACH_LINK, OUTREACH_WORDS } from './types.ts'
+import type { Lang, OutreachContext } from './types.ts'
 import { countWords } from './words.ts'
 
 export { countWords }
@@ -63,7 +64,9 @@ export function checkScript(script: string, lang: Lang, input: unknown): CheckRe
 }
 
 export function checkLines(lines: unknown, lang: Lang, input: unknown): CheckResult {
-  if (!Array.isArray(lines) || lines.length !== 3) return result(['expected an array of exactly 3 lines'])
+  if (!Array.isArray(lines) || lines.length < MIN_COMPANY_LINES || lines.length > 3) {
+    return result([`expected an array of ${MIN_COMPANY_LINES} to 3 lines`])
+  }
   const errors: string[] = []
   const max = SLOT_LIMITS['your-company.line'] ?? 90
   lines.forEach((line: unknown, index) => {
@@ -129,5 +132,29 @@ export function checkBriefText(
   const text = [summary, ...questions].join(' ')
   checkLanguage(text, lang, errors)
   checkNumbers(text, input, errors)
+  return result(errors)
+}
+
+const DASH_PAUSE = /[\u2013\u2014]| - /u
+
+export function checkOutreach(output: { subject: string; message: string }, context: OutreachContext): CheckResult {
+  const errors: string[] = []
+  const subject = typeof output?.subject === 'string' ? output.subject.trim() : ''
+  const message = typeof output?.message === 'string' ? output.message : ''
+  const links = message.split(OUTREACH_LINK).length - 1
+  if (links !== 1) errors.push(`message has ${links} ${OUTREACH_LINK} placeholders, expected 1`)
+  if (/https?:|www\./iu.test(message)) errors.push(`message has a URL, use only the ${OUTREACH_LINK} placeholder`)
+  const text = message.replaceAll(OUTREACH_LINK, ' ')
+  const words = countWords(text)
+  const { min, max } = OUTREACH_WORDS[context.channel]
+  if (words < min || words > max) errors.push(`message has ${words} words, expected ${min} to ${max}`)
+  if (context.channel === 'email' && (subject === '' || subject.length > 80)) errors.push(`subject has ${subject.length} characters, expected 1 to 80`)
+  if (DASH_PAUSE.test(`${subject}\n${text}`.replaceAll(context.company, ' '))) {
+    errors.push('text has a dash (\u2013, \u2014 or " - "), use a comma, a period or parentheses')
+  }
+  if (errors.length > 0) return result(errors)
+  const all = `${subject} ${text}`
+  checkLanguage(all, context.lang, errors)
+  checkNumbers(all, context, errors)
   return result(errors)
 }

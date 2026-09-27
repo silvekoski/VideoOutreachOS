@@ -1,4 +1,4 @@
-import { resolveLanguage } from '@mergero/shared'
+import { isClosedStatus, resolveLanguage } from '@mergero/shared'
 import type { DealSnapshot } from '@mergero/shared'
 import { nowIso, sql, transaction } from '../db/index.ts'
 import type { Db } from '../db/index.ts'
@@ -106,10 +106,30 @@ function sameSnapshot(a: DealSnapshot, b: DealSnapshot): boolean {
   return JSON.stringify({ ...a, readAt: '' }) === JSON.stringify({ ...b, readAt: '' })
 }
 
+// A published video keeps its names, so a published or closed deal takes only new contact details of the same person.
+async function refreshContactDetails(providers: EnsureProviders, db: Db, deal: DealRow, now: Date): Promise<boolean> {
+  const personId = deal.snapshot.personId
+  const person = personId === null ? null : await providers.pipedrive.getPerson(personId)
+  if (!person) return false
+  const snapshot: DealSnapshot = {
+    ...deal.snapshot,
+    ownerRole: person.jobTitle?.trim() || null,
+    ownerEmail: person.email?.trim() || null,
+    ownerPhone: person.phone?.trim() || null,
+    readAt: nowIso(now),
+  }
+  if (sameSnapshot(snapshot, deal.snapshot)) return false
+  updateDeal(db, deal.id, { snapshot }, now)
+  return true
+}
+
 async function refreshDeal(db: Db, providers: EnsureProviders, deal: DealRow, now: Date): Promise<EnsureResult> {
   const kept: EnsureResult = { deal, created: false, refreshed: false, refreshError: null }
-  if (deal.publishedVersion !== null || deal.status === 'lost') return kept
   try {
+    if (deal.publishedVersion !== null || isClosedStatus(deal.status)) {
+      const refreshed = await refreshContactDetails(providers, db, deal, now)
+      return { ...kept, deal: requireDeal(db, deal.id), refreshed }
+    }
     const { source, person, org } = await readPipedrive(providers.pipedrive, deal.id)
     await syncAnalysts(db, providers.pipedrive, { ensureIds: [source.ownerId], now })
     const analyst = getAnalyst(db, source.ownerId)

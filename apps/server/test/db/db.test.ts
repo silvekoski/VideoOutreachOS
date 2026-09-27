@@ -1,4 +1,5 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync, rmSync } from 'node:fs'
+import Database from 'better-sqlite3'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { nowIso, openDb, sql, transaction } from '../../src/db/index.ts'
@@ -40,7 +41,7 @@ describe('openDb', () => {
     const tables = sql<{ name: string }>(t.db, `SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name`)
       .all()
       .map((row) => row.name)
-    expect(tables).toEqual(['analysts', 'briefs', 'deals', 'events', 'jobs', 'sessions', 'tasks', 'timelines'])
+    expect(tables).toEqual(['analysts', 'briefs', 'deals', 'events', 'jobs', 'sessions', 'sync_state', 'tasks', 'timelines'])
     const again = openDb(t.file)
     expect(sql<{ n: number }>(again, 'SELECT COUNT(*) AS n FROM jobs').get()?.n).toBe(0)
     again.close()
@@ -52,6 +53,26 @@ describe('openDb', () => {
     ).toThrow(/FOREIGN KEY/u)
     insertMinimalDeal()
     expect(() => sql(t.db, `UPDATE deals SET status = 'shipped' WHERE id = 7`).run()).toThrow(/CHECK/u)
+  })
+
+  it('rebuilds an old deals table for the won status and keeps the rows and the foreign keys', () => {
+    t.db.close()
+    for (const suffix of ['', '-wal', '-shm']) rmSync(`${t.file}${suffix}`, { force: true })
+    const oldSchema = readFileSync(new URL('../../src/db/schema.sql', import.meta.url), 'utf8').replace(",'lost','won'))", ",'lost'))")
+    const old = new Database(t.file)
+    old.exec(oldSchema)
+    old.close()
+    t.db = openDb(t.file)
+    insertMinimalDeal()
+    sql(t.db, `INSERT INTO timelines (deal_id, version, json, created_at) VALUES (7, 1, '{}', 'x')`).run()
+    t.db.close()
+    t.db = openDb(t.file)
+    sql(t.db, `UPDATE deals SET status = 'won' WHERE id = 7`).run()
+    expect(sql<{ status: string }>(t.db, 'SELECT status FROM deals WHERE id = 7').get()?.status).toBe('won')
+    expect(() => sql(t.db, `INSERT INTO timelines (deal_id, version, json, created_at) VALUES (999, 1, '{}', 'x')`).run()).toThrow(/FOREIGN KEY/u)
+    sql(t.db, 'DELETE FROM deals WHERE id = 7').run()
+    expect(sql<{ n: number }>(t.db, 'SELECT COUNT(*) AS n FROM timelines').get()?.n).toBe(0)
+    t.db.close()
   })
 
   it('cascades a deal delete to its timelines', () => {

@@ -204,6 +204,11 @@ describe('recovery and retry', () => {
     claimNext(t.db, T0)
     completeJob(t.db, newRender?.id ?? 0, T0)
     expect(failedJobs(t.db, { analystId: 10 })).toEqual([])
+
+    const reread = enqueue(t.db, 'scrape', 'scrape:2:reread', { dealId: 2 }, { now: T0 })
+    claimNext(t.db, T0)
+    completeJob(t.db, reread?.id ?? 0, T0)
+    expect(failedJobs(t.db, { analystId: 20, includeGlobal: true }).map((job) => job.id)).toEqual([backup])
   })
 
   it('finds a queued job of a deal by its payload', () => {

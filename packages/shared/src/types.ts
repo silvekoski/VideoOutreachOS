@@ -5,6 +5,25 @@ export const CHANNELS = ['email', 'linkedin', 'sms', 'whatsapp'] as const
 export type Channel = (typeof CHANNELS)[number]
 export type SessionChannel = Channel | 'direct'
 
+export const OUTREACH_LINK = '{link}'
+export const OUTREACH_WORDS: Record<Channel, { min: number; max: number }> = {
+  email: { min: 50, max: 130 },
+  linkedin: { min: 25, max: 80 },
+  sms: { min: 15, max: 45 },
+  whatsapp: { min: 20, max: 60 },
+}
+
+export interface OutreachContext {
+  lang: Lang
+  channel: Channel
+  company: string
+  ownerName: string
+  ownerFirstName: string
+  analystName: string
+  expiresOn: string
+  companyLines: string[]
+}
+
 export const DEAL_STATUSES = [
   'draft',
   'review',
@@ -14,8 +33,13 @@ export const DEAL_STATUSES = [
   'form_sent',
   'meeting_booked',
   'lost',
+  'won',
 ] as const
 export type DealStatus = (typeof DEAL_STATUSES)[number]
+
+export function isClosedStatus(status: DealStatus): boolean {
+  return status === 'lost' || status === 'won'
+}
 
 export const STAGES = ['link_sent', 'opened', 'form_sent', 'meeting_booked'] as const
 export type Stage = (typeof STAGES)[number]
@@ -97,7 +121,7 @@ export interface ScrapeResult {
   reason: ScrapeFailure | null
   error: string | null
   homeUrl: string | null
-  aboutUrl: string | null
+  pageUrls: string[]
   words: number
   markdown: string | null
   siteLanguage: Lang | null
@@ -196,6 +220,13 @@ export interface DealCardItem {
   year: number
   country: string
   text: string
+  profitMultiple?: number
+}
+
+export interface SectorSummary {
+  dealCount: number
+  p25: number
+  p75: number
 }
 
 export type TemplateVariables =
@@ -225,7 +256,7 @@ export type TemplateVariables =
     }
   | { template: 'your-figures'; mode: 'ask'; calculator: boolean }
   | { template: 'buyers'; buyers: BuyerSlideItem[]; candidates?: BuyerSlideItem[]; scope?: BuyerScope }
-  | { template: 'what-is-possible'; deals: DealCardItem[]; scope?: DealScope }
+  | { template: 'what-is-possible'; deals: DealCardItem[]; scope?: DealScope; summary?: SectorSummary | null }
   | { template: 'privacy' }
   | { template: 'book-meeting'; analystName: string; company: string }
 
@@ -302,6 +333,13 @@ export interface DealAnalytics {
   days: number
   lastEventId: number | null
   channel: SessionChannel | null
+  firstChannel: SessionChannel | null
+  buyerLinkTaps: number
+  calculatorResults: number
+  forwards: number
+  interest?: InterestLevel | null
+  signals?: SignalKey[] | null
+  saleTiming?: SaleTiming | null
 }
 
 export const PLAYER_EVENT_TYPES = [
@@ -332,6 +370,8 @@ export const DEAL_EVENT_TYPES = [
   'form_sent',
   'meeting_booked',
   'lost',
+  'won',
+  'reopened',
   'brief_written',
   'brief_read',
   'task_created',
@@ -361,6 +401,19 @@ export interface EventBatch {
   sessionId: string
   session: SessionInfo
   events: ClientEvent[]
+}
+
+export interface RecordingEvent {
+  type: number
+  timestamp: number
+  [key: string]: unknown
+}
+
+export interface RecordingChunk {
+  sessionId: string
+  session: SessionInfo
+  part: number
+  events: RecordingEvent[]
 }
 
 export interface StoredEvent {
@@ -486,8 +539,7 @@ export interface VideoPageData {
   media: { video720: string; video1080: string; poster: string; captions: string }
   slides: { slide: SlideNumber; startS: number; endS: number }[]
   durationS: number
-  transcript: { slide: SlideNumber; text: string; screen: string[] }[]
-  buyers: { id: string; name: string; focus: string; website: string | null }[]
+  buyers: { id: string; name: string; focus: string; website: string | null; logoUrl: string | null }[]
   buyerScope: BuyerScope
   calculator: { p25: number; p75: number; dealCount: number } | null
   calculatorEnabled: boolean

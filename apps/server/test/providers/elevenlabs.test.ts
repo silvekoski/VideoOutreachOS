@@ -2,10 +2,19 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ElevenLabsClient } from '../../src/providers/elevenlabs.ts'
 import { ProviderError } from '../../src/providers/errors.ts'
 
-function mockFetch(response: () => Response) {
-  const fn = vi.fn(async (_url: string, _init: RequestInit) => response())
+const IVC = { category: 'cloned' }
+const PVC = { category: 'professional', fine_tuning: { state: { eleven_multilingual_v2: 'fine_tuned', eleven_flash_v2_5: 'fine_tuned' } } }
+
+function mockFetch(response: () => Response, voice: object = IVC) {
+  const fn = vi.fn(async (url: string, init: RequestInit) =>
+    init.method === 'GET' && url.includes('/v1/voices/') ? Response.json(voice) : response(),
+  )
   vi.stubGlobal('fetch', fn)
   return fn
+}
+
+function speechBodies(fetch: ReturnType<typeof mockFetch>): unknown[] {
+  return fetch.mock.calls.filter(([url]) => url.includes('/v1/text-to-speech/')).map(([, init]) => JSON.parse(String(init.body)))
 }
 
 afterEach(() => {
@@ -20,7 +29,8 @@ describe('ElevenLabsClient', () => {
     const audio = await new ElevenLabsClient('xi-key', 'eleven_v3').synthesize({ voiceId: 'voice 1', text: 'Hei Nora.', language: 'nb' })
     expect(Buffer.isBuffer(audio)).toBe(true)
     expect([...audio]).toEqual([...mp3])
-    const [url, init] = fetch.mock.calls[0]!
+    expect(fetch.mock.calls[0]![0]).toBe('https://api.elevenlabs.io/v1/voices/voice%201')
+    const [url, init] = fetch.mock.calls[1]!
     expect(url).toBe('https://api.elevenlabs.io/v1/text-to-speech/voice%201?output_format=mp3_44100_128')
     expect(init.method).toBe('POST')
     const headers = new Headers(init.headers)
@@ -32,7 +42,26 @@ describe('ElevenLabsClient', () => {
   it('leaves out language_code for eleven_multilingual_v2', async () => {
     const fetch = mockFetch(() => new Response(mp3))
     await new ElevenLabsClient('xi-key', 'eleven_multilingual_v2').synthesize({ voiceId: 'v', text: 'Hej.', language: 'da' })
-    expect(JSON.parse(String(fetch.mock.calls[0]![1].body))).toEqual({ text: 'Hej.', model_id: 'eleven_multilingual_v2' })
+    expect(speechBodies(fetch)).toEqual([{ text: 'Hej.', model_id: 'eleven_multilingual_v2' }])
+  })
+
+  it('uses a trained model for a professional voice that has no training for the configured model', async () => {
+    const fetch = mockFetch(() => new Response(mp3), PVC)
+    const client = new ElevenLabsClient('xi-key', 'eleven_v3')
+    await client.synthesize({ voiceId: 'pvc', text: 'Hei.', language: 'fi' })
+    await client.synthesize({ voiceId: 'pvc', text: 'Hei Nora.', language: 'nb' })
+    expect(speechBodies(fetch)).toEqual([
+      { text: 'Hei.', model_id: 'eleven_multilingual_v2' },
+      { text: 'Hei Nora.', model_id: 'eleven_flash_v2_5', language_code: 'no' },
+    ])
+    expect(fetch.mock.calls.filter(([url]) => url.endsWith('/v1/voices/pvc'))).toHaveLength(1)
+  })
+
+  it('keeps the configured model when the professional voice has training for it', async () => {
+    const trained = { category: 'professional', fine_tuning: { state: { eleven_v3: 'fine_tuned' } } }
+    const fetch = mockFetch(() => new Response(mp3), trained)
+    await new ElevenLabsClient('xi-key', 'eleven_v3').synthesize({ voiceId: 'pvc', text: 'Hej.', language: 'sv' })
+    expect(speechBodies(fetch)).toEqual([{ text: 'Hej.', model_id: 'eleven_v3', language_code: 'sv' }])
   })
 
   it('clones a voice with a multipart upload', async () => {

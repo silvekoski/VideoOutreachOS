@@ -21,7 +21,7 @@ function assertShownVersion(db: Db, deal: DealRow, version: number): void {
   if (row?.renderStatus !== 'rendered') throw new DomainError(400, `Video version ${version} was never published`)
 }
 
-function upsertSession(db: Db, deal: DealRow, batch: EventBatch, now: Date): void {
+export function upsertSession(db: Db, deal: DealRow, batch: Pick<EventBatch, 'sessionId' | 'session'>, now: Date): void {
   const at = nowIso(now)
   const { channel, device, browser, os, screen, version } = batch.session
   const owner = sql<{ deal_id: number; version: number }>(db, 'SELECT deal_id, version FROM sessions WHERE id = ?').get(

@@ -3,6 +3,10 @@ process.env.DISABLE_TELEMETRY = 'true'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { renderTemplatePreviews, renderTimeline } from '@mergero/scene'
 import { closeDb, getDb } from './db/index.ts'
+import { ensureDevIntro } from './dev-bypass.ts'
+import { listAnalysts } from './domain/analysts.ts'
+import { advanceAnalystDeals } from './domain/pipeline.ts'
+import { env } from './env.ts'
 import { ensureTemplatePreviews } from './jobs/render.ts'
 import { recoverStoppedJobs, runJob } from './jobs/runner.ts'
 import type { JobContext } from './jobs/types.ts'
@@ -44,6 +48,10 @@ async function main(): Promise<void> {
     sleep: (ms) => sleep(ms),
   }
   await recoverStoppedJobs(ctx)
+  if (env.devBypass) {
+    await ensureDevIntro()
+    for (const analyst of listAnalysts(db)) advanceAnalystDeals(db, analyst.id, ctx.now())
+  }
   await ensureTemplatePreviews(ctx).catch((error: unknown) => log.error('the template preview check failed', { error }))
   log.info('worker started', { database: paths.database, pid: process.pid })
 

@@ -31,15 +31,6 @@ export const CMP_CONTAINERS = [
   '#shopify-pc__banner',
 ]
 
-export const CONSENT_EXCLUDE_TAGS = [
-  '[id*="cookie" i]',
-  '[class*="cookie" i]',
-  '[id*="consent" i]',
-  '[class*="consent" i]',
-  '[aria-label*="cookie" i]',
-  ...CMP_CONTAINERS,
-]
-
 const ACCEPT_SELECTORS = [
   '#onetrust-accept-btn-handler',
   '#accept-recommended-btn-handler',

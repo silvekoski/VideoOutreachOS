@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ChartLine, Inbox, LayoutList, Search, UserRound } from 'lucide-react'
+import { ChartLine, LayoutList, Search, UserRound } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { useTheme } from 'next-themes'
 import { Button } from '@/components/ui/button'
@@ -20,8 +20,7 @@ import { useReturnFocus } from '../lib/use-return-focus'
 import { THEMES } from './themes'
 
 const PAGES = [
-  { to: '/', label: 'Inbox', icon: Inbox },
-  { to: '/deals', label: 'Deals', icon: LayoutList },
+  { to: '/', label: 'Deals', icon: LayoutList },
   { to: '/metrics', label: 'Metrics', icon: ChartLine },
 ] as const
 
@@ -54,7 +53,7 @@ export function CommandPalette() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" aria-keyshortcuts="Control+K Meta+K" className="text-muted-foreground">
+        <Button variant="outline" aria-keyshortcuts="Control+K Meta+K" className="mr-1 rounded-full text-muted-foreground">
           <Search aria-hidden="true" />
           <span className="sr-only sm:not-sr-only">Search</span>
           <kbd className="hidden rounded border bg-muted px-1 font-mono text-[10px] sm:inline">{MAC ? '⌘K' : 'Ctrl K'}</kbd>

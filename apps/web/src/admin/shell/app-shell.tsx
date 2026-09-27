@@ -1,112 +1,32 @@
-import { ChartLine, Inbox, LayoutList } from 'lucide-react'
-import { NavLink, Outlet, useLocation } from 'react-router'
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuBadge,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarRail,
-  useSidebar,
-} from '@/components/ui/sidebar'
-import logoOnLight from '../../../../../config/mergero-logo-dark.svg'
-import logoOnDark from '../../../../../config/mergero-logo-white.svg'
-import { useInbox } from '../api'
-import { useCurrentAnalyst } from '../analyst-context'
+import { Outlet, useLocation } from 'react-router'
+import { cn } from '@/lib/utils'
+import { useLiveUpdates } from '../api'
 import { TopBar } from './top-bar'
 
-const NAV = [
-  { to: '/', label: 'Inbox', icon: Inbox, match: (path: string) => path === '/' },
-  { to: '/deals', label: 'Deals', icon: LayoutList, match: (path: string) => path.startsWith('/deals') },
-  { to: '/metrics', label: 'Metrics', icon: ChartLine, match: (path: string) => path.startsWith('/metrics') },
-] as const
-
-function AppSidebar() {
-  const { pathname } = useLocation()
-  const { analystId } = useCurrentAnalyst()
-  const inbox = useInbox(analystId)
-  const { isMobile, setOpenMobile } = useSidebar()
-  const inboxCount = inbox.data?.groups.reduce((sum, group) => sum + group.rows.length, 0) ?? 0
-
-  return (
-    <Sidebar collapsible="icon" className="print:hidden">
-      <SidebarHeader>
-        <div className="flex h-8 items-center gap-2 px-1.5">
-          <span
-            aria-hidden="true"
-            className="hidden size-6 shrink-0 place-items-center rounded-md bg-primary font-heading text-sm font-semibold text-primary-foreground group-data-[collapsible=icon]:grid"
-          >
-            M
-          </span>
-          <span className="flex min-w-0 items-center gap-2 group-data-[collapsible=icon]:hidden">
-            <img src={logoOnLight} alt="Mergero" width={500} height={68} className="h-3.5 w-auto dark:hidden" />
-            <img src={logoOnDark} alt="Mergero" width={500} height={68} className="hidden h-3.5 w-auto dark:block" />
-            <span className="truncate text-xs font-medium text-muted-foreground">Video tool</span>
-          </span>
-        </div>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <nav aria-label="Main">
-              <SidebarMenu>
-                {NAV.map((item) => {
-                  const active = item.match(pathname)
-                  return (
-                    <SidebarMenuItem key={item.to}>
-                      <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
-                        <NavLink
-                          to={item.to}
-                          end={item.to === '/'}
-                          aria-current={active ? 'page' : undefined}
-                          onClick={() => {
-                            if (isMobile) setOpenMobile(false)
-                          }}
-                        >
-                          <item.icon aria-hidden="true" />
-                          <span>{item.label}</span>
-                        </NavLink>
-                      </SidebarMenuButton>
-                      {item.to === '/' && inboxCount > 0 ? (
-                        <SidebarMenuBadge>
-                          {inboxCount}
-                          <span className="sr-only"> items need an action</span>
-                        </SidebarMenuBadge>
-                      ) : null}
-                    </SidebarMenuItem>
-                  )
-                })}
-              </SidebarMenu>
-            </nav>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-      <SidebarRail />
-    </Sidebar>
-  )
-}
-
 export function AppShell() {
+  useLiveUpdates()
+  const { pathname } = useLocation()
+  const width = pathname === '/' ? 'max-w-(--breakpoint-2xl)' : 'max-w-6xl'
   return (
-    <SidebarProvider>
+    <div className="flex min-h-svh flex-col bg-background">
       <a
         href="#main"
         className="sr-only z-50 rounded-md bg-background px-3 py-2 text-sm font-medium ring-2 ring-ring focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
       >
         Skip to content
       </a>
-      <AppSidebar />
-      <div className="relative flex min-w-0 flex-1 flex-col bg-background">
-        <TopBar />
-        <main id="main" tabIndex={-1} className="mx-auto grid w-full max-w-6xl gap-4 p-4 outline-none md:p-6 print:max-w-none print:p-0">
-          <Outlet />
-        </main>
+      <div className="sticky top-0 z-20 bg-background print:hidden">
+        <div className={cn('mx-auto w-full px-4 pt-3 pb-2 md:px-6 md:pt-4 md:pb-3', width)}>
+          <TopBar />
+        </div>
       </div>
-    </SidebarProvider>
+      <main
+        id="main"
+        tabIndex={-1}
+        className={cn('mx-auto grid w-full grid-cols-1 gap-4 p-4 outline-none md:p-6 print:max-w-none print:p-0', width)}
+      >
+        <Outlet />
+      </main>
+    </div>
   )
 }

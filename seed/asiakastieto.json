@@ -1,6 +1,3 @@
 {
-  "companies": {
-    "0712834-9": { "revenue": 7450000, "profit": 980000, "fiscalYear": 2025 },
-    "1049382-2": { "revenue": 5260000, "profit": 720000, "fiscalYear": 2025 }
-  }
+  "companies": {}
 }

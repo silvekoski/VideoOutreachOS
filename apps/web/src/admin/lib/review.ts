@@ -1,3 +1,4 @@
+import { isClosedStatus } from '@mergero/shared'
 import type { ReviewDto, ReviewReason, SlideNumber } from '@mergero/shared'
 
 export const LINE_COUNT = 3
@@ -42,7 +43,7 @@ type ApprovalFields = Pick<
 export function approvalState(review: ApprovalFields): ApprovalState | null {
   if (!review.approved) return null
   if (versionPublished(review)) return 'published'
-  if (review.status === 'lost' || review.expired) return 'closed'
+  if (isClosedStatus(review.status) || review.expired) return 'closed'
   if (review.failedJobs.length > 0 || review.renderStatus === 'failed') return 'failed'
   return review.reviewReasons.length > 0 ? 'blocked' : 'waiting'
 }

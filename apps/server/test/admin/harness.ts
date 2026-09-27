@@ -9,6 +9,7 @@ import { publish } from '../../src/domain/pipeline.ts'
 import { approveVersion, createVersion, markRenderStatus, setSlideTimes } from '../../src/domain/timelines.ts'
 import { paths } from '../../src/paths.ts'
 import { SeedLinkedInSource } from '../../src/providers/linkedin.ts'
+import { FakeModel } from '../../src/providers/model-fake.ts'
 import { FakePipedriveClient } from '../../src/providers/pipedrive-fake.ts'
 import { adminRoutes, configureAdmin } from '../../src/routes/admin/index.ts'
 import { DEAL_ID, SCRAPE_OK, SLIDE_TIMES, T0, insertDeal, makeTimeline } from '../domain/fixtures.ts'
@@ -31,7 +32,7 @@ export function createHarness(start: Date = T0): Harness {
   configureAdmin({
     db,
     clock: () => now,
-    providers: { pipedrive: new FakePipedriveClient({ file: paths.fakePipedrive }), linkedin: new SeedLinkedInSource() },
+    providers: { pipedrive: new FakePipedriveClient({ file: paths.fakePipedrive }), linkedin: new SeedLinkedInSource(), model: new FakeModel() },
   })
   const request = async (url: string, init: RequestInit = {}) => {
     const headers = new Headers(init.headers)

@@ -1,10 +1,12 @@
 import {
   fallbackBriefText,
   fallbackLines,
+  fallbackOutreach,
   fallbackScript,
   isLang,
   type Lang,
   type MeetingBrief,
+  type OutreachContext,
   type ScriptContext,
 } from '@mergero/shared'
 import { z } from 'zod'
@@ -31,6 +33,10 @@ const requestSchema = z.discriminatedUnion('task', [
     lang,
     brief: z.custom<Omit<MeetingBrief, 'questions'>>(record, 'brief must be an object'),
   }),
+  z.object({
+    task: z.literal('outreach'),
+    context: z.custom<OutreachContext>((value) => record(value) && isLang((value as { lang?: unknown }).lang), 'context.lang is missing'),
+  }),
 ])
 
 export class FakeModel implements LanguageModelClient {
@@ -55,6 +61,8 @@ export class FakeModel implements LanguageModelClient {
         return { texts: input.texts.map(({ id, text }) => ({ id, text })) }
       case 'brief-text':
         return fallbackBriefText({ lang: input.lang, brief: input.brief })
+      case 'outreach':
+        return fallbackOutreach(input.context)
     }
   }
 }

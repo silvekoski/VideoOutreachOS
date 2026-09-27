@@ -2,7 +2,7 @@ import { checkBriefText, checkLines, checkScript, countWords } from './checks.ts
 import { fill, t } from './i18n.ts'
 import { detectLanguage } from './languages.ts'
 import { SLOT_LIMITS, textLength } from './slots.ts'
-import type { BuyerScope, DealScope, Financials, InterestLevel, Lang, MeetingBrief, ScriptSlideNumber } from './types.ts'
+import type { BuyerScope, DealScope, Financials, InterestLevel, Lang, MeetingBrief, OutreachContext, ScriptSlideNumber } from './types.ts'
 
 export interface ScriptContext {
   lang: Lang
@@ -49,6 +49,7 @@ interface WriterTexts {
     8: string[]
   }
   lines: string[]
+  outreach: { subject: string; email: string; short: string }
   brief: {
     booked: string
     interest: Record<InterestLevel, string>
@@ -137,6 +138,13 @@ const TEXTS: Record<Lang, WriterTexts> = {
       'It serves its customers with its own team and know-how.',
       'We will confirm the details with you in the meeting.',
     ],
+    outreach: {
+      subject: 'A short video about {company}',
+      email:
+        'Hello {first},\n\nI am {analyst}, an analyst at Mergero. We help owners of established companies find the right buyer. I made a short personal video about {company}. It shows buyers from Mergero deals and what other owners have done.\n\nYou can watch it here: {link}\n\nBelow the video, you can book a meeting with me. The link is personal and works until {expires}.\n\nBest regards,\n{analyst}\nMergero',
+      short:
+        'Hello {first}, this is {analyst} from Mergero. I made a short personal video for you about {company}: {link} It takes only a few minutes to watch. The link works until {expires}.',
+    },
     brief: {
       booked: '{owner} of {company} booked a meeting.',
       interest: {
@@ -239,6 +247,13 @@ const TEXTS: Record<Lang, WriterTexts> = {
       'Se palvelee asiakkaitaan omalla henkilöstöllään ja osaamisellaan.',
       'Tarkennamme tiedot kanssasi tapaamisessa.',
     ],
+    outreach: {
+      subject: 'Lyhyt video yrityksestä {company}',
+      email:
+        'Hei {first},\n\nolen {analyst}, analyytikko Mergerolta. Autamme vakiintuneiden yritysten omistajia löytämään oikean ostajan. Tein yrityksestä {company} lyhyen henkilökohtaisen videon. Siinä näkyy ostajia Mergeron kaupoista ja se, mitä muut omistajat ovat tehneet.\n\nVoit katsoa videon tästä: {link}\n\nVideon alla voit varata tapaamisen kanssani. Linkki on henkilökohtainen ja toimii {expires} asti.\n\nYstävällisin terveisin\n{analyst}\nMergero',
+      short:
+        'Hei {first}, täällä {analyst} Mergerolta. Tein sinulle lyhyen henkilökohtaisen videon yrityksestä {company}: {link} Videon katsominen vie vain muutaman minuutin. Linkki toimii {expires} asti.',
+    },
     brief: {
       booked: '{owner} ({company}) varasi tapaamisen.',
       interest: {
@@ -344,6 +359,13 @@ const TEXTS: Record<Lang, WriterTexts> = {
       'Det betjänar sina kunder med egen personal och egen kunskap.',
       'Vi stämmer av detaljerna med dig på mötet.',
     ],
+    outreach: {
+      subject: 'En kort video om {company}',
+      email:
+        'Hej {first},\n\njag heter {analyst} och är analytiker på Mergero. Vi hjälper ägare av etablerade företag att hitta rätt köpare. Jag har gjort en kort personlig video om {company}. Den visar köpare från Mergeros affärer och vad andra ägare har gjort.\n\nDu kan se videon här: {link}\n\nUnder videon kan du boka ett möte med mig. Länken är personlig och fungerar till och med {expires}.\n\nMed vänliga hälsningar\n{analyst}\nMergero',
+      short:
+        'Hej {first}, det är {analyst} från Mergero. Jag har gjort en kort personlig video till dig om {company}: {link} Det tar bara några minuter att se den. Länken fungerar till och med {expires}.',
+    },
     brief: {
       booked: '{owner} ({company}) har bokat ett möte.',
       interest: {
@@ -449,6 +471,13 @@ const TEXTS: Record<Lang, WriterTexts> = {
       'Det betjener kundene sine med egne ansatte og egen kompetanse.',
       'Vi avklarer detaljene med deg i møtet.',
     ],
+    outreach: {
+      subject: 'En kort video om {company}',
+      email:
+        'Hei {first},\n\njeg heter {analyst} og er analytiker i Mergero. Vi hjelper eiere av etablerte selskaper med å finne riktig kjøper. Jeg har laget en kort personlig video om {company}. Den viser kjøpere fra Mergeros avtaler og hva andre eiere har gjort.\n\nDu kan se videoen her: {link}\n\nUnder videoen kan du booke et møte med meg. Lenken er personlig og virker til og med {expires}.\n\nMed vennlig hilsen\n{analyst}\nMergero',
+      short:
+        'Hei {first}, dette er {analyst} fra Mergero. Jeg har laget en kort personlig video til deg om {company}: {link} Det tar bare noen minutter å se den. Lenken virker til og med {expires}.',
+    },
     brief: {
       booked: '{owner} ({company}) har booket et møte.',
       interest: {
@@ -554,6 +583,13 @@ const TEXTS: Record<Lang, WriterTexts> = {
       'Den betjener sine kunder med egne medarbejdere og egen viden.',
       'Vi afklarer detaljerne med dig på mødet.',
     ],
+    outreach: {
+      subject: 'En kort video om {company}',
+      email:
+        'Hej {first},\n\njeg hedder {analyst} og er analytiker hos Mergero. Vi hjælper ejere af etablerede virksomheder med at finde den rigtige køber. Jeg har lavet en kort personlig video om {company}. Den viser købere fra Mergeros handler, og hvad andre ejere har gjort.\n\nDu kan se videoen her: {link}\n\nUnder videoen kan du booke et møde med mig. Linket er personligt og virker til og med {expires}.\n\nMed venlig hilsen\n{analyst}\nMergero',
+      short:
+        'Hej {first}, det er {analyst} fra Mergero. Jeg har lavet en kort personlig video til dig om {company}: {link} Det tager kun et par minutter at se den. Linket virker til og med {expires}.',
+    },
     brief: {
       booked: '{owner} ({company}) har booket et møde.',
       interest: {
@@ -659,6 +695,13 @@ const TEXTS: Record<Lang, WriterTexts> = {
       'Es betreut seine Kunden mit eigenem Team und eigenem Know-how.',
       'Die Einzelheiten klären wir gern mit Ihnen im Gespräch.',
     ],
+    outreach: {
+      subject: 'Ein kurzes Video über {company}',
+      email:
+        'Guten Tag {name},\n\nmein Name ist {analyst}, ich arbeite bei Mergero. Wir helfen Inhabern etablierter Unternehmen, den richtigen Käufer zu finden. Ich habe ein kurzes persönliches Video über {company} erstellt. Es zeigt Käufer aus Mergero-Transaktionen und was andere Inhaber erreicht haben.\n\nSie können das Video hier ansehen: {link}\n\nUnter dem Video können Sie einen Termin mit mir buchen. Der Link ist persönlich und gilt bis zum {expires}.\n\nMit freundlichen Grüßen\n{analyst}\nMergero',
+      short:
+        'Guten Tag {name}, hier ist {analyst} von Mergero. Ich habe ein kurzes persönliches Video für Sie über {company} erstellt: {link} Es dauert nur wenige Minuten. Der Link gilt bis zum {expires}.',
+    },
     brief: {
       booked: '{owner} ({company}) hat einen Termin gebucht.',
       interest: {
@@ -914,4 +957,13 @@ export function fallbackBriefText(input: { lang: Lang; brief: Omit<MeetingBrief,
   const request = { task: 'brief-text', lang: input.lang, brief: input.brief }
   if (checkBriefText(output, input.lang, request).ok) return output
   return { summary: texts.interest[input.brief.header.interest], questions: output.questions }
+}
+
+export function fallbackOutreach(context: OutreachContext): { subject: string; message: string } {
+  const texts = TEXTS[context.lang].outreach
+  const vars = { company: context.company, analyst: context.analystName, expires: context.expiresOn }
+  const greeted = (context.channel === 'email' ? texts.email : texts.short)
+    .replace(' {first}', context.ownerFirstName ? ` ${context.ownerFirstName}` : '')
+    .replace(' {name}', context.ownerName ? ` ${context.ownerName}` : '')
+  return { subject: fill(texts.subject, vars), message: fill(greeted, vars) }
 }

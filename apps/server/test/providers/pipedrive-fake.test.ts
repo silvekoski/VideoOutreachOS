@@ -66,7 +66,7 @@ describe('FakePipedriveClient', () => {
       phone: null,
     })
     expect(await pipedrive.getOrg(20)).toEqual(seed.organizations[0])
-    expect((await pipedrive.listDealsWithoutVideoField()).map((deal) => deal.id)).toEqual([40])
+    expect((await pipedrive.listOpenDeals()).map((deal) => deal.id)).toEqual([40, 41])
     expect(JSON.parse(await readFile(file, 'utf8')).deals).toHaveLength(3)
     expect(pipedrive.dealUrl(40)).toBe('https://fake-pipedrive.invalid/deal/40')
   })
@@ -98,7 +98,7 @@ describe('FakePipedriveClient', () => {
     const reloaded = new FakePipedriveClient({ file, seedFile })
     expect(await reloaded.getDeal(40)).toMatchObject({ videoUrl: 'https://tool.test/deals/40', stageId: 3 })
     expect(await reloaded.getDeal(41)).toMatchObject({ status: 'lost' })
-    expect(await reloaded.listDealsWithoutVideoField()).toEqual([])
+    expect((await reloaded.listOpenDeals()).map((deal) => deal.id)).toEqual([40])
 
     const stored = JSON.parse(await readFile(file, 'utf8'))
     expect(stored.deals[0]).toMatchObject({

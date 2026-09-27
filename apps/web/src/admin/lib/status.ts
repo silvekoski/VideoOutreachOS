@@ -31,15 +31,8 @@ export const STATUS_META: Record<DealStatus, StateMeta> = {
   form_sent: { label: 'Form sent', shape: 'square', tone: 'progress' },
   meeting_booked: { label: 'Meeting booked', shape: 'check', tone: 'success' },
   lost: { label: 'Lost', shape: 'slash', tone: 'neutral' },
+  won: { label: 'Won', shape: 'plus', tone: 'success' },
 }
-
-export const PUBLISHED_STATUSES: ReadonlySet<DealStatus> = new Set<DealStatus>([
-  'link_sent',
-  'opened',
-  'form_sent',
-  'meeting_booked',
-  'lost',
-])
 
 export const AUDIO_META: Record<AudioStatus | 'new_audio', StateMeta> = {
   ok: { label: 'Audio ready', shape: 'check', tone: 'success' },
@@ -68,7 +61,7 @@ export const CLONE_META: Record<AnalystDto['voice']['cloneStatus'], StateMeta> =
   failed: { label: 'Clone failed', shape: 'cross', tone: 'danger' },
 }
 
-export const INTEREST_BARS: Record<InterestLevel, 1 | 2 | 3> = { low: 1, medium: 2, high: 3 }
+export const INTEREST_SCORE: Record<InterestLevel, 1 | 2 | 3> = { low: 1, medium: 2, high: 3 }
 
 export const REVIEW_REASON_TITLES: Record<ReviewReasonCode, string> = {
   lines_missing: 'Company lines missing',

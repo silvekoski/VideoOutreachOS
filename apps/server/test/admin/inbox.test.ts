@@ -16,7 +16,9 @@ const { approveVersion, createVersion, markRenderStatus } = await import('../../
 const { paths } = await import('../../src/paths.ts')
 const { enqueue, getJob, jobKeys } = await import('../../src/queue/index.ts')
 const { SCRAPE_OK, T0, insertAnalyst, insertDeal, later, makeTimeline } = await import('../domain/fixtures.ts')
-const { addSession, addSessionEvent, createHarness, jsonBody, publishedDeal, stoppedAt } = await import('./harness.ts')
+const { addSession, addSessionEvent, createHarness, jsonBody, publishedDeal, stoppedAt, writeStorageFile } = await import(
+  './harness.ts'
+)
 
 const DAY = 24 * 60
 const RECORDED_AT = '2026-09-25T08:00:00.000Z'
@@ -325,12 +327,10 @@ describe('alerts', () => {
 })
 
 describe('GET /api/sessions/:id/events', () => {
-  it('returns the session, the slide times and the events in sequence order', async () => {
+  it('returns the session and the events in sequence order', async () => {
     const { status, body } = await h.json<SessionEventsDto>('/api/sessions/s-105/events')
     expect(status).toBe(200)
     expect(body.session).toMatchObject({ id: 's-105', channel: 'whatsapp', device: 'mobile', analytics: { stopSlide: 5 } })
-    expect(body.durationS).toBe(118)
-    expect(body.slides).toHaveLength(8)
     expect(body.events.map((event) => [event.seq, event.type])).toEqual([
       [0, 'open'],
       [1, 'play'],
@@ -338,5 +338,19 @@ describe('GET /api/sessions/:id/events', () => {
     ])
     expect((await h.request('/api/sessions/unknown/events')).status).toBe(404)
     expect((await h.request('/api/sessions/a%20b/events')).status).toBe(400)
+  })
+})
+
+describe('GET /api/sessions/:id/recording', () => {
+  it('returns the recording events of the session in chunk order', async () => {
+    const dir = 'deals/105/recordings/s-105'
+    writeStorageFile(`${dir}/2000-1.json`, JSON.stringify([{ type: 3, timestamp: 2000 }]))
+    writeStorageFile(`${dir}/1000-0.json`, JSON.stringify([{ type: 4, timestamp: 1000 }, { type: 2, timestamp: 1001 }]))
+    writeStorageFile(`${dir}/3000-2.json.tmp`, '[')
+    const { status, body } = await h.json<{ type: number; timestamp: number }[]>('/api/sessions/s-105/recording')
+    expect(status).toBe(200)
+    expect(body.map((event) => event.timestamp)).toEqual([1000, 1001, 2000])
+    expect((await h.request('/api/sessions/unknown/recording')).status).toBe(404)
+    expect((await h.request('/api/sessions/a%20b/recording')).status).toBe(400)
   })
 })

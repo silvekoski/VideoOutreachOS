@@ -64,6 +64,10 @@ export function analytics(overrides: Partial<DealAnalytics> = {}): DealAnalytics
     days: 1,
     lastEventId: 10,
     channel: 'email',
+    firstChannel: 'email',
+    buyerLinkTaps: 0,
+    calculatorResults: 0,
+    forwards: 0,
     ...overrides,
   }
 }

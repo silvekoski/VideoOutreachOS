@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import type { FormEvent, Ref } from 'react'
+import type { FormEvent } from 'react'
 import type { BookBody, BookResult, SlotDto, VideoPageData } from '@mergero/shared'
 import { fill } from '@mergero/shared/i18n/base'
 import type { PageStrings } from '@mergero/shared/i18n/base'
@@ -15,10 +15,9 @@ interface CalendarProps {
   data: VideoPageData
   strings: PageStrings
   locale: string
-  headingRef: Ref<HTMLHeadingElement>
 }
 
-export function Calendar({ data, strings, locale, headingRef }: CalendarProps) {
+export function Calendar({ data, strings, locale }: CalendarProps) {
   const id = useId()
   const confirmationRef = useRef<HTMLParagraphElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
@@ -107,12 +106,7 @@ export function Calendar({ data, strings, locale, headingRef }: CalendarProps) {
       data-region="calendar"
       className="rounded-2xl border border-line bg-white p-5 motion-safe:animate-reveal sm:p-6"
     >
-      <h2
-        ref={headingRef}
-        id={id}
-        tabIndex={-1}
-        className="flex scroll-mt-6 items-center gap-2 text-xl font-semibold tracking-tight text-ink"
-      >
+      <h2 id={id} className="flex items-center gap-2 text-xl font-semibold tracking-tight text-ink">
         <CalendarDays className="size-5 text-brand" aria-hidden="true" />
         {strings.calendarHeading}
       </h2>

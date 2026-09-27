@@ -1,25 +1,31 @@
-import { useState } from 'react'
-import { UserRound } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import type { RefObject } from 'react'
 import { Separator } from '@/components/ui/separator'
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useCurrentAnalyst } from '../analyst-context'
+import { AccountSection } from './account-section'
 import { IntroSection } from './intro-section'
 import { SettingsSection } from './settings-section'
 import { TemplatesSection } from './templates-section'
 import { VoiceSection } from './voice-section'
 
-export function ProfileSheet() {
-  const [open, setOpen] = useState(false)
+interface ProfileSheetProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  returnFocusTo: RefObject<HTMLElement | null>
+}
+
+export function ProfileSheet({ open, onOpenChange, returnFocusTo }: ProfileSheetProps) {
   const { analyst } = useCurrentAnalyst()
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon-sm" aria-label="Profile menu">
-          <UserRound aria-hidden="true" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-full gap-0 overflow-y-auto data-[side=right]:sm:max-w-xl">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="right"
+        className="w-full gap-0 overflow-y-auto data-[side=right]:sm:max-w-xl"
+        onCloseAutoFocus={(event) => {
+          event.preventDefault()
+          returnFocusTo.current?.focus()
+        }}
+      >
         <SheetHeader className="border-b">
           <SheetTitle>Profile menu</SheetTitle>
           <SheetDescription>
@@ -28,6 +34,8 @@ export function ProfileSheet() {
         </SheetHeader>
         {analyst ? (
           <div className="grid gap-5 p-4">
+            <AccountSection key={analyst.id} analyst={analyst} />
+            <Separator />
             <IntroSection analyst={analyst} />
             <Separator />
             <VoiceSection analyst={analyst} />

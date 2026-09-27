@@ -19,6 +19,8 @@ const PROTOCOL_TIMEOUT_MS = 60_000
 const NAVIGATION_TIMEOUT_MS = 30_000
 const NETWORK_IDLE_TIMEOUT_MS = 10_000
 const MAIN_MIN_CHARS = 200
+const MAX_CAPTURE_HEIGHT = 6 * VIEWPORT.height
+const PRELOAD_STEP_MS = 150
 
 interface ExtractedPage {
   markdown: string
@@ -75,7 +77,8 @@ export class LocalScraper implements ScraperClient {
         await sleep(CONSENT_SETTLE_MS)
         const consent = await runConsent(page, url)
         log.info('local scraper consent', { url, ...consent })
-        screenshotPng = Buffer.from(await page.screenshot({ type: 'png' }))
+        const height = await preloadPage(page)
+        screenshotPng = Buffer.from(await page.screenshot({ type: 'png', clip: { x: 0, y: 0, width: VIEWPORT.width, height } }))
       }
       const extracted = await page.evaluate(extractPage, CONSENT_HINT_PATTERN, CMP_CONTAINERS, MAIN_MIN_CHARS)
       return {
@@ -104,6 +107,25 @@ async function runConsent(page: Page, url: string): Promise<{ method: string | n
     log.warn('local scraper consent script failed', { url, error: messageOf(error) })
     return { method: 'error', visibleAfter: null }
   }
+}
+
+async function preloadPage(page: Page): Promise<number> {
+  const height = await page.evaluate(
+    async (maxHeight, step, stepMs) => {
+      const bottom = () => Math.min(document.documentElement.scrollHeight, maxHeight)
+      for (let y = step; y < bottom(); y += step) {
+        window.scrollTo(0, y)
+        await new Promise((resolve) => setTimeout(resolve, stepMs))
+      }
+      window.scrollTo(0, 0)
+      return bottom()
+    },
+    MAX_CAPTURE_HEIGHT,
+    VIEWPORT.height / 2,
+    PRELOAD_STEP_MS,
+  )
+  await page.waitForNetworkIdle({ idleTime: 500, timeout: NETWORK_IDLE_TIMEOUT_MS }).catch(() => undefined)
+  return Math.max(VIEWPORT.height, height)
 }
 
 function toScrapeError(url: string, error: unknown): ScrapeError {

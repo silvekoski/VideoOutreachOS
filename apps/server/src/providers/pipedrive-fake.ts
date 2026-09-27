@@ -9,11 +9,15 @@ import { paths } from '../paths.ts'
 import { ProviderError } from './errors.ts'
 import type {
   PipedriveActivityInput,
+  PipedriveChange,
+  PipedriveChanges,
   PipedriveClient,
   PipedriveDeal,
   PipedriveDealFields,
   PipedriveOrg,
+  PipedriveOrgPatch,
   PipedrivePerson,
+  PipedrivePersonPatch,
   PipedriveUser,
 } from './types.ts'
 
@@ -112,6 +116,7 @@ export class FakePipedriveClient implements PipedriveClient {
   readonly #file: string
   readonly #seedFile: string
   #queue: Promise<unknown> = Promise.resolve()
+  #seen: Map<string, string> | null = null
 
   constructor(options: FakePipedriveOptions = {}) {
     this.#file = options.file ?? paths.fakePipedrive
@@ -138,9 +143,43 @@ export class FakePipedriveClient implements PipedriveClient {
     return (await this.#read()).organizations.find((item) => item.id === id) ?? null
   }
 
-  async listDealsWithoutVideoField(): Promise<PipedriveDeal[]> {
+  async listOpenDeals(): Promise<PipedriveDeal[]> {
     const store = await this.#read()
-    return store.deals.filter((deal) => deal.status === 'open' && !deal.videoUrl).map(toDeal)
+    return store.deals.filter((deal) => deal.status === 'open').map(toDeal)
+  }
+
+  // The store has no update times, so a change is a difference to the store at the last call.
+  async listChanges(since: string): Promise<PipedriveChanges> {
+    const store = await this.#read()
+    const items: [PipedriveChange, unknown][] = [
+      ...store.deals.map((deal): [PipedriveChange, unknown] => [
+        { type: 'deal', id: deal.id, updatedAt: null, deal: { ...toDeal(deal), lostReason: deal.lostReason } },
+        deal,
+      ]),
+      ...store.persons.map((person): [PipedriveChange, unknown] => [{ type: 'person', id: person.id, updatedAt: null, deal: null }, person]),
+      ...store.organizations.map((org): [PipedriveChange, unknown] => [{ type: 'organization', id: org.id, updatedAt: null, deal: null }, org]),
+    ]
+    const seen = new Map(items.map(([change, item]) => [`${change.type}:${change.id}`, JSON.stringify(item)]))
+    const previous = this.#seen
+    this.#seen = seen
+    const changes = previous === null ? [] : items.map(([change]) => change).filter((change) => previous.get(`${change.type}:${change.id}`) !== seen.get(`${change.type}:${change.id}`))
+    return { changes, cursor: since, budget: null }
+  }
+
+  async updateOrg(id: number, patch: PipedriveOrgPatch): Promise<void> {
+    await this.#mutate('update organization', { orgId: id }, (store) => {
+      const org = store.organizations.find((item) => item.id === id)
+      if (!org) throw notFound(`organization ${id}`)
+      Object.assign(org, definedOnly(patch))
+    })
+  }
+
+  async updatePerson(id: number, patch: PipedrivePersonPatch): Promise<void> {
+    await this.#mutate('update person', { personId: id }, (store) => {
+      const person = store.persons.find((item) => item.id === id)
+      if (!person) throw notFound(`person ${id}`)
+      Object.assign(person, definedOnly(patch))
+    })
   }
 
   async setVideoField(dealId: number, url: string): Promise<void> {
@@ -164,7 +203,7 @@ export class FakePipedriveClient implements PipedriveClient {
   }
 
   async setDealFields(dealId: number, fields: PipedriveDealFields): Promise<void> {
-    const changed = Object.fromEntries(Object.entries(fields).filter(([, value]) => value !== undefined))
+    const changed = definedOnly(fields)
     if (Object.keys(changed).length === 0) return
     await this.#mutate('set deal fields', { dealId, fields: changed }, (store) => {
       const deal = findDeal(store, dealId)
@@ -289,6 +328,10 @@ function toDeal(deal: StoredDeal): PipedriveDeal {
     status: deal.status,
     videoUrl: deal.videoUrl,
   }
+}
+
+function definedOnly<T extends object>(patch: T): Partial<T> {
+  return Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined)) as Partial<T>
 }
 
 function findDeal(store: Store, dealId: number): StoredDeal {

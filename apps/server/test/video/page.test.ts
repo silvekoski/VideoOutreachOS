@@ -1,12 +1,12 @@
 import { rmSync } from 'node:fs'
 import path from 'node:path'
-import { fill, slideLabels, t } from '@mergero/shared'
-import type { DealCardItem, VideoPageData } from '@mergero/shared'
+import { fill, t } from '@mergero/shared'
+import type { VideoPageData } from '@mergero/shared'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { completeIntro, startIntro } from '../../src/domain/analysts.ts'
 import { requireDeal, updateDeal } from '../../src/domain/deals.ts'
 import { updateVersion } from '../../src/domain/timelines.ts'
-import { BUYERS, DEAL_ID, SLIDE_TIMES, T0, snapshot } from '../domain/fixtures.ts'
+import { DEAL_ID, SLIDE_TIMES, T0, snapshot } from '../domain/fixtures.ts'
 import { PUBLIC_BASE_URL, addRenderedVersion, createHarness, draftDeal, mgxData, publishedDeal } from './harness.ts'
 import type { Harness } from './harness.ts'
 
@@ -90,91 +90,22 @@ describe('GET /v/:code', () => {
       contact: { company: 'Mergero', address: 'Mannerheiminaukio 1A, 00100 Helsinki, Finland', email: 'office@mergero.com' },
     })
     expect(data.slides).toEqual(SLIDE_TIMES)
-    expect(data.transcript[0]).toEqual({ slide: 1, text: 'Hei, olen Aino Mergerosta.', screen: ['Aino Analyst'] })
-    expect(data.transcript.map((item) => item.slide)).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
     expect(data.buyers).toEqual([
-      { id: 'b1', name: 'Nordic Industrial Partners', focus: 'Buys metal workshops', website: 'https://nip.test' },
-      { id: 'b2', name: 'Baltic Growth Fund', focus: 'Invests in family firms', website: null },
-      { id: 'b3', name: 'Helsinki Holding', focus: 'Buys industrial service firms', website: 'https://hh.test' },
+      { id: 'b1', name: 'Nordic Industrial Partners', focus: 'Buys metal workshops', website: 'https://nip.test', logoUrl: `/v/${deal.linkCode}/logos/0` },
+      { id: 'b2', name: 'Baltic Growth Fund', focus: 'Invests in family firms', website: null, logoUrl: null },
+      { id: 'b3', name: 'Helsinki Holding', focus: 'Buys industrial service firms', website: 'https://hh.test', logoUrl: `/v/${deal.linkCode}/logos/2` },
     ])
   })
 
-  it('keeps the intro transcript of the published version after a new recording', async () => {
+  it('keeps the intro transcript of the published version in the captions after a new recording', async () => {
     const deal = publishedDeal(h)
     const recordedAt = '2026-09-26T13:00:00.000Z'
     startIntro(h.db, 10, 'fi', { recordedAt, transcript: 'Uuden tallenteen sanat.' }, T0)
     completeIntro(h.db, 10, 'fi', recordedAt, { file: 'analysts/10/intro-fi.mp4', durationS: 28 }, T0)
 
-    const data = bootstrap(await (await h.request(`/v/${deal.linkCode}`)).text())
-    expect(data.transcript[0]).toMatchObject({ slide: 1, text: 'Hei, olen Aino Mergerosta.' })
     const captions = await (await h.request(`/v/${deal.linkCode}/captions.v1.vtt`)).text()
     expect(captions).toContain('Hei, olen Aino Mergerosta.')
     expect(captions).not.toContain('Uuden tallenteen')
-  })
-
-  it('lists the text that each slide of the served version shows in the transcript', async () => {
-    const deal = publishedDeal(h, { patch: { country: 'DE', pageLanguage: 'en' }, timeline: { language: 'de' } })
-    const recent: DealCardItem[] = [
-      { id: 'r1', year: 2025, country: 'FI', text: 'Owner-led supplier of turned parts sold to a Swiss family office' },
-      { id: 'r2', year: 2024, country: 'SE', text: 'Plumbing and ventilation installer with 55 staff joined a service group' },
-    ]
-    const sector: DealCardItem[] = [
-      { id: 's1', year: 2025, country: 'DE', text: 'Hydraulic cylinder maker with 85 staff sold to a strategic buyer' },
-      { id: 's2', year: 2024, country: 'AT', text: 'Machine tool builder sold to a German mid-market fund' },
-    ]
-    updateVersion(h.db, deal.id, 1, (timeline) => ({
-      ...timeline,
-      segments: timeline.segments.map((segment) => {
-        const labels = segment.template === 'facecam' ? {} : slideLabels('de', segment.template)
-        const v = segment.variables
-        if (v.template === 'who-we-are') return { ...segment, labels, variables: { ...v, buyers: BUYERS.slice(0, 2), deals: recent } }
-        if (v.template === 'what-is-possible') return { ...segment, labels, variables: { ...v, deals: sector } }
-        return { ...segment, labels }
-      }) as typeof timeline.segments,
-    }))
-    const de = t('de').slides
-    const { transcript } = bootstrap(await (await h.request(`/v/${deal.linkCode}`)).text())
-    const screen = (slide: number) => transcript.find((part) => part.slide === slide)?.screen
-    expect(screen(2)).toEqual([
-      'Mergero verbindet Inhaber mit 2.200 Käufern',
-      `${de['who-we-are']['buyers-heading']}: Nordic Industrial Partners, Baltic Growth Fund`,
-      de['who-we-are']['deals-heading'],
-      '2025, Finnland: Owner-led supplier of turned parts sold to a Swiss family office',
-      '2024, Schweden: Plumbing and ventilation installer with 55 staff joined a service group',
-    ])
-    expect(screen(3)).toEqual([de['your-company'].headline, 'Acme Oy', 'Acme makes steel parts.', 'It has 46 staff.', 'It sells to ship yards.'])
-    expect(screen(4)).toEqual([de['your-figures'].headline, de['your-figures']['ask-form']])
-    expect(screen(5)).toEqual([
-      de.buyers.headline,
-      'Nordic Industrial Partners: Buys metal workshops',
-      'Baltic Growth Fund: Invests in family firms',
-      'Helsinki Holding: Buys industrial service firms',
-    ])
-    expect(screen(6)).toEqual([
-      de['what-is-possible'].headline,
-      '2025, Deutschland: Hydraulic cylinder maker with 85 staff sold to a strategic buyer',
-      '2024, Österreich: Machine tool builder sold to a German mid-market fund',
-    ])
-    expect(screen(7)).toEqual([de.privacy.headline, de.privacy['point-1'], de.privacy['point-2'], de.privacy['point-3']])
-    expect(screen(8)).toEqual([de['book-meeting'].headline, de['book-meeting'].line, 'Aino Analyst'])
-  })
-
-  it('lists the empty panel text of slides 5 and 6 without buyers or deals', async () => {
-    const deal = publishedDeal(h, { timeline: { language: 'de' } })
-    updateVersion(h.db, deal.id, 1, (timeline) => ({
-      ...timeline,
-      segments: timeline.segments.map((segment) => {
-        const v = segment.variables
-        if (v.template === 'buyers') return { ...segment, labels: slideLabels('de', 'buyers'), variables: { ...v, buyers: [] } }
-        if (v.template === 'what-is-possible') return { ...segment, labels: slideLabels('de', 'what-is-possible'), variables: { ...v, deals: [] } }
-        return segment
-      }) as typeof timeline.segments,
-    }))
-    const de = t('de').slides
-    const { transcript } = bootstrap(await (await h.request(`/v/${deal.linkCode}`)).text())
-    const screen = (slide: number) => transcript.find((part) => part.slide === slide)?.screen
-    expect(screen(5)).toEqual([de.buyers.headline, de.buyers.empty])
-    expect(screen(6)).toEqual([de['what-is-possible'].headline, de['what-is-possible'].empty])
   })
 
   it('gives the buyer scope of the served version', async () => {

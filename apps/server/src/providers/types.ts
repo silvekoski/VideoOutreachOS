@@ -61,6 +61,22 @@ export interface PipedriveOrg {
   nace: string | null
 }
 
+export interface PipedriveChange {
+  type: 'deal' | 'person' | 'organization'
+  id: number
+  updatedAt: string | null
+  deal: Pick<PipedriveDeal, 'status' | 'ownerId' | 'personId' | 'orgId'> & { lostReason: string | null } | null
+}
+
+export interface PipedriveChanges {
+  changes: PipedriveChange[]
+  cursor: string
+  budget: { limit: number; remaining: number } | null
+}
+
+export type PipedriveOrgPatch = Partial<Pick<PipedriveOrg, 'name' | 'website' | 'businessId' | 'nace'>>
+export type PipedrivePersonPatch = Partial<Pick<PipedrivePerson, 'name' | 'jobTitle' | 'email' | 'phone'>>
+
 export interface PipedriveDealFields {
   revenueRange?: string | null
   profitRange?: string | null
@@ -88,7 +104,10 @@ export interface PipedriveClient {
   getDeal(id: number): Promise<PipedriveDeal | null>
   getPerson(id: number): Promise<PipedrivePerson | null>
   getOrg(id: number): Promise<PipedriveOrg | null>
-  listDealsWithoutVideoField(): Promise<PipedriveDeal[]>
+  listOpenDeals(): Promise<PipedriveDeal[]>
+  listChanges(since: string): Promise<PipedriveChanges>
+  updateOrg(id: number, patch: PipedriveOrgPatch): Promise<void>
+  updatePerson(id: number, patch: PipedrivePersonPatch): Promise<void>
   setVideoField(dealId: number, url: string): Promise<void>
   moveStage(dealId: number, stage: Stage): Promise<void>
   setLost(dealId: number, reason: string): Promise<void>

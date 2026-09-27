@@ -3,6 +3,7 @@ import { readdir } from 'node:fs/promises'
 import path from 'node:path'
 import {
   LANGUAGE_LOCALES,
+  MIN_COMPANY_LINES,
   SLOT_LIMITS,
   checkLines,
   checkScript,
@@ -33,6 +34,7 @@ import type {
   ReviewReason,
   ScriptContext,
   ScriptSlideNumber,
+  SectorSummary,
   Segment,
   SlideSegment,
   TemplateName,
@@ -44,12 +46,12 @@ import type { AnalystRow, DealRow } from '../db/rows.ts'
 import { readyIntro, requireAnalyst } from '../domain/analysts.ts'
 import { mergeroConfig } from '../domain/config.ts'
 import { requireDeal, updateDeal } from '../domain/deals.ts'
-import { LINES_SLOT, MIN_COMPANY_LINES, advance, recordReviewReasons, videoBasis } from '../domain/pipeline.ts'
+import { LINES_SLOT, advance, recordReviewReasons, videoBasis } from '../domain/pipeline.ts'
 import { createVersion, getTimeline, newestTimeline, updateVersion } from '../domain/timelines.ts'
 import { log } from '../log.ts'
 import { paths } from '../paths.ts'
 import { NonRetryableError, errorText } from '../queue/index.ts'
-import { calculatorFor } from '../video/valuation.ts'
+import { calculatorFor, sectorSummary } from '../video/valuation.ts'
 import { askModel } from './ask-model.ts'
 import type { ModelAnswer } from './ask-model.ts'
 import { companyLinesPrompt, slideScriptPrompt, translateTextsPrompt } from './prompts.ts'
@@ -86,6 +88,7 @@ interface SlideContent {
   recentDeals: MgxClosedDeal[]
   sectorDeals: MgxClosedDeal[]
   dealScope: DealScope
+  sectorSummary: SectorSummary | null
 }
 
 interface Written {
@@ -197,6 +200,7 @@ function selectContent(deal: DealRow, mgx: MgxData): SlideContent {
     recentDeals,
     sectorDeals: possible.deals,
     dealScope: possible.scope,
+    sectorSummary: possible.scope === 'sector' ? sectorSummary(deal) : null,
   }
 }
 
@@ -287,7 +291,7 @@ function buyerItem(buyer: MgxBuyer, logos: ReadonlyMap<string, string>): BuyerSl
 }
 
 function dealCard(item: MgxClosedDeal): DealCardItem {
-  return { id: item.id, year: item.year, country: item.country, text: item.text }
+  return { id: item.id, year: item.year, country: item.country, text: item.text, profitMultiple: item.profitMultiple }
 }
 
 function labelsFor(lang: Lang, template: TemplateName, vars: Record<string, string>): Record<string, string> {
@@ -359,7 +363,7 @@ function buildTimeline(
         : { template: 'your-figures', mode: 'ask', calculator: calculatorFor(deal) !== null },
     ],
     [5, { template: 'buyers', buyers: content.buyers.map((buyer) => buyerItem(buyer, logos)), scope: content.buyerScope }],
-    [6, { template: 'what-is-possible', deals: content.sectorDeals.map(dealCard), scope: content.dealScope }],
+    [6, { template: 'what-is-possible', deals: content.sectorDeals.map(dealCard), scope: content.dealScope, summary: content.sectorSummary }],
     [7, { template: 'privacy' }],
     [8, { template: 'book-meeting', analystName: analyst.name, company: snapshot.company }],
   ]
@@ -514,7 +518,11 @@ async function writeLines(ctx: JobContext, deal: DealRow, lang: Lang, company: s
     },
     { dealId: deal.id, slide: 3 },
   )
-  return answer.ok ? { ok: true, value: answer.value.lines.map((line) => line.trim()) } : answer
+  if (answer.ok) return { ok: true, value: answer.value.lines.map((line) => line.trim()) }
+  const kept = filledLines(answer.last?.lines ?? []).filter((line) => fits(LINES_SLOT, line))
+  if (!checkLines(kept, lang, input).ok) return { ok: false, errors: answer.errors }
+  log.warn('company lines kept without the lines that failed the checks', { dealId: deal.id, kept: kept.length, errors: answer.errors })
+  return { ok: true, value: kept }
 }
 
 async function writeScript(
@@ -536,7 +544,7 @@ async function writeScript(
     },
     { dealId, slide: segment.slide },
   )
-  return answer.ok ? { ok: true, value: answer.value.script.trim() } : answer
+  return answer.ok ? { ok: true, value: answer.value.script.trim() } : { ok: false, errors: answer.errors }
 }
 
 async function writeContent(

@@ -1,4 +1,5 @@
 import type { ProviderStatus } from '@mergero/shared'
+import { DEV_VOICE_ID } from '../dev-bypass.ts'
 import { env } from '../env.ts'
 import { log } from '../log.ts'
 import { paths } from '../paths.ts'
@@ -14,7 +15,7 @@ import { FakePipedriveClient } from './pipedrive-fake.ts'
 import { RealPipedriveClient } from './pipedrive-real.ts'
 import { LocalScraper } from './scraper-local.ts'
 import { FakeSpeech } from './speech-fake.ts'
-import type { PipedriveClient, Providers } from './types.ts'
+import type { PipedriveClient, Providers, SpeechClient } from './types.ts'
 
 function fake<T>(provider: string, missing: string, fallback: string, client: T): T {
   log.warn('fake provider in use', { provider, reason: `${missing} is not set`, fake: fallback })
@@ -24,6 +25,16 @@ function fake<T>(provider: string, missing: string, fallback: string, client: T)
 function realPipedrive(token: string): PipedriveClient {
   if (!env.pipedriveDomain) throw new Error('PIPEDRIVE_COMPANY_DOMAIN must be set when PIPEDRIVE_API_TOKEN is set')
   return new RealPipedriveClient({ token, domain: env.pipedriveDomain, config: loadPipedriveConfig() })
+}
+
+function withDevVoice(speech: SpeechClient): SpeechClient {
+  if (!env.devBypass) return speech
+  const devSpeech = new FakeSpeech()
+  return {
+    mode: speech.mode,
+    synthesize: (request) => (request.voiceId === DEV_VOICE_ID ? devSpeech : speech).synthesize(request),
+    cloneVoice: (name, sample, fileName) => speech.cloneVoice(name, sample, fileName),
+  }
 }
 
 export function createProviders(): Providers {
@@ -37,9 +48,11 @@ export function createProviders(): Providers {
     model: env.featherlessKey
       ? new FeatherlessClient(env.featherlessKey)
       : fake('featherless', 'FEATHERLESS_API_KEY', 'template writer from @mergero/shared', new FakeModel()),
-    speech: env.elevenlabsKey
-      ? new ElevenLabsClient(env.elevenlabsKey, env.elevenlabsModel)
-      : fake('elevenlabs', 'ELEVENLABS_API_KEY', 'macOS say or silence', new FakeSpeech()),
+    speech: withDevVoice(
+      env.elevenlabsKey
+        ? new ElevenLabsClient(env.elevenlabsKey, env.elevenlabsModel)
+        : fake('elevenlabs', 'ELEVENLABS_API_KEY', 'macOS say or silence', new FakeSpeech()),
+    ),
     mgx: new McpMgxClient(env.mgxUrl),
     financials: new AsiakastietoClient(env.asiakastietoUrl),
     linkedin: new SeedLinkedInSource(),

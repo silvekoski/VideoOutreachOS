@@ -59,8 +59,8 @@ const SAMPLE_DEALS: DealCardItem[] = [
 ]
 
 const SECTOR_DEALS: DealCardItem[] = [
-  { id: 'd4', year: 2025, country: 'FI', text: 'A Finnish machining company with 40 staff found a strategic buyer in eight months and kept its brand.' },
-  { id: 'd5', year: 2023, country: 'NO', text: 'A Norwegian subcontractor for the process industry was sold to an owner-led industrial group.' },
+  { id: 'd4', year: 2025, country: 'FI', text: 'A Finnish machining company with 40 staff found a strategic buyer in eight months and kept its brand.', profitMultiple: 6.4 },
+  { id: 'd5', year: 2023, country: 'NO', text: 'A Norwegian subcontractor for the process industry was sold to an owner-led industrial group.', profitMultiple: 5.1 },
 ]
 
 function logoSvg(logo: (typeof SAMPLE_LOGOS)[number]): string {
@@ -185,7 +185,7 @@ function slideContents(media: SampleMedia): SlideContent[] {
       variables: { template: 'your-figures', mode: 'figures', revenue: 4_200_000, profit: 610_000, revenueText: '€4.2M', profitText: '€610K', fiscalYear: 2025 },
     },
     { template: 'buyers', variables: { template: 'buyers', buyers } },
-    { template: 'what-is-possible', variables: { template: 'what-is-possible', deals: SECTOR_DEALS } },
+    { template: 'what-is-possible', variables: { template: 'what-is-possible', deals: SECTOR_DEALS, summary: { dealCount: 14, p25: 4.8, p75: 7.2 } } },
     { template: 'privacy', variables: { template: 'privacy' } },
     { template: 'book-meeting', variables: { template: 'book-meeting', analystName: 'Laura Mäkelä', company: 'Example Industrial Oy' } },
   ]

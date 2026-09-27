@@ -4,6 +4,8 @@ import { nowIso, sql, transaction } from '../db/index.ts'
 import type { Db } from '../db/index.ts'
 import { log } from '../log.ts'
 import { paths } from '../paths.ts'
+import { dealEngagement } from './brief-data.ts'
+import { requireDeal } from './deals.ts'
 import { closeOpenTasks } from './stages.ts'
 
 async function removeLateMedia(db: Db, storageDir: string): Promise<void> {
@@ -38,6 +40,13 @@ export async function purgeExpired(db: Db, now: Date = new Date(), storageDir: s
     }
     transaction(db, () => {
       closeOpenTasks(db, id, now)
+      const deal = requireDeal(db, id)
+      const engagement = dealEngagement(db, deal)
+      sql(
+        db,
+        `UPDATE deals SET analytics = json_set(analytics, '$.interest', ?, '$.signals', json(?), '$.saleTiming', ?)
+         WHERE id = ? AND analytics IS NOT NULL`,
+      ).run(engagement?.interest ?? null, JSON.stringify(engagement?.signals ?? null), deal.form?.timing ?? null, id)
       sql(db, 'DELETE FROM events WHERE deal_id = ?').run(id)
       sql(db, 'DELETE FROM sessions WHERE deal_id = ?').run(id)
       sql(db, 'DELETE FROM briefs WHERE deal_id = ?').run(id)

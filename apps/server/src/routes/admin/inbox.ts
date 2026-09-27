@@ -8,6 +8,7 @@ import { advance } from '../../domain/pipeline.ts'
 import { getJob, retryJob } from '../../queue/index.ts'
 import type { AnyJob, JobType } from '../../queue/index.ts'
 import { inboxDto } from '../../views/inbox.ts'
+import { renderQueue } from '../../views/queue.ts'
 import { analystFromQuery } from './analysts.ts'
 import { adminContext } from './context.ts'
 import { parseId } from './http.ts'
@@ -39,6 +40,8 @@ inboxRoutes.get('/inbox', (c) => {
   const { db, now } = adminContext()
   return c.json(inboxDto(db, analystFromQuery(c, db), now))
 })
+
+inboxRoutes.get('/queue', (c) => c.json(renderQueue(adminContext().db)))
 
 inboxRoutes.post('/jobs/:id/retry', (c) => {
   const { db, now } = adminContext()

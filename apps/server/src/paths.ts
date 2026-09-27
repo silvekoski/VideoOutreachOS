@@ -28,6 +28,7 @@ export const paths = {
   intro: (analystId: number, lang: Lang) => path.join(root, 'analysts', String(analystId), `intro-${lang}.mp4`),
   voiceSample: (analystId: number) => path.join(root, 'analysts', String(analystId), 'voice-sample.mp3'),
   consent: (analystId: number) => path.join(root, 'analysts', String(analystId), 'consent.pdf'),
+  photo: (analystId: number) => path.join(root, 'analysts', String(analystId), 'photo.jpg'),
 }
 
 export function insideDir(dir: string, file: string): string | null {

@@ -25,10 +25,10 @@ Open http://localhost:3000. The command starts four processes:
 |---|---|---|
 | API | http://localhost:3000 | admin panel, video page, media, mock Asiakastieto |
 | Worker | none | scrape, scripts, audio, render, Pipedrive writes, hourly sweep, backup |
-| Mock MGX | http://localhost:3100 | MCP server, demo company sites, buyer logos |
+| Mock MGX | http://localhost:3100 | MCP server, buyer logos |
 | Vite | http://localhost:5173 | front end modules in development |
 
-Without API keys, each external service uses a local fake, and the top bar shows "Demo providers":
+Without API keys, each external service uses a local fake. The avatar in the top bar then shows an amber dot, and its menu lists the "Demo providers":
 
 | Service | Key | Fake |
 |---|---|---|
@@ -37,7 +37,9 @@ Without API keys, each external service uses a local fake, and the top bar shows
 | Featherless (Kimi-K3) | `FEATHERLESS_API_KEY` | template writer |
 | ElevenLabs | `ELEVENLABS_API_KEY` | macOS `say`, else silence |
 
-The hosted Firecrawl service cannot read the demo sites on localhost. Use the local scraper for the demo sites.
+The demo companies in `seed/pipedrive.json` are real companies with public websites, so both scrapers can read them. The seed has no figures for them. Slide 4 asks the owner to enter the figures. The contact emails use the reserved domain `example.com`, so that no message goes to a real person.
+
+For local tests without a face-cam intro or a voice clone, set `DEV_BYPASS=1`. Then an analyst without an intro gets a 3 s placeholder clip, and an analyst without a voice clone gets the macOS `say` voice. The worker makes the clip at start and moves the blocked deals forward. The bypass has no effect when `NODE_ENV` is `production`.
 
 ## Make a first video
 
@@ -56,7 +58,7 @@ pnpm setup:pipedrive   # creates the custom fields and stages, writes config/pip
 pnpm seed:pipedrive    # optional: copies the demo companies, persons and deals into the account
 ```
 
-Pipedrive does not accept `localhost` in a website address. The seed script writes the demo sites as `http://localtest.me:3100/sites/...`. The public DNS name `localtest.me` points to 127.0.0.1. To scrape these sites, remove `FIRECRAWL_API_KEY`, because the hosted Firecrawl service cannot read them.
+The API reads the Pipedrive changes every 10 s while an admin panel is open, and every 60 s when no panel is open. When less than 20 % of the daily token budget remains, it reads every 120 s. A lost, won or deleted deal in Pipedrive closes the deal in the tool. "Edit contact" on the deal page saves the company and contact data in Pipedrive.
 
 ## Production
 

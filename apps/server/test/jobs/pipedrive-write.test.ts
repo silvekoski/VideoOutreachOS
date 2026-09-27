@@ -132,6 +132,10 @@ describe('pipedrive-write job', () => {
           days: 1,
           lastEventId: 9,
           channel: 'whatsapp',
+          firstChannel: 'whatsapp',
+          buyerLinkTaps: 0,
+          calculatorResults: 0,
+          forwards: 0,
         },
       },
       T0,
@@ -154,7 +158,7 @@ describe('pipedrive-write job', () => {
   })
 
   it('keeps the link channel of the stored analytics after the sweep deleted the sessions', async () => {
-    const analytics: Omit<DealAnalytics, 'channel'> = { opens: 1, sessions: 1, totalWatchS: 40, perSlide: [], stopSlide: 3, replays: 0, completed: false, days: 1, lastEventId: 4 }
+    const analytics: Omit<DealAnalytics, 'channel'> = { opens: 1, sessions: 1, totalWatchS: 40, perSlide: [], stopSlide: 3, replays: 0, completed: false, days: 1, lastEventId: 4, firstChannel: null, buyerLinkTaps: 0, calculatorResults: 0, forwards: 0 }
     updateDeal(t.db, DEAL_ID, { analytics: { ...analytics, channel: 'linkedin' } }, T0)
     queue({ dealId: DEAL_ID, op: 'analytics' })
     await runAll()

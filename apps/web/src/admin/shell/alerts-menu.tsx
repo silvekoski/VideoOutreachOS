@@ -52,7 +52,7 @@ export function AlertsMenu() {
   return (
     <DropdownMenu open={open} onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon-sm" className="relative" aria-label={`Alerts, ${unread} unread`}>
+        <Button variant="ghost" size="icon" className="relative rounded-full" aria-label={`Alerts, ${unread} unread`}>
           <Bell aria-hidden="true" />
           {unread > 0 ? (
             <span

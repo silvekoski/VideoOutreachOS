@@ -1,6 +1,6 @@
 import { DEAL_STATUSES } from '@mergero/shared'
 import { describe, expect, it } from 'vitest'
-import { AUDIO_META, INTEREST_BARS, PUBLISHED_STATUSES, STATUS_META, audioMeta } from '../../src/admin/lib/status'
+import { AUDIO_META, INTEREST_SCORE, STATUS_META, audioMeta } from '../../src/admin/lib/status'
 
 describe('STATUS_META', () => {
   it('gives each status a word and a shape', () => {
@@ -19,10 +19,6 @@ describe('STATUS_META', () => {
     const labels = DEAL_STATUSES.map((status) => STATUS_META[status].label)
     expect(new Set(labels).size).toBe(DEAL_STATUSES.length)
   })
-
-  it('treats the five Pipedrive stages as published', () => {
-    expect([...PUBLISHED_STATUSES].sort()).toEqual(['form_sent', 'link_sent', 'lost', 'meeting_booked', 'opened'])
-  })
 })
 
 describe('audioMeta', () => {
@@ -39,9 +35,9 @@ describe('audioMeta', () => {
   })
 })
 
-describe('INTEREST_BARS', () => {
+describe('INTEREST_SCORE', () => {
   it('orders the levels by bar count', () => {
-    expect(INTEREST_BARS.low).toBeLessThan(INTEREST_BARS.medium)
-    expect(INTEREST_BARS.medium).toBeLessThan(INTEREST_BARS.high)
+    expect(INTEREST_SCORE.low).toBeLessThan(INTEREST_SCORE.medium)
+    expect(INTEREST_SCORE.medium).toBeLessThan(INTEREST_SCORE.high)
   })
 })

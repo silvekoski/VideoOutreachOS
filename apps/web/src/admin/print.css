@@ -1,6 +1,4 @@
 @media print {
-  [data-slot='sidebar-gap'],
-  [data-slot='sidebar-container'],
   [data-sonner-toaster] {
     display: none !important;
   }

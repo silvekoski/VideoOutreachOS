@@ -22,7 +22,6 @@ const CONTENT_TYPES: Record<string, string> = {
 export interface StaticMount {
   prefix: string
   root: string
-  directoryIndex: boolean
 }
 
 export function sendText(res: ServerResponse, status: number, text: string, headers: Record<string, string> = {}): void {
@@ -58,19 +57,9 @@ export async function serveStatic(req: IncomingMessage, res: ServerResponse, url
   const rest = url.pathname.slice(mount.prefix.length)
   const segments = safeSegments(rest)
   const root = path.resolve(mount.root)
-  let file = segments === null ? null : path.join(root, ...segments)
-  if (file === null || !file.startsWith(root + path.sep)) return sendText(res, 404, 'Not found')
-
-  let info = await statOrNull(file)
-  if (info?.isDirectory()) {
-    if (!mount.directoryIndex) return sendText(res, 404, 'Not found')
-    if (!rest.endsWith('/')) return sendText(res, 301, 'Moved permanently', { location: `${url.pathname}/${url.search}` })
-    file = path.join(file, 'index.html')
-    info = await statOrNull(file)
-  } else if (rest.endsWith('/')) {
-    return sendText(res, 404, 'Not found')
-  }
-  if (!info?.isFile()) return sendText(res, 404, 'Not found')
+  const file = segments === null ? null : path.join(root, ...segments)
+  if (file === null || !file.startsWith(root + path.sep) || rest.endsWith('/')) return sendText(res, 404, 'Not found')
+  if (!(await statOrNull(file))?.isFile()) return sendText(res, 404, 'Not found')
 
   const body = await readFile(file)
   res

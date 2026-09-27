@@ -1,5 +1,16 @@
 import { computeSignals, countryTimeZone, formatAmount, interestLevel, t } from '@mergero/shared'
-import type { Amount, DealAnalytics, FigureValue, FormAnswers, Lang, MeetingBrief, StoredEvent, Timeline } from '@mergero/shared'
+import type {
+  Amount,
+  DealAnalytics,
+  FigureValue,
+  FormAnswers,
+  InterestLevel,
+  Lang,
+  MeetingBrief,
+  SignalKey,
+  StoredEvent,
+  Timeline,
+} from '@mergero/shared'
 import { nowIso, sql, transaction } from '../db/index.ts'
 import type { Db } from '../db/index.ts'
 import { toBriefRow } from '../db/rows.ts'
@@ -27,6 +38,10 @@ const EMPTY_ANALYTICS: DealAnalytics = {
   days: 0,
   lastEventId: null,
   channel: null,
+  firstChannel: null,
+  buyerLinkTaps: 0,
+  calculatorResults: 0,
+  forwards: 0,
 }
 
 export function newestBrief(db: Db, dealId: number): BriefRow | null {
@@ -49,7 +64,7 @@ function amountFigure(amount: Amount): FigureValue {
     : { type: 'range', min: amount.min, max: amount.max, value: null, source: 'form', fiscalYear: null }
 }
 
-function figures(deal: DealRow): MeetingBrief['figures'] {
+export function figures(deal: DealRow): MeetingBrief['figures'] {
   const official = deal.financials?.source === 'asiakastieto' ? deal.financials : null
   const figure = (amount: Amount | null | undefined, value: number | undefined): FigureValue | null => {
     if (amount) return amountFigure(amount)
@@ -118,6 +133,30 @@ function briefAnalytics(db: Db, deal: DealRow): DealAnalytics {
     log.warn('brief analytics from the stored deal numbers', { dealId: deal.id, error })
     return deal.analytics ?? EMPTY_ANALYTICS
   }
+}
+
+export interface DealEngagement {
+  interest: InterestLevel
+  signals: SignalKey[]
+}
+
+export function dealEngagement(db: Db, deal: DealRow): DealEngagement | null {
+  if (deal.firstOpenAt === null) return null
+  if (deal.expiredAt !== null) {
+    const { interest, signals } = deal.analytics ?? {}
+    return interest && signals ? { interest, signals } : null
+  }
+  const signals = computeSignals({
+    analytics: briefAnalytics(db, deal),
+    events: listEvents(db, deal.id),
+    form: deal.form,
+    sessionDays: listSessions(db, deal.id).map((session) => ({ sessionId: session.id, localDay: session.localDay })),
+  })
+  return { interest: interestLevel(signals), signals: signals.map((signal) => signal.key) }
+}
+
+export function dealInterest(db: Db, deal: DealRow): InterestLevel | null {
+  return dealEngagement(db, deal)?.interest ?? null
 }
 
 export function buildBriefData(db: Db, dealId: number, now: Date = new Date()): BriefData {

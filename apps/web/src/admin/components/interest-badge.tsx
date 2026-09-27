@@ -1,25 +1,19 @@
 import type { InterestLevel } from '@mergero/shared'
-import { INTEREST_BARS } from '../lib/status'
+import { INTEREST_SCORE } from '../lib/status'
 import { cn } from '@/lib/utils'
 
-export function InterestBadge({ level, label, className }: { level: InterestLevel; label: string; className?: string }) {
-  const bars = INTEREST_BARS[level]
+const CHIP_CLASSES: Record<InterestLevel, string> = {
+  high: 'bg-emerald-700 text-white',
+  medium: 'bg-amber-700 text-white',
+  low: 'bg-muted-foreground text-background',
+}
+
+export function InterestBadge({ level, label, className }: { level: InterestLevel; label?: string; className?: string }) {
   return (
-    <span className={cn('inline-flex items-center gap-1.5 text-xs font-medium whitespace-nowrap', className)}>
-      <svg viewBox="0 0 14 12" aria-hidden="true" focusable="false" className="h-3 w-3.5 shrink-0">
-        {[0, 1, 2].map((index) => (
-          <rect
-            key={index}
-            x={index * 5}
-            y={8 - index * 4}
-            width="3.5"
-            height={4 + index * 4}
-            rx="0.5"
-            fill="currentColor"
-            opacity={index < bars ? 1 : 0.25}
-          />
-        ))}
-      </svg>
+    <span className={cn('inline-flex items-center gap-2 text-sm whitespace-nowrap', className)}>
+      <span aria-hidden="true" className={cn('grid size-5 shrink-0 place-items-center rounded-md text-xs font-semibold', CHIP_CLASSES[level])}>
+        {INTEREST_SCORE[level]}
+      </span>
       {label}
     </span>
   )

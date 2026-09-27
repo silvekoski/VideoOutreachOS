@@ -96,6 +96,15 @@ importers:
       '@mergero/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@rrweb/record':
+        specifier: 2.1.6
+        version: 2.1.6
+      '@rrweb/replay':
+        specifier: 2.1.6
+        version: 2.1.6
+      '@rrweb/types':
+        specifier: 2.1.6
+        version: 2.1.6
       '@tanstack/react-query':
         specifier: 5.104.0
         version: 5.104.0(react@19.3.0)
@@ -1746,6 +1755,18 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@rrweb/record@2.1.6':
+    resolution: {integrity: sha512-dHOrWa97l3C+BBsUd+zgLtErTZavzudJunu1HN2bV6WhTBLGk7z8BY1fWw0QerYK7qJJyrBE9D6XHcISVdVGQQ==}
+
+  '@rrweb/replay@2.1.6':
+    resolution: {integrity: sha512-Ti7zPk3Lbp33N9rKtIPCCIbUm4ctJMRRIMG5/5uI70M0efpSC1cpo/Eq8ELVW/5zWrkiElgmnPR0+h+oS79ASA==}
+
+  '@rrweb/types@2.1.6':
+    resolution: {integrity: sha512-DacFzGpPbQ91q3rRyh/AeZrtFYYonmLT+qgGlmh2iGcW2HPnrABJNgJWhpyzYwp/xed6Fbpi8yMxhRBlrOY0ZA==}
+
+  '@rrweb/utils@2.1.6':
+    resolution: {integrity: sha512-BIRXcxiytJs5Guxw0tzsnVS7ukcMqtnxixjIGvV49VdJeOEG6NJeMU7o8efbHW1D52a12Y8QsgDjgDgblg3org==}
+
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
 
@@ -1888,6 +1909,9 @@ packages:
 
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
+
+  '@types/css-font-loading-module@0.0.7':
+    resolution: {integrity: sha512-nl09VhutdjINdWyXxHWN/w9zlNCfr60JUqJbd24YXUuCwgeL0TpFSdElCwb6cxfB6ybE19Gjj4g0jsgkXxKv1Q==}
 
   '@types/d3-array@3.2.2':
     resolution: {integrity: sha512-hOLWVbm7uRza0BYXpIIW5pxfrKe0W+D5lrFiAEYR+pb6w3N2SwSMaJbXdUfSEv+dT4MfHBLtn5js0LAWaO6otw==}
@@ -2071,6 +2095,9 @@ packages:
     engines: {node: '>=14.6'}
     deprecated: this version has critical issues, please update to the latest version
 
+  '@xstate/fsm@1.6.5':
+    resolution: {integrity: sha512-b5o1I6aLNeYlU/3CPlj/Z91ybk1gUsKT+5NAJI+2W4UjvS5KLG28K9v5UvNoFVjHV8PajVZ00RH3vnjyQO7ZAw==}
+
   accepts@2.0.0:
     resolution: {integrity: sha512-5cvg6CtKwfgdmVqY1WIiXKc3Q1bkRqGLi+2W/6ao+6Y7gu/RCwRuAhGEzh5B4KlszSuTLgZYuqFqo5bImjNKng==}
     engines: {node: '>= 0.6'}
@@ -2161,6 +2188,10 @@ packages:
   balanced-match@4.0.4:
     resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
     engines: {node: 18 || 20 || >=22}
+
+  base64-arraybuffer@1.0.2:
+    resolution: {integrity: sha512-I3yl4r9QB5ZRY3XuJVEPfc2XhZO6YweFPI+UovAzn+8/hb3oJ6lnysaFcjVpkCPfVWFUDvoZ8kmVDP7WyRtYtQ==}
+    engines: {node: '>= 0.6.0'}
 
   baseline-browser-mapping@2.11.26:
     resolution: {integrity: sha512-GLQdD3y6UF8iVuMJl5fHgE4jdn/ua7n+toKfLgNlg3BqQtOZjpy68T8Tup8/wGWZCDlm7KMg7tPb4MPn7oN0TQ==}
@@ -3905,6 +3936,15 @@ packages:
   router@2.2.0:
     resolution: {integrity: sha512-nLTrUKm2UyiL7rlhapu/Zl45FwNgkZGaCpZbIHajDYgwlJCOzLSk+cIPAnsEqV955GjILJnKbdQC1nVPz+gAYQ==}
     engines: {node: '>= 18'}
+
+  rrdom@2.1.6:
+    resolution: {integrity: sha512-EMRrTs1GRsmb8bNyAs107wG7eRwVEOvDUBsnCyvQnVV6elrmrua/AeS0tdcA0gLW4eptr4l6bRsS/2QRICvdqQ==}
+
+  rrweb-snapshot@2.1.6:
+    resolution: {integrity: sha512-X03+x3AdWTbpD4Swb54CCJoEauYTv/O2ah0d3ZVv5rgr6bv0Ty5mxNjEyEEfNC1dQ8VdyjKKJgDG3A00FV0lNg==}
+
+  rrweb@2.1.6:
+    resolution: {integrity: sha512-OMdw4lWyfCx2fNhKCv1eZe54oVmD8r4QZsCXKY9fdt+cD/eiiupFgMHoFuwbwvltr4JH3IwWKXoadVjiMNhOZQ==}
 
   run-applescript@7.1.0:
     resolution: {integrity: sha512-DPe5pVFaAsinSaV6QjQ6gdiedWDcRCbUuiQfQa2wmWV7+xC9bGulGI8+TdRmoFkAPaBXk8CrAbnlY2ISniJ47Q==}
@@ -6094,6 +6134,21 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.63.5':
     optional: true
 
+  '@rrweb/record@2.1.6':
+    dependencies:
+      '@rrweb/types': 2.1.6
+      '@rrweb/utils': 2.1.6
+      rrweb: 2.1.6
+
+  '@rrweb/replay@2.1.6':
+    dependencies:
+      '@rrweb/types': 2.1.6
+      rrweb: 2.1.6
+
+  '@rrweb/types@2.1.6': {}
+
+  '@rrweb/utils@2.1.6': {}
+
   '@sec-ant/readable-stream@0.4.1': {}
 
   '@sindresorhus/merge-streams@4.0.0': {}
@@ -6220,6 +6275,8 @@ snapshots:
     dependencies:
       '@types/deep-eql': 4.0.2
       assertion-error: 2.0.1
+
+  '@types/css-font-loading-module@0.0.7': {}
 
   '@types/d3-array@3.2.2': {}
 
@@ -6448,6 +6505,8 @@ snapshots:
 
   '@xmldom/xmldom@0.9.10': {}
 
+  '@xstate/fsm@1.6.5': {}
+
   accepts@2.0.0:
     dependencies:
       mime-types: 3.0.2
@@ -6516,6 +6575,8 @@ snapshots:
   balanced-match@1.0.2: {}
 
   balanced-match@4.0.4: {}
+
+  base64-arraybuffer@1.0.2: {}
 
   baseline-browser-mapping@2.11.26: {}
 
@@ -8487,6 +8548,25 @@ snapshots:
       path-to-regexp: 8.4.2
     transitivePeerDependencies:
       - supports-color
+
+  rrdom@2.1.6:
+    dependencies:
+      rrweb-snapshot: 2.1.6
+
+  rrweb-snapshot@2.1.6:
+    dependencies:
+      postcss: 8.5.28
+
+  rrweb@2.1.6:
+    dependencies:
+      '@rrweb/types': 2.1.6
+      '@rrweb/utils': 2.1.6
+      '@types/css-font-loading-module': 0.0.7
+      '@xstate/fsm': 1.6.5
+      base64-arraybuffer: 1.0.2
+      mitt: 3.0.1
+      rrdom: 2.1.6
+      rrweb-snapshot: 2.1.6
 
   run-applescript@7.1.0: {}
 

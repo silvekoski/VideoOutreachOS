@@ -41,7 +41,7 @@ function secondChannelTasks(db: Db, now: Date): number {
 }
 
 async function videoFields(ctx: JobContext, hour: string, now: Date): Promise<number> {
-  const deals = await ctx.providers.pipedrive.listDealsWithoutVideoField()
+  const deals = (await ctx.providers.pipedrive.listOpenDeals()).filter((deal) => !deal.videoUrl)
   for (let start = 0; start < deals.length; start += VIDEO_FIELD_BATCH) {
     const dealIds = deals.slice(start, start + VIDEO_FIELD_BATCH).map((deal) => deal.id)
     const key = jobKeys.pipedriveWrite(null, 'video_field', `${hour}-${start / VIDEO_FIELD_BATCH}`)

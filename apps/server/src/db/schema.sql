@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS analysts (
   id INTEGER PRIMARY KEY,
   name TEXT NOT NULL,
+  name_local INTEGER NOT NULL DEFAULT 0 CHECK (name_local IN (0,1)),
   email TEXT,
   time_zone TEXT NOT NULL DEFAULT 'Europe/Helsinki',
   time_zone_local INTEGER NOT NULL DEFAULT 0 CHECK (time_zone_local IN (0,1)),
@@ -10,6 +11,7 @@ CREATE TABLE IF NOT EXISTS analysts (
   clone_status TEXT NOT NULL DEFAULT 'none' CHECK (clone_status IN ('none','pending','ready','failed')),
   consent_date TEXT,
   consent_file TEXT,
+  photo_file TEXT,
   default_expiry_days INTEGER NOT NULL DEFAULT 30,
   default_second_channel TEXT NOT NULL DEFAULT 'linkedin',
   brief_language TEXT NOT NULL DEFAULT 'en',
@@ -21,7 +23,7 @@ CREATE TABLE IF NOT EXISTS analysts (
 CREATE TABLE IF NOT EXISTS deals (
   id INTEGER PRIMARY KEY,
   analyst_id INTEGER NOT NULL REFERENCES analysts(id),
-  status TEXT NOT NULL CHECK (status IN ('draft','review','failed','link_sent','opened','form_sent','meeting_booked','lost')),
+  status TEXT NOT NULL CHECK (status IN ('draft','review','failed','link_sent','opened','form_sent','meeting_booked','lost','won')),
   review_reasons TEXT NOT NULL DEFAULT '[]',
   link_code TEXT NOT NULL UNIQUE,
   language TEXT NOT NULL,
@@ -140,4 +142,9 @@ CREATE TABLE IF NOT EXISTS briefs (
   json TEXT NOT NULL,
   created_at TEXT NOT NULL,
   UNIQUE (deal_id, version)
+);
+
+CREATE TABLE IF NOT EXISTS sync_state (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
 );

@@ -1,4 +1,4 @@
-import { t } from '@mergero/shared'
+import { isClosedStatus, t } from '@mergero/shared'
 import type { InboxDto, InboxGroupKey, InboxRow } from '@mergero/shared'
 import { sql } from '../db/index.ts'
 import type { Db } from '../db/index.ts'
@@ -23,7 +23,7 @@ export function meetingUpcoming(deal: DealRow, now: Date): boolean {
 }
 
 export function dealDone(deal: DealRow, now: Date): boolean {
-  return deal.status === 'lost' || isExpired(deal, now) || (deal.meetingAt !== null && !meetingUpcoming(deal, now))
+  return isClosedStatus(deal.status) || isExpired(deal, now) || (deal.meetingAt !== null && !meetingUpcoming(deal, now))
 }
 
 export function countsAsFailure(job: AnyJob, deal: DealRow, now: Date): boolean {

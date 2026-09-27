@@ -5,12 +5,15 @@ import { nowIso, sql, transaction } from '../db/index.ts'
 import type { Db } from '../db/index.ts'
 import { toAnalystRow } from '../db/rows.ts'
 import type { AnalystColumns, AnalystIntro, AnalystRow } from '../db/rows.ts'
+import { DEV_INTRO, DEV_VOICE_ID } from '../dev-bypass.ts'
+import { env } from '../env.ts'
 import type { PipedriveClient } from '../providers/types.ts'
 import { DomainError } from './errors.ts'
 
 const DEFAULT_TIME_ZONE = 'Europe/Helsinki'
 
 const PATCH_COLUMNS: Record<keyof AnalystPatch, keyof AnalystColumns> = {
+  name: 'name',
   defaultExpiryDays: 'default_expiry_days',
   defaultSecondChannel: 'default_second_channel',
   briefLanguage: 'brief_language',
@@ -41,18 +44,19 @@ export async function syncAnalysts(
   const at = nowIso(options.now)
   const ensure = new Set(options.ensureIds ?? [])
   transaction(db, () => {
+    const nameSql = `CASE WHEN analysts.name_local = 1 THEN analysts.name ELSE @name END`
     const zoneSql = `CASE WHEN analysts.time_zone_local = 1 OR @zone IS NULL THEN analysts.time_zone ELSE @zone END`
-    const changedSql = `analysts.name IS NOT @name OR analysts.email IS NOT @email OR analysts.time_zone IS NOT ${zoneSql}`
+    const changedSql = `analysts.name IS NOT ${nameSql} OR analysts.email IS NOT @email OR analysts.time_zone IS NOT ${zoneSql}`
     const insert = sql(
       db,
       `INSERT INTO analysts (id, name, email, time_zone, created_at, updated_at)
        VALUES (@id, @name, @email, COALESCE(@zone, '${DEFAULT_TIME_ZONE}'), @at, @at)
-       ON CONFLICT (id) DO UPDATE SET name = @name, email = @email, time_zone = ${zoneSql}, updated_at = @at
+       ON CONFLICT (id) DO UPDATE SET name = ${nameSql}, email = @email, time_zone = ${zoneSql}, updated_at = @at
        WHERE ${changedSql}`,
     )
     const update = sql(
       db,
-      `UPDATE analysts SET name = @name, email = @email, time_zone = ${zoneSql}, updated_at = @at WHERE id = @id AND (${changedSql})`,
+      `UPDATE analysts SET name = ${nameSql}, email = @email, time_zone = ${zoneSql}, updated_at = @at WHERE id = @id AND (${changedSql})`,
     )
     for (const user of users) {
       const zone = user.timeZone !== null && isTimeZone(user.timeZone) ? user.timeZone : null
@@ -70,6 +74,7 @@ export function updateAnalyst(db: Db, id: number, patch: AnalystPatch, now: Date
     requireAnalyst(db, id)
     if (entries.length > 0) {
       const sets = entries.map(([key]) => `${PATCH_COLUMNS[key]} = ?`)
+      if (patch.name !== undefined) sets.push('name_local = 1')
       if (patch.timeZone !== undefined) sets.push('time_zone_local = 1')
       db.prepare(`UPDATE analysts SET ${sets.join(', ')}, updated_at = ? WHERE id = ?`).run(
         ...entries.map(([, value]) => value),
@@ -149,9 +154,14 @@ export function failIntro(db: Db, id: number, lang: Lang, recordedAt: string, no
 
 export function readyIntro(analyst: AnalystRow | null, lang: Lang): (AnalystIntro & { file: string; durationS: number }) | null {
   const intro = analyst?.intros[lang]
-  return intro?.status === 'ready' && intro.file !== null && intro.durationS !== null
-    ? { ...intro, file: intro.file, durationS: intro.durationS }
-    : null
+  if (intro?.status === 'ready' && intro.file !== null && intro.durationS !== null) {
+    return { ...intro, file: intro.file, durationS: intro.durationS }
+  }
+  return env.devBypass && analyst ? DEV_INTRO : null
+}
+
+export function voiceIdFor(analyst: AnalystRow): string | null {
+  return analyst.voiceId ?? (env.devBypass ? DEV_VOICE_ID : null)
 }
 
 export function setVoiceSample(db: Db, id: number, file: string, now: Date = new Date()): AnalystRow {
@@ -174,6 +184,10 @@ export function setConsent(db: Db, id: number, input: { date: string; file: stri
   return setColumns(db, id, { consent_date: input.date, consent_file: input.file }, now)
 }
 
+export function setPhoto(db: Db, id: number, file: string, now: Date = new Date()): AnalystRow {
+  return setColumns(db, id, { photo_file: file }, now)
+}
+
 export function markAlertsSeen(db: Db, id: number, now: Date = new Date()): AnalystRow {
   return setColumns(db, id, { alerts_seen_at: nowIso(now) }, now)
 }
@@ -188,6 +202,7 @@ export function toAnalystDto(row: AnalystRow, fileUrlBase = '/api/analysts'): An
     name: row.name,
     email: row.email,
     timeZone: row.timeZone,
+    photoUrl: fileUrl(row.photoFile, row.updatedAt),
     intros: LANGUAGES.flatMap((language) => {
       const intro = row.intros[language]
       if (!intro) return []

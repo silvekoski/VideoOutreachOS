@@ -1,4 +1,4 @@
-import { LANGUAGE_NAMES, checkTimelineSlots, resolveLanguage } from '@mergero/shared'
+import { LANGUAGE_NAMES, MIN_COMPANY_LINES, checkTimelineSlots, isClosedStatus, resolveLanguage } from '@mergero/shared'
 import type {
   BuyerSlideItem,
   DealStatus,
@@ -15,7 +15,8 @@ import type { Db } from '../db/index.ts'
 import type { AnalystRow, DealPatch, DealRow, TimelineRow } from '../db/rows.ts'
 import { enqueue, jobKeys, jobsForDeal, retryJob } from '../queue/index.ts'
 import type { AnyJob, Job, JobType } from '../queue/index.ts'
-import { getAnalyst, readyIntro } from './analysts.ts'
+import { getAnalyst, readyIntro, voiceIdFor } from './analysts.ts'
+import { buyerPool } from './buyers.ts'
 import { isExpired, linkExpiresAt, listDeals, requireDeal, setExpiry, updateDeal } from './deals.ts'
 import { DomainError } from './errors.ts'
 import { moveStage } from './stages.ts'
@@ -30,9 +31,8 @@ import {
 } from './timelines.ts'
 
 export const SCRIPT_SLIDES: readonly ScriptSlideNumber[] = [2, 3, 4, 5, 6, 7, 8]
-export const MIN_COMPANY_LINES = 2
 export const LINES_SLOT = 'your-company.line'
-const PIPELINE_JOBS: readonly JobType[] = ['scrape', 'write-script', 'audio', 'render']
+export const PIPELINE_JOBS: readonly JobType[] = ['scrape', 'write-script', 'audio', 'render']
 const CHECK_CAUSES: Partial<Record<ScriptSlideNumber, string>> = { 3: 'company name, the website or the lines', 5: 'buyer list' }
 const BASIS_NAMES: Record<keyof VideoBasis, string> = { website: 'website', businessId: 'business ID', nace: 'NACE code' }
 
@@ -163,7 +163,7 @@ export function recomputeReviewReasons(
   if (!readyIntro(analyst, timeline.language)) {
     reasons.push({ code: 'no_intro', slide: 1, detail: introDetail(analyst, timeline.language) })
   }
-  if (!analyst?.voiceId) {
+  if (!analyst || !voiceIdFor(analyst)) {
     const detail = !analyst
       ? 'The analyst of this deal is unknown'
       : analyst.cloneStatus === 'pending'
@@ -401,7 +401,7 @@ export interface AdvanceOptions {
 export function advance(db: Db, dealId: number, now: Date = new Date(), options: AdvanceOptions = {}): AdvanceResult {
   return transaction(db, () => {
     const deal = requireDeal(db, dealId)
-    if (deal.status === 'lost' || isExpired(deal, now)) {
+    if (isClosedStatus(deal.status) || isExpired(deal, now)) {
       return { action: 'none', status: deal.status, reasons: deal.reviewReasons }
     }
     const state = pipelineState(db, deal, options.finishedJobId ?? null)
@@ -428,7 +428,7 @@ export function advanceAnalystDeals(db: Db, analystId: number, now: Date = new D
 export function publish(db: Db, dealId: number, version: number, now: Date = new Date()): DealRow {
   return transaction(db, () => {
     const deal = requireDeal(db, dealId)
-    if (deal.status === 'lost') throw new DomainError(409, 'The deal is lost')
+    if (isClosedStatus(deal.status)) throw new DomainError(409, `The deal is ${deal.status}`)
     const row = getTimeline(db, dealId, version)
     if (!row || row.renderStatus !== 'rendered') throw new DomainError(409, `Version ${version} is not rendered`)
     if (row.approvedAt === null) throw new DomainError(409, `Version ${version} is not approved`)
@@ -449,7 +449,7 @@ export function publish(db: Db, dealId: number, version: number, now: Date = new
 }
 
 function assertEditable(deal: DealRow, now: Date): void {
-  if (deal.status === 'lost') throw new DomainError(409, 'The deal is lost')
+  if (isClosedStatus(deal.status)) throw new DomainError(409, `The deal is ${deal.status}`)
   if (isExpired(deal, now)) throw new DomainError(409, 'The link has expired')
 }
 
@@ -478,7 +478,7 @@ export function approveDeal(db: Db, dealId: number, now: Date = new Date()): App
   })
 }
 
-function buyerCandidates(db: Db, dealId: number): BuyerSlideItem[] {
+export function buyerCandidates(db: Db, dealId: number): BuyerSlideItem[] {
   const seen = new Map<string, BuyerSlideItem>()
   for (const row of listTimelines(db, dealId)) {
     const variables = scriptSegment(row.timeline, 5)?.variables
@@ -512,7 +512,12 @@ interface TimelineEdit {
   rewrite: ScriptSlideNumber[]
 }
 
-function editTimeline(timeline: Timeline, patch: ReviewPatch, buyers: () => BuyerSlideItem[]): TimelineEdit {
+function editTimeline(
+  timeline: Timeline,
+  patch: ReviewPatch,
+  buyers: () => BuyerSlideItem[],
+  pool: () => BuyerSlideItem[],
+): TimelineEdit {
   const next = structuredClone(timeline)
   const contentChanged: SlideSegment[] = []
   if (patch.lines !== undefined) {
@@ -532,6 +537,22 @@ function editTimeline(timeline: Timeline, patch: ReviewPatch, buyers: () => Buye
     const kept: BuyersVariables['buyers'] = candidates.filter((buyer) => !removed.has(buyer.id))
     if (!sameList(kept.map((buyer) => buyer.id), segment.variables.buyers.map((buyer) => buyer.id))) {
       segment.variables = { ...segment.variables, buyers: kept, candidates }
+      contentChanged.push(segment)
+    }
+  }
+  if (patch.buyerIds !== undefined) {
+    const segment = scriptSegment(next, 5)
+    if (segment?.variables.template !== 'buyers') throw new DomainError(400, 'Slide 5 has no buyer list')
+    const available = new Map(pool().map((buyer) => [buyer.id, buyer]))
+    const selected = patch.buyerIds.map((id) => {
+      const buyer = available.get(id)
+      if (!buyer) throw new DomainError(400, `Buyer ${id} is not in the MGX list of this deal`)
+      return buyer
+    })
+    if (!sameList(patch.buyerIds, segment.variables.buyers.map((buyer) => buyer.id))) {
+      const known = [...(segment.variables.candidates ?? segment.variables.buyers), ...selected]
+      const candidates = [...new Map(known.map((buyer) => [buyer.id, buyer])).values()]
+      segment.variables = { ...segment.variables, buyers: selected, candidates }
       contentChanged.push(segment)
     }
   }
@@ -635,24 +656,36 @@ export interface ReviewPatchResult {
 export function applyReviewPatch(db: Db, dealId: number, patch: ReviewPatch, now: Date = new Date()): ReviewPatchResult {
   return transaction(db, () => {
     assertEditable(requireDeal(db, dealId), now)
-    if (patch.scripts !== undefined || patch.lines !== undefined || patch.removedBuyers !== undefined) assertNotRemaking(db, dealId)
+    const buyersEdited = patch.removedBuyers !== undefined || patch.buyerIds !== undefined
+    if (patch.scripts !== undefined || patch.lines !== undefined || buyersEdited) assertNotRemaking(db, dealId)
     const dealPatch: DealPatch = {}
     if (patch.customQuestions !== undefined) {
       dealPatch.customQuestions = patch.customQuestions.map((question) => ({ id: question.id, text: question.text.trim() }))
     }
     if (patch.pageLanguage !== undefined) dealPatch.pageLanguage = patch.pageLanguage
     if (patch.removedBuyers !== undefined) dealPatch.removedBuyers = [...new Set(patch.removedBuyers)]
+    if (patch.buyerIds !== undefined) {
+      const selected = new Set(patch.buyerIds)
+      dealPatch.removedBuyers = buyerCandidates(db, dealId)
+        .map((buyer) => buyer.id)
+        .filter((id) => !selected.has(id))
+    }
     if (Object.keys(dealPatch).length > 0) updateDeal(db, dealId, dealPatch, now)
     if (patch.expiryDays !== undefined) setExpiry(db, dealId, patch.expiryDays, now)
 
     let newVersion = false
-    const editsTimeline = patch.scripts !== undefined || patch.lines !== undefined || patch.removedBuyers !== undefined
+    const editsTimeline = patch.scripts !== undefined || patch.lines !== undefined || buyersEdited
     const row = newestTimeline(db, dealId)
     if (editsTimeline && !row && (patch.scripts !== undefined || patch.lines !== undefined)) {
       throw new DomainError(409, 'The video has no script yet')
     }
     if (editsTimeline && row) {
-      const edit = editTimeline(row.timeline, patch, () => buyerCandidates(db, dealId))
+      const edit = editTimeline(
+        row.timeline,
+        patch,
+        () => buyerCandidates(db, dealId),
+        () => buyerPool(requireDeal(db, dealId), buyerCandidates(db, dealId)),
+      )
       let version = row.version
       if (edit.changed && row.renderStatus === 'pending') {
         savePendingEdit(db, dealId, row.version, edit.timeline, now)

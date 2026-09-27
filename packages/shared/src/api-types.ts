@@ -4,13 +4,16 @@ import type {
   CustomQuestion,
   DealAnalytics,
   DealStatus,
+  FigureValue,
   FormAnswers,
   InterestLevel,
   Lang,
   MeetingBrief,
   ReviewReason,
+  SaleTiming,
   SessionAnalytics,
   SessionChannel,
+  SignalKey,
   SlideNumber,
   StoredEvent,
   Timeline,
@@ -55,11 +58,26 @@ export interface EnsureDealDto {
   refreshError: string | null
 }
 
+export interface ProspectDto {
+  dealId: number
+  company: string
+  ownerName: string | null
+  ownerRole: string | null
+  country: string | null
+}
+
+export interface GenerateResultDto {
+  dealId: number
+  created: boolean
+  error: string | null
+}
+
 export interface AnalystDto {
   id: number
   name: string
   email: string | null
   timeZone: string
+  photoUrl: string | null
   intros: IntroInfo[]
   voice: {
     sampleUrl: string | null
@@ -74,6 +92,7 @@ export interface AnalystDto {
 }
 
 export interface AnalystPatch {
+  name?: string
   defaultExpiryDays?: number
   defaultSecondChannel?: Channel
   briefLanguage?: Lang
@@ -110,11 +129,25 @@ export interface InboxDto {
 export interface DealRowDto {
   id: number
   company: string
+  logoUrl: string | null
   country: string
   analystId: number
   analystName: string
   status: DealStatus
+  reached: DealStatus
+  ownerName: string
+  ownerRole: string | null
+  language: Lang
+  staffCount: number | null
+  revenue: FigureValue | null
+  askInForm: boolean
+  buyers: { id: string; name: string; focus: string; logoUrl: string | null }[] | null
+  interest: InterestLevel | null
   watchS: number
+  stopSlide: number | null
+  completed: boolean
+  video: { posterUrl: string; durationS: number } | null
+  lastActivity: { text: string; at: string } | null
   nextAction: string | null
   updatedAt: string
 }
@@ -146,8 +179,12 @@ export interface DealDetailDto {
   reviewReasons: ReviewReason[]
   company: string
   website: string | null
+  businessId: string | null
+  nace: string | null
   ownerName: string
   ownerRole: string | null
+  ownerEmail: string | null
+  ownerPhone: string | null
   language: Lang
   pageLanguage: Lang
   country: string
@@ -176,6 +213,14 @@ export interface DealDetailDto {
   pipeline: { running: boolean; step: string | null }
 }
 
+export interface OutreachDto {
+  channel: Channel
+  lang: Lang
+  subject: string | null
+  message: string
+  drafted: 'model' | 'template'
+}
+
 export interface FailedJobDto {
   id: number
   type: string
@@ -196,6 +241,7 @@ export interface ReviewSlideDto {
 export interface ReviewVideoDto {
   version: number
   url: string
+  posterUrl: string
   captionsUrl: string
   language: Lang
   slides: { slide: SlideNumber; startS: number; endS: number }[]
@@ -230,15 +276,27 @@ export interface ReviewPatch {
   scripts?: Partial<Record<SlideNumber, string>>
   lines?: string[]
   removedBuyers?: string[]
+  buyerIds?: string[]
   customQuestions?: CustomQuestion[]
   expiryDays?: number
   pageLanguage?: Lang
 }
 
+export interface ContactPatch {
+  company?: string
+  website?: string | null
+  businessId?: string | null
+  nace?: string | null
+  ownerName?: string
+  ownerRole?: string | null
+  ownerEmail?: string | null
+  ownerPhone?: string | null
+}
+
+export type LiveEvent = { type: 'db' } | { type: 'pipedrive'; dealIds: number[]; prospects: boolean }
+
 export interface SessionEventsDto {
   session: SessionRowDto
-  durationS: number
-  slides: { slide: SlideNumber; startS: number; endS: number }[]
   events: StoredEvent[]
 }
 
@@ -252,6 +310,17 @@ export interface AlertDto {
   unread: boolean
 }
 
+export type QueueState = 'running' | 'queued' | 'retrying'
+
+export interface QueueItemDto {
+  dealId: number
+  company: string
+  analystName: string
+  step: string
+  state: QueueState
+  runAt: string
+}
+
 export interface MetricsRow {
   key: string
   label: string
@@ -262,13 +331,112 @@ export interface MetricsRow {
   meetingRate: number | null
 }
 
+export type RateBand = [low: number, high: number]
+
+export interface ComparisonPoint {
+  n: number
+  video: number | null
+  text: number | null
+  videoBand: RateBand | null
+  textBand: RateBand | null
+}
+
+export interface FunnelDto {
+  sent: number
+  opened: number
+  completed: number
+  formSent: number
+  booked: number
+}
+
+export interface ChannelCell {
+  opened: number
+  meetingRate: number | null
+}
+
+export interface ChannelRow {
+  key: string
+  label: string
+  cells: Partial<Record<SessionChannel, ChannelCell>>
+}
+
+export interface SlideReach {
+  slide: SlideNumber
+  reachRate: number | null
+  avgWatchS: number | null
+}
+
+export interface ActionRate {
+  deals: number
+  rate: number | null
+}
+
+export interface ActionsDto {
+  opened: number
+  buyerLinkTap: ActionRate
+  calculator: ActionRate
+  forward: ActionRate
+  replayFiguresOrBuyers: ActionRate
+}
+
+export interface InterestRow {
+  level: InterestLevel
+  deals: number
+  meetingRate: number | null
+}
+
+export interface FollowUpRow {
+  type: DealTaskDto['type']
+  tasks: number
+  booked: number
+  rate: number | null
+}
+
+export interface TimingPoint {
+  hours: number
+  opened: number | null
+  booked: number | null
+}
+
+export interface SignalLiftRow {
+  key: SignalKey
+  deals: number
+  withRate: number | null
+  withoutRate: number | null
+}
+
+export interface WatchBucket {
+  fromS: number
+  toS: number | null
+  deals: number
+}
+
+export interface SaleTimingRow {
+  timing: SaleTiming
+  forms: number
+  meetingRate: number | null
+}
+
 export interface MetricsDto {
   from: string
   to: string
   timeZone: string
+  total: MetricsRow
   byAnalyst: MetricsRow[]
   byCountry: MetricsRow[]
-  comparison: { n: number; video: number | null; text: number | null }[]
+  funnel: FunnelDto
+  byWeek: MetricsRow[]
+  timing: TimingPoint[]
+  openHeatmap: number[][]
+  watchHistogram: WatchBucket[]
+  signalLift: SignalLiftRow[]
+  saleTiming: SaleTimingRow[]
+  byChannel: ChannelRow[]
+  retention: { opened: number; slides: SlideReach[] }
+  actions: ActionsDto
+  byInterest: InterestRow[]
+  followUp: FollowUpRow[]
+  comparison: ComparisonPoint[]
   videoDeals: number
   textDeals: number
 }

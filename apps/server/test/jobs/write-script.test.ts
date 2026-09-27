@@ -160,8 +160,10 @@ describe('write-script job, version 1', () => {
 
     const possible = slide(timeline, 6)
     if (possible.variables.template !== 'what-is-possible') throw new Error('slide 6 template')
-    expect(possible.variables.deals.map((item) => item.id)).toEqual(['s1', 's3'])
+    expect(possible.variables.deals.map((item) => [item.id, item.profitMultiple])).toEqual([['s1', 6], ['s3', 6]])
     expect(possible.variables.scope).toBe('sector')
+    expect(possible.variables.summary).toEqual({ dealCount: 3, p25: 6, p75: 6 })
+    expect(possible.labels).toMatchObject({ multiple: 'Kauppahinta suhteessa liikevoittoon', 'summary-deals': 'Mergeron toteutunutta kauppaa toimialallasi' })
     expect(possible.labels.headline).toBe('Mikä on mahdollista toimialallasi')
     expect(possible.labels).not.toHaveProperty('headline-recent')
 
@@ -186,6 +188,7 @@ describe('write-script job, version 1', () => {
     if (possible.variables.template !== 'what-is-possible') throw new Error('slide 6 template')
     expect(possible.variables.deals.map((item) => item.id)).toEqual(['r4'])
     expect(possible.variables.scope).toBe('recent')
+    expect(possible.variables.summary).toBeNull()
     expect(possible.labels.headline).toBe('Mikä on mahdollista kaltaisillesi omistajille')
     expect(possible.labels).not.toHaveProperty('headline-recent')
     expect(possible.labels.empty).toBeTruthy()
@@ -472,6 +475,26 @@ describe('write-script job, filling a version', () => {
     expect(slide(timeline, 6)).toMatchObject({ script: 'Analyst text of slide 6.', scriptSource: 'analyst', audio: { status: 'ok' } })
     expect(slide(timeline, 2)).toMatchObject({ script: 'Script of slide 2.', audio: { status: 'ok' } })
     expect(getDeal(t.db, DEAL_ID)?.financials).toBeNull()
+  })
+
+  it('tells the model the length of a long line and keeps the lines that fit after a second failure', async () => {
+    const model = new ScriptedModel()
+    ctx.providers.model = model
+    const long = `Acme Oy valmistaa teräsosia ja hitsattuja rakenteita laivanrakennukseen ${'ja telakoille '.repeat(3)}Turussa.`
+    const fit = [
+      'Acme Oy valmistaa teräsosia ja hitsattuja rakenteita Turussa.',
+      'Asiakkaat ovat suomalaisia ja ruotsalaisia telakoita.',
+    ]
+    model.answers.push(() => ({ lines: [fit[0], long, fit[1]] }), () => ({ lines: [fit[0], long, fit[1]] }))
+    createVersion(t.db, DEAL_ID, makeTimeline(DEAL_ID, { audio: 'ok', lines: [], linesSource: null }), T0)
+    enqueue(t.db, 'write-script', jobKeys.writeScript(DEAL_ID, 1, [3]), { dealId: DEAL_ID, version: 1, slides: [3], lines: true }, { now: T0 })
+
+    await runWriteScript()
+
+    expect(model.requests[1]?.system).toContain(`line 2 has ${long.length} of 90 characters`)
+    const timeline = getTimeline(t.db, DEAL_ID, 1)?.timeline as Timeline
+    expect(slide(timeline, 3).variables).toMatchObject({ lines: fit, linesSource: 'model' })
+    expect(requireDeal(t.db, DEAL_ID).reviewReasons.filter((reason) => reason.code === 'model_failed')).toEqual([])
   })
 
   it('writes a new buyer script after the analyst removes a buyer', async () => {

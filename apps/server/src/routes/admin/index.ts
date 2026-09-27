@@ -9,6 +9,7 @@ import { captionRoutes } from './captions.ts'
 import { dealRoutes } from './deals.ts'
 import { errorResponse } from './http.ts'
 import { inboxRoutes } from './inbox.ts'
+import { liveRoutes } from './live.ts'
 import { reportRoutes } from './reports.ts'
 import { jsonBodyLimit } from './uploads.ts'
 
@@ -49,6 +50,7 @@ adminRoutes.route('/api', dealRoutes)
 adminRoutes.route('/api', captionRoutes)
 adminRoutes.route('/api', inboxRoutes)
 adminRoutes.route('/api', reportRoutes)
+adminRoutes.route('/api', liveRoutes)
 adminRoutes.all('/api/*', () => {
   throw new DomainError(404, 'The API has no such route')
 })

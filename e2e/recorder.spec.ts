@@ -18,7 +18,6 @@ test('the recorder sends the field names but never the typed values', async ({ p
   await page.getByRole('radiogroup', { name: fill(s.amountKind, { field: s.revenue }) }).getByText(s.exactChoice).click()
   await page.getByRole('textbox', { name: `${s.revenue} ${s.exactValue}`, exact: true }).fill(typed.revenue)
   await page.getByRole('textbox', { name: s.message, exact: true }).fill(typed.message)
-  await page.getByRole('button', { name: s.calendarHeading, exact: true }).click()
   const email = page.getByRole('textbox', { name: s.email })
   await email.fill(typed.email)
   await email.blur()

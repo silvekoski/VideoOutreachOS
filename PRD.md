@@ -31,7 +31,7 @@ In the demo, Pipedrive holds mock data. A mock MCP server replaces MGX, and a mo
 
 ### Steps to make one video
 
-1. The analyst clicks the "Video" link field on the Pipedrive deal.
+1. The analyst selects the deal in the Generate videos dialog on the Deals page, or clicks the "Video" link field on the Pipedrive deal. The dialog lists the open Pipedrive deals of the analyst that have no video, up to 50.
 2. The tool reads the deal, the person, and the organization from Pipedrive.
 3. The tool reads the website and writes three lines about the company.
 4. The tool gets the financial data from Asiakastieto with the business ID, or marks the slide as "ask in form".
@@ -136,7 +136,7 @@ The meeting brief uses the language that the analyst sets in the profile menu. T
 #### Delivery and privacy
 
 - The deal page shows the meeting brief as the first card.
-- The Inbox shows the deal in the Meeting today group.
+- The Deals page shows the deal in To do today, with the meeting time.
 - The tool sends an alert to the deal owner with a link to the meeting brief.
 - The tool adds one Pipedrive note to the deal with the meeting time, the interest level, and the link. The note has no session data.
 - The tool records when the analyst opens the meeting brief. The Events card shows this.
@@ -165,7 +165,7 @@ The slides are branded with Mergero's branding (logo, colors, layout) and do not
 
 ### Pipedrive integration
 
-The tool connects to Pipedrive with an API token. See Pipedrive connection in Backend. The deal owner in Pipedrive is the analyst in the face-cam clip. The alerts go to this person. Four stages: Link sent, Opened, Form sent, Meeting booked. The tool moves the deal. A URL field "Video" on each deal opens the tool, where the analyst manages the video. The form values write to deal fields: revenue range, profit range, staff range, and valuation range from the calculator. If the owner marks "not interested" in the form, the tool sets the deal to Lost with the reason. One link per deal. If a link exists, the Video field opens it. The tool does not make a second link. Pipedrive is the source of truth for contact data. The tool reads it and does not change it.
+The tool connects to Pipedrive with an API token. See Pipedrive connection in Backend. The deal owner in Pipedrive is the analyst in the face-cam clip. The alerts go to this person. Four stages: Link sent, Opened, Form sent, Meeting booked. The tool moves the deal. A URL field "Video" on each deal opens the tool, where the analyst manages the video. The form values write to deal fields: revenue range, profit range, staff range, and valuation range from the calculator. If the owner marks "not interested" in the form, the tool sets the deal to Lost with the reason. One link per deal. If a link exists, the Video field opens it. The tool does not make a second link. Pipedrive is the source of truth for contact data and for the open, won and lost state. The tool reads the changes about every 10 s. An edit of the contact data in the tool goes to Pipedrive first, then the tool reads the deal again.
 
 ### Website scraping
 
@@ -244,7 +244,7 @@ The page plays the MP4 in a custom player. The player is a React component aroun
 
 The video element has the `playsinline` attribute. Screens narrower than 1024 pixels get the 720p file, and larger screens get the 1080p file. iPhone shows native controls in fullscreen, so the player has no fullscreen button on iPhone. The media route supports HTTP range requests, so seek works on phones.
 
-The player maps the video time to the slide with the timeline JSON. While slide 5 plays, the page shows the buyer links under the video. While slide 8 plays, the page shows the calendar.
+The player maps the video time to the slide with the timeline JSON. While slide 5 plays, the page shows the buyer links under the video. The page always shows the calendar.
 
 The player records these events: play, pause, seek, slide start, slide end, complete, and page hide. Each event has the deal, the slide number, the video time, the channel of the link, and a sequence number. The player sends the events in a batch every 10 seconds. When `visibilitychange` sets the page to hidden, the player sends the last batch with `navigator.sendBeacon`. The server ignores an event with a sequence number that it already has. From the events, the server computes the watch time per slide, the slide where the owner stopped, and the number of replays. It writes these to the deal and moves the deal stage. The analyst can download the 720p file from the admin panel.
 
@@ -262,25 +262,25 @@ The render workers set `DISABLE_TELEMETRY=true`, so Revideo sends no render coun
 
 # Admin panel
 
-The admin panel has five pages and a profile menu: Inbox, Deals, Deal page, Review page, and Metrics. The analyst opens it from the Video link field in Pipedrive or from the browser. The panel uses the stack and the design rules in the Tech stack section.
+The admin panel has four pages and a profile menu: Deals, Deal page, Review page, and Metrics. The analyst opens it from the Video link field in Pipedrive or from the browser. The panel uses the stack and the design rules in the Tech stack section.
 
-The demo has no sign-in. An analyst selector in the top bar sets the current analyst. Run the demo on a private address only.
+The demo has no sign-in. The account menu in the top bar sets the current analyst. Run the demo on a private address only.
 
 #### Status
 
 Each deal has one status in the panel: Draft, Review, Failed, Link sent, Opened, Form sent, Meeting booked, Lost. Draft, Review, and Failed exist only in the tool. The other five mirror the Pipedrive stage. The panel shows a status as a word and a shape, not only a color.
 
-#### Inbox
-
-The Inbox is the start page. It shows only the deals that need an action today, in four groups: Review, Meeting today, Call, Send on a second channel. Each row shows the company, one line of context, and one button. The button label is the action. A failed render shows in the Review group with a Retry button. A done deal leaves the Inbox.
-
-The Meeting today group shows each deal with a meeting in the next 24 hours. The row shows the meeting time and the interest level. The button is Read meeting brief.
-
-A failed job of any type shows in the Review group with its error line and a Retry button. This includes failed scrapes, failed audio, failed renders, failed Pipedrive writes, and failed meeting briefs.
-
 #### Deals
 
-The Deals page is one table of all deals with a video. It has a search box and three filters: analyst, country, status. The columns are company, country, analyst, status, watch time, and next action. The default view shows the deals of the analyst in the analyst selector. A click on a row opens the deal page.
+The Deals page is the start page. It joins the to-do list and the outreach pipeline in one table, with one row for each deal.
+
+A strip of cards above the table filters the rows. The first card, To do today, is the default. It shows the deals that need an action today: Review, Meeting today, Call, and Second channel. A failed job of any type shows in To do today with its error line and a Retry button. This includes failed scrapes, failed audio, failed renders, failed Pipedrive writes, and failed meeting briefs. A failed job that has no deal, for example a voice clone, shows in an alert above the table. A done deal leaves To do today.
+
+The next cards show the pipeline: All deals, Not sent, Link sent, Opened, Form sent, Meeting booked, Lost. Each funnel stage counts the deals that reached it and shows the rate from the stage before.
+
+The page has a search box, a country filter, and a toggle for My deals and All analysts. The columns are prospect (company, owner, country, and language), company data (revenue, staff count, source, and buyers), stage, engagement (interest, watch time, and stop slide), and next step. For a deal in To do today, the next step shows the reason, one line of context, and one button. The button label is the action. For a meeting, the reason shows the meeting time, and the button is Read meeting brief. The Analyst column shows only for All analysts. A click on a row opens the deal page.
+
+The Generate videos button is in the page header. See Steps to make one video.
 
 #### Deal page
 
@@ -302,7 +302,7 @@ A card appears only when its data exists.
 The video plays on top with one mark per slide. Below it, one row per slide shows the slide name, the script box, and the audio status.
 
 - Slide 1 is the face-cam intro. It is fixed.
-- Slide 3 shows the screenshot and the three lines. When the scrape failed, the box is empty and the analyst writes the lines.
+- Slide 3 shows the three lines and the full-page screenshot. The screenshot scrolls down slowly while the slide plays. When the scrape failed, the box is empty and the analyst writes the lines.
 - Slide 4 shows the figures or the "ask in form" flag.
 - Slide 5 shows the buyers from MGX. The analyst can remove a buyer.
 - Slides 2, 6, 7, and 8 show the script.
@@ -313,9 +313,19 @@ When the analyst edits a script, the tool marks that slide "New audio". On appro
 
 The Metrics page shows one table per analyst and per country with five numbers: links sent, open rate, average watch time, form rate, meeting rate. One chart compares the video sequence with the text sequence on the first 100 deals. The only filter is the date range.
 
+The page also shows these parts. Each part comes from the talks with Timo.
+
+- A funnel from link sent to meeting booked. Each step shows the percentage of the links sent. Timo has only rough data about why a deal does not go on.
+- A table of meeting rates per country and channel. The channel is the channel of the first open. Timo said that email converts well in Finland, and calls and LinkedIn work better in the DACH region.
+- A slide retention chart: the percentage of owners who reach each slide.
+- A page actions table: buyer link taps, calculator use, replays of slides 4 and 5, and forwards. Owners ask two questions first: who are the buyers, and what is the company worth.
+- A table of meeting rates per interest level. It tests the signal rules of the meeting brief.
+- A follow-up table: the meeting rate after a call task and after a second-channel task.
+- A 95 % confidence band on the comparison chart. When a sequence has fewer than 30 deals, the chart shows a warning.
+
 #### Profile menu
 
-The profile menu is not a page in the sidebar. It holds:
+The profile menu is not a page in the top bar navigation. It holds:
 
 - The face-cam intro per language, with record and replace.
 - The voice sample, the clone status, and the consent date.
@@ -325,13 +335,13 @@ The profile menu is not a page in the sidebar. It holds:
 
 ### Session recordings
 
-The video page records two things. The player records the events: play, pause, seek, slide start, slide end, complete, and page hide. The page records the session: scroll, taps, form field focus, device, browser, screen size, and the channel of the link. The page does not record form values. It records only that a field got a value.
+The video page records three things. The player records the events: play, pause, seek, slide start, slide end, complete, and page hide. The page records the session: scroll, taps, form field focus, device, browser, screen size, and the channel of the link. The page also records the screen with rrweb: the page structure, its changes, the pointer, the scroll, and the video state. The page does not record form values. It records only that a field got a value. The screen recording masks each input and shows the company form as an empty block.
 
-The page sends the data in the same way as the player: a batch every 10 seconds, and `navigator.sendBeacon` when the page is hidden. The server writes each event as one row in the events table of SQLite, with the session ID. From the events, the server computes the watch time per slide, the stop slide, and the replay count. It writes these numbers to the deal.
+The page sends the data in the same way as the player: a batch every 10 seconds, and `navigator.sendBeacon` when the page is hidden. The server writes each event as one row in the events table of SQLite, with the session ID. The server writes the screen recording as chunk files in the deal folder, one folder per session. A session recording can have 50 MB at most. From the events, the server computes the watch time per slide, the stop slide, and the replay count. It writes these numbers to the deal.
 
-Pipedrive gets only the computed numbers, the stage change, and the task. The recording stays in Mergero systems. The hourly sweep deletes the session rows and the event rows when the link expires. The privacy notice on the video page says that the page records the session.
+Pipedrive gets only the computed numbers, the stage change, and the task. The recording stays in Mergero systems. The hourly sweep deletes the session rows, the event rows, and the screen recordings when the link expires. The privacy notice on the video page says that the page records the session.
 
-The analyst sees the sessions on the deal page in the Sessions card. Each row shows the date, the channel, the device, the watch time, the stop slide, and the form activity. The Replay button shows the session as an event timeline. The timeline has one bar for the video time with a mark per slide. It shows each play, pause, seek, scroll, tap, and form field focus at its time. It does not replay the page visually. The Inbox row shows the last session in one line, for example "Opened on WhatsApp, stopped at slide 5".
+The analyst sees the sessions on the deal page in the Sessions card. Each row shows the date, the channel, the device, the watch time, the stop slide, and the form activity. The Replay button opens the session. The analyst can watch the screen recording with play, pause, a time slider, a speed of 1x, 2x, or 4x, and a switch that skips idle time. Below the recording, an event list shows each play, pause, seek, scroll, tap, and form field focus in time order, with the video time and the slide. The list marks the event at the current recording time. A click on an event moves the recording to that time. A session from before the screen recording has only the event list.
 
 The page also records three named events: buyer link tap, forward, and calculator result. A forward event is a tap on the forward button. The meeting brief uses these events.
 
@@ -349,6 +359,7 @@ deals/{deal}/
   audio/slide-2.v{n}.mp3 … slide-8.v{n}.mp3
   video-1080.v{n}.mp4
   video-720.v{n}.mp4
+  recordings/{session}/{first event ms}-{part}.json   screen recording chunks
 analysts/{analyst}/
   intro-{language}.mp4
   voice-sample.mp3
@@ -371,8 +382,8 @@ The layout lives in one scene file in the repository, with one fixed layout per 
 | Face-cam intro, voice sample | Profile menu | Analyst | New videos only |
 | Slide layout, fonts, colors | Scene file in the repository | Developer | Code change, new videos only |
 | Contact data | Pipedrive | Analyst in Pipedrive | The tool reads it and does not write it |
-| Session recordings | SQLite events table | Nobody | Read on the deal page, deleted at expiry |
-| Meeting brief | SQLite briefs table | Nobody | Read on the deal page and in the Inbox, deleted at expiry |
+| Session recordings | SQLite events table, recording files in the deal folder | Nobody | Read on the deal page, deleted at expiry |
+| Meeting brief | SQLite briefs table | Nobody | Read on the deal page and from To do today, deleted at expiry |
 
 # Tech stack
 

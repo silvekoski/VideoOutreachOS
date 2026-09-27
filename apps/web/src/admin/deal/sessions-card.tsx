@@ -1,36 +1,55 @@
-import { useState } from 'react'
+import { Suspense, lazy, useRef, useState } from 'react'
 import type { SessionRowDto } from '@mergero/shared'
 import { formatDurationS } from '@mergero/shared'
 import { t } from '@mergero/shared/i18n'
-import { ChartGantt } from 'lucide-react'
+import { MonitorPlay } from 'lucide-react'
 import { ChannelIcon } from '@/components/channel-icon'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { useSessionEvents } from '../api'
+import { useSessionEvents, useSessionRecording } from '../api'
 import { QueryState } from '../components/query-state'
-import { ReplayTimeline } from '../components/replay-timeline'
+import { SessionEventList } from '../components/session-event-list'
+import type { SessionPlayerHandle } from '../components/session-player'
 import { channelLabel } from '../lib/events'
 import { formatDateTime, formatZonedDateTime, timeZoneNote } from '../lib/format'
 import { useReturnFocus } from '../lib/use-return-focus'
 import { DealCard } from './deal-card'
 
 const devices: Record<string, string> = t('en').devices
+const SessionPlayer = lazy(() => import('../components/session-player'))
 
 function ReplayDialog({ session, timeZone, onClose }: { session: SessionRowDto; timeZone: string; onClose: () => void }) {
   const events = useSessionEvents(session.id)
+  const recording = useSessionRecording(session.id)
+  const player = useRef<SessionPlayerHandle>(null)
+  const [currentAt, setCurrentAt] = useState<number | null>(null)
   const returnFocus = useReturnFocus()
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent {...returnFocus} className="max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-3xl">
+      <DialogContent {...returnFocus} className="max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle>{`Session of ${formatZonedDateTime(session.startedAt, timeZone)}`}</DialogTitle>
           <DialogDescription>
-            {`${channelLabel(session.channel)}, ${devices[session.device] ?? session.device}, ${session.browser} on ${session.os}, screen ${session.screen}. The timeline shows the video time. It does not replay the page.`}
+            {`${channelLabel(session.channel)}, ${devices[session.device] ?? session.device}, ${session.browser} on ${session.os}, screen ${session.screen}. The recording hides the form. Select an event to go to that point in the recording.`}
           </DialogDescription>
         </DialogHeader>
+        <QueryState query={recording} label="the screen recording">
+          {(data) => (
+            <Suspense fallback={<Skeleton className="aspect-video w-full" />}>
+              <SessionPlayer ref={player} events={data} onTime={setCurrentAt} />
+            </Suspense>
+          )}
+        </QueryState>
         <QueryState query={events} label="the session events">
-          {(data) => <ReplayTimeline data={data} />}
+          {(data) => (
+            <SessionEventList
+              data={data}
+              currentAt={currentAt}
+              onSeek={currentAt === null ? undefined : (at) => player.current?.seek(at)}
+            />
+          )}
         </QueryState>
       </DialogContent>
     </Dialog>
@@ -80,7 +99,7 @@ export function SessionsCard({ sessions, timeZone }: { sessions: SessionRowDto[]
                     onClick={() => setReplay(session)}
                     aria-label={`Replay the session of ${formatDateTime(session.startedAt, timeZone)}`}
                   >
-                    <ChartGantt aria-hidden="true" />
+                    <MonitorPlay aria-hidden="true" />
                     Replay
                   </Button>
                 </TableCell>

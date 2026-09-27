@@ -1,22 +1,28 @@
 import path from 'node:path'
-import { DEAL_STATUSES, reviewPatchSchema } from '@mergero/shared'
+import { CHANNELS, DEAL_STATUSES, contactPatchSchema, reviewPatchSchema } from '@mergero/shared'
 import type { EnsureDealDto } from '@mergero/shared'
 import { Hono } from 'hono'
 import type { Context } from 'hono'
 import { z } from 'zod'
+import { sql } from '../../db/index.ts'
 import type { Db } from '../../db/index.ts'
 import { newestBrief } from '../../domain/brief-data.ts'
+import { updateContact } from '../../domain/contact.ts'
 import { requireDeal, setExpiry } from '../../domain/deals.ts'
 import { ensureDeal } from '../../domain/ensure.ts'
+import { PROSPECT_LIMIT, generateVideos, listProspects } from '../../domain/prospects.ts'
 import { DomainError } from '../../domain/errors.ts'
 import { recordBriefRead } from '../../domain/events.ts'
+import { writeOutreach } from '../../domain/outreach.ts'
 import { applyReviewPatch, approveDeal, remakeDeal } from '../../domain/pipeline.ts'
 import { completeTask } from '../../domain/tasks.ts'
 import { insideDir, paths } from '../../paths.ts'
 import { dealDetailDto } from '../../views/deal-detail.ts'
 import { dealRowDtos } from '../../views/deal-rows.ts'
+import { readRecording } from '../../video/recording.ts'
 import { reviewDto } from '../../views/review.ts'
 import { sessionEventsDto } from '../../views/sessions.ts'
+import { analystFromQuery } from './analysts.ts'
 import { adminContext } from './context.ts'
 import type { AdminContext } from './context.ts'
 import { parseId, parseInput, readJson, sendExistingFile } from './http.ts'
@@ -41,6 +47,8 @@ const dealListQuery = z.object({
 })
 
 const expiryBody = z.object({ days: z.int().min(1).max(365) })
+const generateBody = z.object({ dealIds: z.array(z.int().positive()).min(1).max(PROSPECT_LIMIT) })
+const outreachBody = z.object({ channel: z.enum(CHANNELS) })
 
 export const dealRoutes = new Hono()
 
@@ -68,6 +76,17 @@ dealRoutes.get('/deals', (c) => {
   return c.json(dealRowDtos(db, { analystId, country: query.country, status: query.status, q: query.q }, now))
 })
 
+dealRoutes.get('/prospects', async (c) => {
+  const { db, providers } = adminContext()
+  return c.json(await listProspects(db, providers.pipedrive, analystFromQuery(c, db).id))
+})
+
+dealRoutes.post('/deals/generate', async (c) => {
+  const { db, now, providers } = adminContext()
+  const { dealIds } = await readJson(c, generateBody)
+  return c.json(await generateVideos(db, providers, dealIds, now))
+})
+
 dealRoutes.post('/deals/:id/ensure', async (c) => {
   const { db, now, providers } = adminContext()
   const { deal, created, refreshed, refreshError } = await ensureDeal(db, providers, dealId(c), now)
@@ -77,6 +96,14 @@ dealRoutes.post('/deals/:id/ensure', async (c) => {
 
 dealRoutes.get('/deals/:id', async (c) => {
   const context = adminContext()
+  return c.json(await detail(context, context.db, dealId(c)))
+})
+
+dealRoutes.patch('/deals/:id/contact', async (c) => {
+  const context = adminContext()
+  const patch = await readJson(c, contactPatchSchema)
+  const { refreshError } = await updateContact(context.db, context.providers, dealId(c), patch, context.now)
+  if (refreshError !== null) throw new DomainError(409, `Pipedrive has the change, but the deal could not be read again: ${refreshError}`)
   return c.json(await detail(context, context.db, dealId(c)))
 })
 
@@ -113,6 +140,13 @@ dealRoutes.post('/deals/:id/expiry', async (c) => {
   return c.json(await detail(context, context.db, id))
 })
 
+dealRoutes.post('/deals/:id/outreach', async (c) => {
+  const { db, now, providers } = adminContext()
+  const id = dealId(c)
+  const { channel } = await readJson(c, outreachBody)
+  return c.json(await writeOutreach(db, providers.model, id, channel, now))
+})
+
 dealRoutes.get('/deals/:id/files/:file{.+}', async (c) => {
   const { db } = adminContext()
   const id = dealId(c)
@@ -141,6 +175,17 @@ dealRoutes.get('/sessions/:id/events', (c) => {
   const id = c.req.param('id')
   if (!SESSION_ID.test(id)) throw new DomainError(400, 'The session ID is not valid')
   return c.json(sessionEventsDto(db, id))
+})
+
+dealRoutes.get('/sessions/:id/recording', async (c) => {
+  const { db } = adminContext()
+  const id = c.req.param('id')
+  if (!SESSION_ID.test(id)) throw new DomainError(400, 'The session ID is not valid')
+  const session = sql<{ deal_id: number }>(db, 'SELECT deal_id FROM sessions WHERE id = ?').get(id)
+  if (!session) throw new DomainError(404, 'The session does not exist')
+  c.header('Content-Type', 'application/json')
+  c.header('Cache-Control', 'private, no-cache')
+  return c.body(await readRecording(paths.root, session.deal_id, id))
 })
 
 dealRoutes.post('/tasks/:id/done', (c) => {

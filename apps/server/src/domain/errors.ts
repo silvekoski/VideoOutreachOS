@@ -1,4 +1,4 @@
-export type DomainErrorStatus = 400 | 404 | 409 | 410
+export type DomainErrorStatus = 400 | 404 | 409 | 410 | 413
 
 export class DomainError extends Error {
   readonly status: DomainErrorStatus

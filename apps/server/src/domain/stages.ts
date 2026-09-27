@@ -1,15 +1,18 @@
+import { isClosedStatus } from '@mergero/shared'
 import type { DealEventType, DealStatus, Stage, StoredEvent } from '@mergero/shared'
 import { nowIso, transaction } from '../db/index.ts'
 import type { Db } from '../db/index.ts'
 import type { DealRow } from '../db/rows.ts'
 import { enqueue, hasQueuedJob, jobKeys } from '../queue/index.ts'
 import type { Job } from '../queue/index.ts'
+import type { PipedriveDeal } from '../providers/types.ts'
 import { requireDeal, updateDeal } from './deals.ts'
 import { DomainError } from './errors.ts'
 import { addDealEvent } from './events.ts'
 import { completeTask, listOpenTasks } from './tasks.ts'
 
 const ANALYTICS_DELAY_MS = 60_000
+const DELETED_REASON = 'Deleted in Pipedrive'
 
 const STATUS_RANK: Record<DealStatus, number> = {
   draft: -1,
@@ -20,6 +23,7 @@ const STATUS_RANK: Record<DealStatus, number> = {
   form_sent: 2,
   meeting_booked: 3,
   lost: 4,
+  won: 4,
 }
 
 const STAGE_EVENTS: Partial<Record<Stage, DealEventType>> = {
@@ -32,7 +36,7 @@ export function stageRank(status: DealStatus): number {
 }
 
 export function reachedStage(deal: DealRow): DealStatus {
-  if (deal.status !== 'lost') return deal.status
+  if (!isClosedStatus(deal.status)) return deal.status
   if (deal.meetingAt !== null) return 'meeting_booked'
   if (deal.formSentAt !== null) return 'form_sent'
   if (deal.firstOpenAt !== null) return 'opened'
@@ -60,7 +64,7 @@ export function moveStage(
     if (deal.publishedVersion === null) throw new DomainError(409, 'The video link is not published')
     const action = STAGE_EVENTS[stage]
     const event = action ? addDealEvent(db, dealId, action, options.data ?? {}, now) : null
-    if (deal.status === 'lost' || stageRank(stage) <= stageRank(deal.status)) return { moved: false, event }
+    if (isClosedStatus(deal.status) || stageRank(stage) <= stageRank(deal.status)) return { moved: false, event }
     updateDeal(db, dealId, { status: stage }, now)
     const linkSent = stage === 'link_sent' ? addDealEvent(db, dealId, 'link_sent', options.data ?? {}, now) : null
     enqueue(db, 'pipedrive-write', jobKeys.pipedriveWrite(dealId, 'stage', stage), { dealId, op: 'stage', stage }, { now })
@@ -73,7 +77,7 @@ export function markLost(db: Db, dealId: number, reason: string, now: Date = new
   const text = reason.trim()
   return transaction(db, () => {
     const deal = requireDeal(db, dealId)
-    if (deal.status === 'lost') return { moved: false, event: null }
+    if (isClosedStatus(deal.status)) return { moved: false, event: null }
     closeOpenTasks(db, dealId, now)
     updateDeal(db, dealId, { status: 'lost', lostAt: nowIso(now), lostReason: text || null }, now)
     const event = addDealEvent(db, dealId, 'lost', { reason: text }, now)
@@ -85,6 +89,39 @@ export function markLost(db: Db, dealId: number, reason: string, now: Date = new
       { now },
     )
     return { moved: true, event }
+  })
+}
+
+// Pipedrive owns the open, won and lost state, so nothing here writes back to Pipedrive.
+export function followPipedriveStatus(
+  db: Db,
+  dealId: number,
+  remote: PipedriveDeal['status'],
+  lostReason: string | null,
+  now: Date = new Date(),
+): DealStatus | null {
+  return transaction(db, () => {
+    const deal = requireDeal(db, dealId)
+    const closed = isClosedStatus(deal.status)
+    if (remote === 'open') {
+      if (!closed) return null
+      const status = deal.publishedVersion === null ? 'draft' : reachedStage(deal)
+      updateDeal(db, dealId, { status, lostAt: null, lostReason: null }, now)
+      addDealEvent(db, dealId, 'reopened', {}, now)
+      return status
+    }
+    const status = remote === 'won' ? 'won' : 'lost'
+    if (deal.status === status) return null
+    closeOpenTasks(db, dealId, now)
+    if (status === 'won') {
+      updateDeal(db, dealId, { status }, now)
+      addDealEvent(db, dealId, 'won', {}, now)
+    } else {
+      const reason = remote === 'deleted' ? DELETED_REASON : lostReason
+      updateDeal(db, dealId, { status, lostAt: nowIso(now), lostReason: reason }, now)
+      addDealEvent(db, dealId, 'lost', { reason: reason ?? '' }, now)
+    }
+    return status
   })
 }
 

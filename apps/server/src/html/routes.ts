@@ -13,7 +13,8 @@ const IMMUTABLE = 'public, max-age=31536000, immutable'
 export const denyFraming: MiddlewareHandler = async (c, next) => {
   await next()
   c.header('X-Frame-Options', 'DENY')
-  c.header('Content-Security-Policy', "frame-ancestors 'none'")
+  const policy = c.res.headers.get('Content-Security-Policy')
+  c.header('Content-Security-Policy', policy ? `${policy}; frame-ancestors 'none'` : "frame-ancestors 'none'")
 }
 
 export function createHtmlRoutes(options: { assets: AssetTags; distDir: string }): Hono {

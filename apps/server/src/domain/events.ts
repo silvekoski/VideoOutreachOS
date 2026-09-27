@@ -93,6 +93,10 @@ function alertText(row: AlertColumns, data: Record<string, unknown>, timeZone: s
       return 'The meeting brief is ready'
     case 'lost':
       return typeof data.reason === 'string' && data.reason.trim() !== '' ? `Marked as lost: ${data.reason.trim()}` : 'Marked as lost'
+    case 'won':
+      return 'Marked as won in Pipedrive'
+    case 'reopened':
+      return 'Opened again in Pipedrive'
     default:
       return row.type
   }
@@ -110,7 +114,7 @@ export function alertsFor(db: Db, analystId: number, since: Date, limit: number 
      LEFT JOIN sessions s ON s.id = e.session_id
      WHERE d.analyst_id = ? AND e.at >= ?
        AND (
-         (e.session_id IS NULL AND e.type IN ('form_sent', 'meeting_booked', 'brief_written', 'lost'))
+         (e.session_id IS NULL AND e.type IN ('form_sent', 'meeting_booked', 'brief_written', 'lost', 'won', 'reopened'))
          OR (e.type = 'open' AND e.session_id IS NOT NULL
            AND e.id = (SELECT MIN(o.id) FROM events o WHERE o.session_id = e.session_id AND o.type = 'open'))
        )

@@ -20,7 +20,7 @@ export function RouteError() {
           Reload the page
         </Button>
         <Button asChild variant="outline" size="sm">
-          <Link to="/">Go to the Inbox</Link>
+          <Link to="/">Go to the deals</Link>
         </Button>
       </div>
     </main>

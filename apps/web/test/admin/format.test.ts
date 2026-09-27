@@ -6,6 +6,8 @@ import {
   formatPercent,
   formatTime,
   formatZonedDateTime,
+  companyInitials,
+  initials,
   isValidRange,
   lastDaysRange,
   localDay,
@@ -76,5 +78,23 @@ describe('pluralize', () => {
   it('selects the word by count', () => {
     expect(pluralize(1, 'deal', 'deals')).toBe('1 deal')
     expect(pluralize(3, 'deal', 'deals')).toBe('3 deals')
+  })
+})
+
+describe('companyInitials', () => {
+  it('leaves out the legal form', () => {
+    expect(companyInitials('Kide Software Oy')).toBe('KS')
+    expect(companyInitials('Wästerby Rör & Ventilation AB')).toBe('WV')
+    expect(companyInitials('Nordkraft Oy')).toBe('NO')
+    expect(companyInitials('Oy')).toBe('O')
+  })
+})
+
+describe('initials', () => {
+  it('takes the first letter of the first and the last name', () => {
+    expect(initials('Jonas Weber')).toBe('JW')
+    expect(initials('anna maria virtanen')).toBe('AV')
+    expect(initials('  Émilie  ')).toBe('É')
+    expect(initials(' ')).toBe('')
   })
 })

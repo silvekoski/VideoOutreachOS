@@ -15,6 +15,7 @@ import { FailedJobsCard } from '../deal/failed-jobs-card'
 import { FormAnswersCard } from '../deal/form-answers-card'
 import { OpenTaskCard } from '../deal/open-task-card'
 import { SessionsCard } from '../deal/sessions-card'
+import { VideoCard } from '../deal/video-card'
 import { WatchTimeCard } from '../deal/watch-time-card'
 import { dealTimeline } from '../lib/events'
 import { REVIEW_REASON_TITLES } from '../lib/status'
@@ -67,6 +68,7 @@ function DealContent({ deal }: { deal: DealDetailDto }) {
       {deal.openTasks.map((task) => (
         <OpenTaskCard key={task.id} deal={deal} task={task} />
       ))}
+      {deal.publishedVersion !== null ? <VideoCard dealId={deal.id} /> : null}
       {timeline.length > 0 ? <EventsCard events={timeline} timeZone={timeZone} /> : null}
       {deal.analytics && deal.analytics.sessions > 0 ? (
         <WatchTimeCard analytics={deal.analytics} slideNames={deal.slideNames} />

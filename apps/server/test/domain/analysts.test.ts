@@ -14,10 +14,13 @@ import {
   syncAnalysts,
   toAnalystDto,
   updateAnalyst,
+  voiceIdFor,
 } from '../../src/domain/analysts.ts'
 import { brand, contactFor, mergeroConfig } from '../../src/domain/config.ts'
 import { addDays, getDealByCode, isExpired, linkExpiresAt, listDeals, newLinkCode, setExpiry } from '../../src/domain/deals.ts'
 import { DomainError } from '../../src/domain/errors.ts'
+import { DEV_INTRO, DEV_VOICE_ID } from '../../src/dev-bypass.ts'
+import { env } from '../../src/env.ts'
 import type { PipedriveUser } from '../../src/providers/types.ts'
 import { tempDb } from '../db/temp-db.ts'
 import type { TempDb } from '../db/temp-db.ts'
@@ -57,6 +60,16 @@ describe('analysts', () => {
     expect(rows[1]?.updatedAt).toBe(T0.toISOString())
     expect(listAnalysts(t.db)).toHaveLength(2)
     expect(() => updateAnalyst(t.db, 99, {})).toThrow(DomainError)
+  })
+
+  it('keeps a local name after a Pipedrive sync', async () => {
+    const users: PipedriveUser[] = [{ id: 1, name: 'Aino A', email: 'aino@mergero.test', active: true, timeZone: null }]
+    const pipedrive = { listUsers: async () => users }
+    await syncAnalysts(t.db, pipedrive, { now: T0 })
+    updateAnalyst(t.db, 1, { name: 'Aino Aaltonen' }, T0)
+    users[0] = { id: 1, name: 'Aino B', email: 'aino@example.test', active: true, timeZone: null }
+    const [row] = await syncAnalysts(t.db, pipedrive, { now: later(1) })
+    expect(row).toMatchObject({ name: 'Aino Aaltonen', email: 'aino@example.test' })
   })
 
   it('takes the time zone from Pipedrive and keeps a time zone that the analyst changed', async () => {
@@ -143,6 +156,7 @@ describe('analysts', () => {
       name: 'Aino Analyst',
       email: 'aino@mergero.test',
       timeZone: 'Europe/Helsinki',
+      photoUrl: null,
       intros: [
         {
           language: 'fi',
@@ -165,6 +179,33 @@ describe('analysts', () => {
       briefLanguage: 'en',
     })
     expect(setVoiceId(t.db, 10, null, T0)).toMatchObject({ voiceId: null, cloneStatus: 'none' })
+  })
+})
+
+describe('dev bypass', () => {
+  afterEach(() => {
+    env.devBypass = false
+  })
+
+  it('gives an analyst without an intro or a voice clone the placeholder intro and the dev voice', () => {
+    const analyst = insertAnalyst(t.db, { intros: {}, voiceId: null })
+    expect(readyIntro(analyst, 'fi')).toBeNull()
+    expect(voiceIdFor(analyst)).toBeNull()
+
+    env.devBypass = true
+    expect(readyIntro(analyst, 'fi')).toEqual(DEV_INTRO)
+    expect(voiceIdFor(analyst)).toBe(DEV_VOICE_ID)
+    expect(readyIntro(null, 'fi')).toBeNull()
+  })
+
+  it('keeps the own intro and voice clone of the analyst', () => {
+    env.devBypass = true
+    const analyst = insertAnalyst(t.db, {
+      intros: { de: { file: 'analysts/10/intro-de.mp4', durationS: 9, recordedAt: '2026-09-01T00:00:00.000Z', transcript: 'Hallo.', status: 'ready' } },
+      voiceId: 'voice-10',
+    })
+    expect(readyIntro(analyst, 'de')?.file).toBe('analysts/10/intro-de.mp4')
+    expect(voiceIdFor(analyst)).toBe('voice-10')
   })
 })
 

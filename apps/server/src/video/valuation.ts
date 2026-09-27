@@ -1,5 +1,5 @@
 import { DACH, computeValuation, multiplesFor } from '@mergero/shared'
-import type { Amount, ValuationResult, VideoPageData } from '@mergero/shared'
+import type { Amount, SectorSummary, ValuationResult, VideoPageData } from '@mergero/shared'
 import type { DealRow } from '../db/rows.ts'
 
 function loadedNace(deal: DealRow): string | null {
@@ -20,8 +20,12 @@ export function dealValuation(deal: DealRow, profit: Amount | null): ValuationRe
   return calculatorEnabled(deal) ? computeValuation(profit, sectorMultiples(deal), loadedNace(deal)) : null
 }
 
+export function sectorSummary(deal: DealRow): SectorSummary | null {
+  const valuation = computeValuation(null, sectorMultiples(deal), loadedNace(deal))
+  if (valuation.p25 === null || valuation.p75 === null) return null
+  return { dealCount: valuation.dealCount, p25: valuation.p25, p75: valuation.p75 }
+}
+
 export function calculatorFor(deal: DealRow): VideoPageData['calculator'] {
-  const valuation = dealValuation(deal, null)
-  if (!valuation || valuation.p25 === null || valuation.p75 === null) return null
-  return { p25: valuation.p25, p75: valuation.p75, dealCount: valuation.dealCount }
+  return calculatorEnabled(deal) ? sectorSummary(deal) : null
 }

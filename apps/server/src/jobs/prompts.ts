@@ -1,5 +1,5 @@
-import { LANGUAGE_NAMES, SLOT_LIMITS } from '@mergero/shared'
-import type { Lang, ScriptContext, ScriptSlideNumber } from '@mergero/shared'
+import { LANGUAGE_NAMES, OUTREACH_LINK, OUTREACH_WORDS, SLOT_LIMITS } from '@mergero/shared'
+import type { Channel, Lang, OutreachContext, ScriptContext, ScriptSlideNumber } from '@mergero/shared'
 
 export const MODEL_MAX_TOKENS = 16_384
 
@@ -86,7 +86,7 @@ export function companyLinesPrompt(lang: Lang): string {
     `You write three short lines about a company for slide 3 of a personalized video from Mergero. ${MERGERO}`,
     'The lines show the owner that Mergero understands the business. The input field "text" is the text of the company website.',
     'Rules:',
-    `- Write exactly three lines. Each line is one complete sentence of at most ${max} characters.`,
+    `- Write exactly three lines. Each line is one complete sentence of 50 to 75 characters. The check rejects a line of more than ${max} characters.`,
     `- Write in ${LANGUAGE_LABELS[lang]} only, also when the website text is in another language.`,
     '- Write in the third person about the company: what it does, for whom and where. Use plain facts, no marketing words and no superlatives.',
     '- Use only facts from the website text. Do not write any number that is not in the text.',
@@ -117,6 +117,40 @@ export function briefTextPrompt(lang: Lang): string {
     '- questions: 3 to 5 questions for the meeting. Each question comes from a gap in the data, for example a missing figure, an unanswered custom question, a missing form answer or a slide that the owner skipped.',
     '- Do not write figures. Do not write any number that is not in the input.',
     '- Return a JSON object with the fields "summary" (a string) and "questions" (an array of strings).',
+  ].join('\n')
+}
+
+const OUTREACH_CHANNELS: Record<Channel, string> = {
+  email:
+    'The message is an email. Write a subject line of at most 60 characters in "subject". Start the body with a greeting, use short paragraphs with an empty line between them, and end with a sign-off and the full name of the analyst.',
+  linkedin:
+    'The message is a LinkedIn direct message. Leave "subject" empty. Write two or three short paragraphs and end with the first name of the analyst.',
+  sms: 'The message is a text message (SMS). Leave "subject" empty. Write one short paragraph and sign it with the name of the analyst.',
+  whatsapp: 'The message is a WhatsApp message. Leave "subject" empty. Write one or two short paragraphs in a friendly, direct tone.',
+}
+
+export function outreachPrompt(context: OutreachContext): string {
+  const { min, max } = OUTREACH_WORDS[context.channel]
+  return [
+    `You write a short message from a Mergero analyst to the owner of a company. ${MERGERO}`,
+    'The analyst made a short personalized video for the owner. The video page shows the company, buyers from Mergero deals, deals that other owners made, a form, and a calendar to book a meeting with the analyst. The message makes the owner open the link.',
+    'The input field "context" holds the company, the owner, the analyst and the date until which the link works ("expiresOn"). "context.companyLines" describe the company, maybe in another language.',
+    OUTREACH_CHANNELS[context.channel],
+    'Rules:',
+    `- Write in ${LANGUAGE_LABELS[context.lang]} only.`,
+    context.lang === 'de'
+      ? '- In German, use the formal "Sie" and greet the owner with "Guten Tag" and the full name in context.ownerName.'
+      : '- Greet the owner with the first name in context.ownerFirstName. If it is empty, do not use a name.',
+    '- Write in the first person as the analyst. Say who you are in one short sentence.',
+    `- Write ${min} to ${max} words in "message".`,
+    `- Put the placeholder ${OUTREACH_LINK} exactly once in "message", where the link to the video goes. Do not write any other URL. The tool replaces the placeholder with the personal link.`,
+    '- Give one concrete reason to watch: mention one detail about the company from context.companyLines, if there is one. Say that the video takes only a few minutes.',
+    '- Say that the link is personal and works until context.expiresOn. Write the date exactly as in the input.',
+    '- Do not say that a buyer wants to buy the company, looks for companies like it, or is interested in it. Never promise a price, a valuation or a sale.',
+    '- Use only facts from the input JSON. Do not write any number that is not in the input.',
+    '- No markdown, no emojis, no marketing words, no superlatives.',
+    '- Never use a dash: no en dash (\u2013), no em dash (\u2014) and no hyphen with spaces around it. To show a pause, use a comma, a period or parentheses, or write two sentences.',
+    '- Return a JSON object with the fields "subject" (a string) and "message" (a string).',
   ].join('\n')
 }
 

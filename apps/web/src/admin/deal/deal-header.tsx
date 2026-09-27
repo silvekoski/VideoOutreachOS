@@ -7,7 +7,8 @@ import { MailLink } from '../components/mail-link'
 import { StatusBadge } from '../components/state-badge'
 import { displayName, languageName } from '../lib/brief'
 import { formatDate, formatZonedDateTime } from '../lib/format'
-import { CopyLinkMenu } from './copy-link-menu'
+import { ContactDialog } from './contact-dialog'
+import { ShareLinkMenu } from './share-link-menu'
 import { ExpiryDialog } from './expiry-dialog'
 
 function NewTab() {
@@ -69,7 +70,7 @@ export function DealHeader({ deal }: { deal: DealDetailDto }) {
         ))}
       </dl>
       <div className="flex flex-wrap gap-2">
-        <CopyLinkMenu links={deal.expired ? null : deal.links} />
+        <ShareLinkMenu deal={deal} />
         {deal.download720 && !deal.expired ? (
           <Button asChild variant="outline" size="sm">
             <a href={deal.download720} download>
@@ -84,6 +85,7 @@ export function DealHeader({ deal }: { deal: DealDetailDto }) {
           </Button>
         )}
         <ExpiryDialog dealId={deal.id} expiryDays={deal.expiryDays} expiresAt={deal.expiresAt} timeZone={timeZone} />
+        <ContactDialog deal={deal} />
         <Button asChild variant="outline" size="sm">
           <Link to={`/deals/${deal.id}/review`}>
             <FilePenLine aria-hidden="true" />

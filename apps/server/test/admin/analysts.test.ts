@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs'
 import path from 'node:path'
 import type { AnalystDto, ApiError } from '@mergero/shared'
@@ -87,6 +88,12 @@ describe('GET and PATCH /api/analysts', () => {
     expect(body).toMatchObject({ defaultExpiryDays: 14, briefLanguage: 'fi', timeZone: 'Europe/Stockholm', defaultSecondChannel: 'sms' })
   })
 
+  it('renames the analyst with a trimmed name and rejects an empty name', async () => {
+    const renamed = await h.json<AnalystDto>('/api/analysts/1001', jsonBody('PATCH', { name: '  Linnea A. Aaltonen ' }))
+    expect(renamed).toMatchObject({ status: 200, body: { name: 'Linnea A. Aaltonen' } })
+    expect((await h.request('/api/analysts/1001', jsonBody('PATCH', { name: '   ' }))).status).toBe(400)
+  })
+
   it('rejects a bad patch, a bad body and an unknown analyst', async () => {
     const zone = await h.json<ApiError>('/api/analysts/1001', jsonBody('PATCH', { timeZone: 'EET' }))
     expect(zone.status).toBe(400)
@@ -144,6 +151,30 @@ describe('POST /api/analysts/:id/intros/:lang', () => {
     })
     expect(response.status).toBe(413)
     expect(((await response.json()) as ApiError).error).toMatch(/200 MB/u)
+  })
+})
+
+describe('POST /api/analysts/:id/photo', () => {
+  it('crops the photo to a square JPEG and serves it', async () => {
+    const png = path.join(paths.root, 'photo-source.png')
+    execFileSync(env.ffmpegPath, ['-v', 'error', '-f', 'lavfi', '-i', 'color=c=teal:s=640x480', '-frames:v', '1', png])
+    const { status, body } = await h.json<AnalystDto>('/api/analysts/1001/photo', multipart(readFileSync(png), {}, 'me.png'))
+    expect(status).toBe(200)
+    expect(body.photoUrl).toMatch(/^\/api\/analysts\/1001\/files\/photo\.jpg\?v=/u)
+    const probe = execFileSync(env.ffprobePath, ['-v', 'error', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', paths.photo(1001)])
+    expect(probe.toString().trim()).toBe('512,512')
+    const file = await h.request('/api/analysts/1001/files/photo.jpg')
+    expect(file.headers.get('content-type')).toBe('image/jpeg')
+    expect(readdirSync(paths.uploadsDir)).toEqual([])
+  })
+
+  it('rejects a file that is not an image and an image that ffmpeg cannot read', async () => {
+    const notImage = await h.json<ApiError>('/api/analysts/1001/photo', multipart(PDF))
+    expect(notImage).toEqual({ status: 400, body: { error: 'The file is not a JPEG, PNG or WebP image' } })
+    const broken = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(200, 1)])
+    const unreadable = await h.json<ApiError>('/api/analysts/1001/photo', multipart(broken))
+    expect(unreadable).toEqual({ status: 400, body: { error: 'The image could not be read. Choose another file.' } })
+    expect(existsSync(paths.photo(1001))).toBe(false)
   })
 })
 

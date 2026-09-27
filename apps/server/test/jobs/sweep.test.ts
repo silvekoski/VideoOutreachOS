@@ -148,7 +148,7 @@ describe('sweep job', () => {
   it('runs every check even when one fails, and lets the queue retry the sweep', async () => {
     published(100)
     ctx.providers.pipedrive = Object.assign(Object.create(ctx.providers.pipedrive) as PipedriveClient, {
-      listDealsWithoutVideoField: async () => {
+      listOpenDeals: async () => {
         throw new Error('Pipedrive HTTP 503')
       },
     })

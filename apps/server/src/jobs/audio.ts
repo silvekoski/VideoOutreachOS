@@ -10,6 +10,7 @@ import {
   introUpload,
   requireAnalyst,
   setVoiceId,
+  voiceIdFor,
 } from '../domain/analysts.ts'
 import { isExpired, requireDeal } from '../domain/deals.ts'
 import { advance, advanceAnalystDeals } from '../domain/pipeline.ts'
@@ -89,7 +90,8 @@ async function runSlides(job: AudioJob<'slides'>, ctx: JobContext): Promise<void
     return
   }
   const analyst = requireAnalyst(ctx.db, deal.analystId)
-  if (!analyst.voiceId) throw new NonRetryableError(`${analyst.name} has no voice clone`)
+  const voiceId = voiceIdFor(analyst)
+  if (!voiceId) throw new NonRetryableError(`${analyst.name} has no voice clone`)
   const sameOwner = () => requireDeal(ctx.db, dealId).analystId === analyst.id
 
   const errors: string[] = []
@@ -104,7 +106,7 @@ async function runSlides(job: AudioJob<'slides'>, ctx: JobContext): Promise<void
     const output = paths.slideAudio(dealId, segment.slide, version)
     let result: { clip: Clip } | { error: string }
     try {
-      result = { clip: await makeClip(ctx, analyst.voiceId, text, row.timeline.language, output, fields) }
+      result = { clip: await makeClip(ctx, voiceId, text, row.timeline.language, output, fields) }
       log.info('audio clip made', { ...fields, durationS: result.clip.durationS })
     } catch (error) {
       result = { error: errorText(error) }

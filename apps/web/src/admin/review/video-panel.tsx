@@ -42,6 +42,7 @@ export function VideoPanel({ review }: { review: ReviewDto }) {
         ref={videoRef}
         key={video.url}
         src={video.url}
+        poster={video.posterUrl}
         controls
         playsInline
         preload="metadata"

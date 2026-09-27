@@ -153,6 +153,19 @@ export async function transcodeIntro(input: string, output: string): Promise<voi
   )
 }
 
+export async function placeholderIntro(seconds: number, color: string, output: string): Promise<void> {
+  await writeAtomic(output, (tmp) =>
+    ffmpeg([
+      '-f', 'lavfi', '-i', `color=c=${color}:s=1920x1080:r=30:d=${seconds}`,
+      '-f', 'lavfi', '-i', 'anullsrc=r=48000:cl=stereo',
+      '-t', String(seconds),
+      '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p',
+      '-c:a', 'aac', '-b:a', '160k', '-ar', '48000', '-ac', '2',
+      '-movflags', '+faststart', tmp,
+    ]),
+  )
+}
+
 export async function transcodeVoiceSample(input: string, output: string): Promise<void> {
   await writeAtomic(output, (tmp) =>
     ffmpeg(['-i', input, '-map', '0:a:0', '-ar', '44100', '-c:a', 'libmp3lame', '-b:a', '192k', tmp]),
@@ -191,6 +204,16 @@ export async function ogImage(png: string, output: string): Promise<void> {
       '-i', png,
       '-vf', 'scale=1200:630:force_original_aspect_ratio=increase:flags=lanczos,crop=1200:630:(iw-ow)/2:0,format=yuv420p',
       '-color_range', 'pc', '-frames:v', '1', '-q:v', '3', '-update', '1', tmp,
+    ]),
+  )
+}
+
+export async function squarePhoto(input: string, output: string, size: number): Promise<void> {
+  await writeAtomic(output, (tmp) =>
+    ffmpeg([
+      '-i', input,
+      '-vf', `crop=min(iw\\,ih):min(iw\\,ih),scale=${size}:${size}:flags=lanczos,format=yuvj420p`,
+      '-frames:v', '1', '-q:v', '3', '-update', '1', tmp,
     ]),
   )
 }

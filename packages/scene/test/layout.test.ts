@@ -18,10 +18,13 @@ const ffmpegPath = process.env.FFMPEG_PATH || 'ffmpeg'
 const ffprobePath = process.env.FFPROBE_PATH || 'ffprobe'
 
 const DARK = 160
-const HEADLINE_TOP = 124
-const HEADLINE_LINE = 68
-const HEADLINE_GAP = 56
-const BODY_BOTTOM = 948
+const SIDE = 100
+const TOP = 100
+const EYEBROW_BOTTOM = 132
+const HEADLINE_TOP = 172
+const HEADLINE_LINE = 80
+const BODY_GAP = 48
+const BODY_BOTTOM = 1000
 const GERMAN_LINES = [
   'Präzisionsmaschinenbau Geschäftsführung Großhandelsunternehmen Käufergruppe Österreich',
   'Instandhaltungsdienstleistungen Unternehmensnachfolge Familienunternehmen übernimmt',
@@ -84,13 +87,12 @@ describe('slides 5 and 6 without buyers or deals', () => {
     if (root) await rm(root, { recursive: true, force: true })
   })
 
-  it('shows a statement in the body of each slide in place of an empty list', () => {
+  it('shows an eyebrow and a statement in place of an empty list', () => {
     expect(frames).toHaveLength(2)
-    const bodyTop = HEADLINE_TOP + 2 * HEADLINE_LINE + HEADLINE_GAP
     for (const pixels of frames) {
       expect(pixels.length).toBe(SCENE_WIDTH * SCENE_HEIGHT)
-      expect(countDark(pixels, 112, SCENE_WIDTH - 112, HEADLINE_TOP, bodyTop - HEADLINE_GAP)).toBeGreaterThan(0)
-      expect(countDark(pixels, 112, SCENE_WIDTH - 112, bodyTop, BODY_BOTTOM)).toBeGreaterThan(0)
+      expect(countDark(pixels, SIDE, SCENE_WIDTH - SIDE, TOP, EYEBROW_BOTTOM)).toBeGreaterThan(0)
+      expect(countDark(pixels, SIDE, SCENE_WIDTH - SIDE, EYEBROW_BOTTOM + BODY_GAP, BODY_BOTTOM)).toBeGreaterThan(0)
     }
   })
 })
@@ -141,14 +143,15 @@ describe('slide 3 with a company name at the slot limit', () => {
   })
 
   it('breaks the unspaced name inside the content width', () => {
-    expect(darkPixels(0, 112, 0, SCENE_HEIGHT)).toBe(0)
-    expect(darkPixels(SCENE_WIDTH - 112, SCENE_WIDTH, 0, SCENE_HEIGHT)).toBe(0)
+    expect(darkPixels(0, SIDE - 8, 0, SCENE_HEIGHT)).toBe(0)
+    expect(darkPixels(SCENE_WIDTH - SIDE + 8, SCENE_WIDTH, 0, SCENE_HEIGHT)).toBe(0)
   })
 
-  it('gives the name four headline lines and moves the body below them', () => {
-    const headlineBottom = HEADLINE_TOP + 4 * HEADLINE_LINE
-    expect(darkPixels(120, 1800, headlineBottom - HEADLINE_LINE + 8, headlineBottom - 8)).toBeGreaterThan(0)
-    expect(darkPixels(112, SCENE_WIDTH - 112, headlineBottom + 4, headlineBottom + HEADLINE_GAP - 4)).toBe(0)
-    expect(darkPixels(112, SCENE_WIDTH - 112, headlineBottom + HEADLINE_GAP, BODY_BOTTOM)).toBeGreaterThan(0)
+  it('gives the name five headline lines and moves the body below them', () => {
+    const headlineBottom = HEADLINE_TOP + 5 * HEADLINE_LINE
+    expect(darkPixels(SIDE, SCENE_WIDTH - SIDE, headlineBottom - HEADLINE_LINE + 8, headlineBottom - 8)).toBeGreaterThan(0)
+    expect(darkPixels(SIDE, SCENE_WIDTH - SIDE, headlineBottom + 4, headlineBottom + BODY_GAP - 4)).toBe(0)
+    expect(darkPixels(SIDE, SCENE_WIDTH - SIDE, headlineBottom + BODY_GAP, BODY_BOTTOM)).toBeGreaterThan(0)
+    expect(darkPixels(0, SCENE_WIDTH, BODY_BOTTOM + 4, SCENE_HEIGHT)).toBe(0)
   })
 })

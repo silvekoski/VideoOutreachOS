@@ -135,6 +135,7 @@ The body shape is {success:false, code?, error, details?}.
 * blockAds:false is NOT honored. The response says: "The engine used does not support the following features: disableAdblock -- your scrape may be partial." The banner stayed hidden on ikea and dr.dk. VERIFIED.
 * GOTCHA: blockAds only hides the banner visually. The banner DOM stays, so its text leaks into the markdown. On hesburger.fi, "HYVÄKSY KAIKKI EVÄSTEET..." was in the markdown with onlyMainContent true AND false. VERIFIED.
   * Fix A (VERIFIED): excludeTags ["[id*=\"cookie\" i]","[class*=\"cookie\" i]","[id*=\"consent\" i]","[class*=\"consent\" i]","[aria-label*=\"cookie\" i]"] removed it. The case-insensitive `i` flag works. Risk: a wrapper element whose class contains "cookie" is also dropped.
+    * REMOVED on 2026-09-27. On linjateras.fi, the WordPress Cookie Notice plugin puts the class `cookies-not-set` on `<body>`. `[class*="cookie" i]` dropped the whole body, and Firecrawl returned an empty page. A test on 6 sites showed that Firecrawl alone (blockAds and onlyMainContent) gives the same text, with at most one cookie sentence more. The company lines prompt tells the model to ignore cookie banners. The code sends no excludeTags now.
   * Fix B (VERIFIED): guarded DOM removal in executeJavascript (below). Cookie-word hits in the markdown went from 13 to 2 (the 2 left are footer links).
 
 9. RECOMMENDED STRATEGY FOR NORDIC AND DACH SITES (code: consent.mjs, run on Firecrawl and in local Chrome)
@@ -155,7 +156,8 @@ The body shape is {success:false, code?, error, details?}.
   * removes hidden consent nodes, guarded by text under 3000 chars and no main, article or h1 inside,
   * unlocks overflow on html and body,
   * returns {method, removed, what, visibleAfter}.
-* Tier 2: also pass excludeTags: CMP_CONTAINERS (exported by the file).
+* Tier 2: do not pass excludeTags (see the gotcha above). The cleanup phase removes the CMP_CONTAINERS.
+* GOTCHA (VERIFIED 2026-09-27): onlyMainContent also filters the `links` format. On kobenhavns-mobelsnedkeri.com, the home page gave 3 links and no menu links. `scrapeHome` also calls POST /v2/map {url, limit:500, includeSubdomains:false} in parallel and adds its URLs to the links. The map took 2 s to 14 s. If the map fails, the home page links stay.
 * Tier 3 fallbacks:
   * On 500 SCRAPE_ACTION_ERROR, retry once without actions (blockAds alone).
   * If javascriptReturns[1].value.visibleAfter is not null, flag the screenshot.

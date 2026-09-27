@@ -256,7 +256,7 @@ describe('RealPipedriveClient', () => {
     ])
   })
 
-  it('pages through open deals with the cursor and keeps deals without a Video URL', async () => {
+  it('pages through open deals with the cursor and keeps each deal', async () => {
     routes.push((r) => {
       if (r.url.pathname !== '/api/v2/deals') return undefined
       const deal = (id: number, video: string | null) => ({
@@ -273,8 +273,8 @@ describe('RealPipedriveClient', () => {
         ? json([deal(3, null)], { additional_data: { next_cursor: null } })
         : json([deal(1, null), deal(2, 'https://tool.example/deals/2')], { additional_data: { next_cursor: 'page-2' } })
     })
-    const deals = await client().listDealsWithoutVideoField()
-    expect(deals.map((deal) => deal.id)).toEqual([1, 3])
+    const deals = await client().listOpenDeals()
+    expect(deals.map((deal) => deal.id)).toEqual([1, 2, 3])
     expect(requests).toHaveLength(2)
     expect(requests[0]?.url.searchParams.get('status')).toBe('open')
     expect(requests[0]?.url.searchParams.get('limit')).toBe('500')
@@ -310,5 +310,53 @@ describe('RealPipedriveClient', () => {
   it('builds the Pipedrive deal link from the company domain', () => {
     expect(client().dealUrl(12)).toBe('https://acme.pipedrive.com/deal/12')
     expect(() => new RealPipedriveClient({ token: 't', domain: 'bad domain', config })).toThrow(/PIPEDRIVE_COMPANY_DOMAIN/)
+  })
+
+  it('reads the change feed over pages and keeps the daily token budget', async () => {
+    const deal = { update_time: '2026-09-27 10:00:01', status: 'lost', deleted: false, user_id: 1, person_id: 30, org_id: 20, lost_reason: 'No interest' }
+    routes.push((r) =>
+      r.url.pathname === '/api/v1/recents' && r.url.searchParams.get('start') === '0'
+        ? {
+            json: {
+              success: true,
+              data: [
+                { item: 'deal', id: 40, data: deal },
+                { item: 'deal', id: 41, data: { update_time: '2026-09-27 10:00:02', status: 'open', deleted: true, user_id: 1 } },
+              ],
+              additional_data: { last_timestamp_on_page: '2026-09-27 10:00:02', pagination: { more_items_in_collection: true, next_start: 2 } },
+            },
+            headers: { 'x-daily-ratelimit-token-limit': '150000', 'x-daily-ratelimit-token-remaining': '120000' },
+          }
+        : undefined,
+    )
+    routes.push((r) =>
+      r.url.pathname === '/api/v1/recents'
+        ? json([{ item: 'person', id: 30, data: { update_time: '2026-09-27 10:00:03' } }, { item: 'note', id: 9, data: {} }], {
+            additional_data: { last_timestamp_on_page: '2026-09-27 10:00:03', pagination: { more_items_in_collection: false } },
+          })
+        : undefined,
+    )
+    const page = await client().listChanges('2026-09-27 09:59:00')
+    expect(requests[0]?.url.searchParams.get('since_timestamp')).toBe('2026-09-27 09:59:00')
+    expect(requests[0]?.url.searchParams.get('items')).toBe('deal,person,organization')
+    expect(page).toEqual({
+      changes: [
+        { type: 'deal', id: 40, updatedAt: '2026-09-27 10:00:01', deal: { status: 'lost', ownerId: 1, personId: 30, orgId: 20, lostReason: 'No interest' } },
+        { type: 'deal', id: 41, updatedAt: '2026-09-27 10:00:02', deal: { status: 'deleted', ownerId: 1, personId: null, orgId: null, lostReason: null } },
+        { type: 'person', id: 30, updatedAt: '2026-09-27 10:00:03', deal: null },
+      ],
+      cursor: '2026-09-27 10:00:03',
+      budget: { limit: 150000, remaining: 120000 },
+    })
+  })
+
+  it('writes organization and person changes with the configured custom fields', async () => {
+    routes.push((r) => (r.method === 'PATCH' ? json({ id: 1 }) : undefined))
+    await client().updateOrg(20, { name: 'Acme Group Oy', businessId: '1234567-8', nace: null })
+    await client().updatePerson(30, { jobTitle: 'CEO', email: 'ceo@example.com', phone: null })
+    expect(requests.map((r) => [r.url.pathname, r.body])).toEqual([
+      ['/api/v2/organizations/20', { name: 'Acme Group Oy', custom_fields: { k_business_id: '1234567-8', k_nace: null } }],
+      ['/api/v2/persons/30', { emails: [{ value: 'ceo@example.com', primary: true, label: 'work' }], phones: [], custom_fields: { k_role: 'CEO' } }],
+    ])
   })
 })

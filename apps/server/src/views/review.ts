@@ -4,7 +4,8 @@ import type { Db } from '../db/index.ts'
 import type { DealRow, TimelineRow } from '../db/rows.ts'
 import { isExpired } from '../domain/deals.ts'
 import { DomainError } from '../domain/errors.ts'
-import { dealPipelineState } from '../domain/pipeline.ts'
+import { buyerPool } from '../domain/buyers.ts'
+import { buyerCandidates, dealPipelineState } from '../domain/pipeline.ts'
 import { listTimelines } from '../domain/timelines.ts'
 import { paths } from '../paths.ts'
 import { failedJobs } from '../queue/index.ts'
@@ -38,6 +39,7 @@ async function newestVideo(dealId: number, rows: readonly TimelineRow[]): Promis
       return {
         version: row.version,
         url: dealFileUrl(dealId, name),
+        posterUrl: dealFileUrl(dealId, `poster.v${row.version}.jpg`),
         captionsUrl: `/api/deals/${dealId}/captions.v${row.version}.vtt`,
         language: row.timeline.language,
         slides: playedSlides(row.timeline),
@@ -103,7 +105,10 @@ export async function reviewDto(db: Db, deal: DealRow, now: Date): Promise<Revie
       figures?.mode === 'figures'
         ? { mode: 'figures', revenueText: figures.revenueText, profitText: figures.profitText, fiscalYear: figures.fiscalYear }
         : { mode: 'ask' },
-    buyers: (buyers?.candidates ?? buyers?.buyers ?? []).map((buyer) => ({
+    buyers: [
+      ...(buyers?.buyers ?? []),
+      ...(buyers ? buyerPool(deal, buyerCandidates(db, deal.id)).filter((buyer) => !shown.has(buyer.id)) : []),
+    ].map((buyer) => ({
       id: buyer.id,
       name: buyer.name,
       focus: buyer.focus,

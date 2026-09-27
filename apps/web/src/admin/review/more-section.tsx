@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { usePatchReview } from '../api'
 import { languageName } from '../lib/brief'
 import { createId, isValidExpiryDays } from '../lib/review'
-import { PUBLISHED_STATUSES } from '../lib/status'
 import { SaveStatusText } from './save-status'
 
 const MUTATION_SAVE_STATUS = { idle: 'idle', pending: 'saving', success: 'saved', error: 'error' } as const satisfies Record<
@@ -154,7 +153,7 @@ export function MoreSection({ review, save }: MoreSectionProps) {
               }}
             />
             <p id={hintId} className={valid ? 'text-xs text-muted-foreground' : 'text-xs text-destructive'}>
-              {`A whole number from 1 to 365. The tool counts the days from ${PUBLISHED_STATUSES.has(review.status) ? 'today' : 'the publication'}.`}
+              {`A whole number from 1 to 365. The tool counts the days from ${review.publishedVersion !== null ? 'today' : 'the publication'}.`}
             </p>
           </div>
           <div className="grid content-start gap-1.5">

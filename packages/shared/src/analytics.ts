@@ -112,7 +112,9 @@ export function computeDealAnalytics(
       }
     })
   const stops = results.map((r) => r.stopSlide).filter((slide): slide is SlideNumber => slide !== null)
-  const ids = sessions.flatMap((session) => session.events.map((event) => event.id))
+  const events = sessions.flatMap((session) => session.events)
+  const ids = events.map((event) => event.id)
+  const count = (type: StoredEvent['type']) => events.filter((event) => event.type === type).length
   return {
     opens: sessions.reduce((sum, session) => sum + Math.max(1, session.events.filter((event) => event.type === 'open').length), 0),
     sessions: sessions.length,
@@ -124,5 +126,9 @@ export function computeDealAnalytics(
     days: new Set(sessions.map((session) => session.localDay)).size,
     lastEventId: ids.length > 0 ? Math.max(...ids) : null,
     channel: sessions.at(-1)?.channel ?? null,
+    firstChannel: sessions[0]?.channel ?? null,
+    buyerLinkTaps: count('buyer_link_tap'),
+    calculatorResults: count('calculator_result'),
+    forwards: count('forward'),
   }
 }

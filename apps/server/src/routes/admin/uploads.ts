@@ -11,21 +11,22 @@ import { bodyLimit } from 'hono/body-limit'
 import { HTTPException } from 'hono/http-exception'
 import { DomainError } from '../../domain/errors.ts'
 
-export type UploadKind = 'video' | 'audio' | 'pdf'
+export type UploadKind = 'video' | 'audio' | 'pdf' | 'image'
 
 const MB = 1024 * 1024
 const MULTIPART_OVERHEAD = MB
 const SNIFF_BYTES = 16
 
-const LIMITS: Record<UploadKind, number> = { video: 200 * MB, audio: 50 * MB, pdf: 20 * MB }
+const LIMITS: Record<UploadKind, number> = { video: 200 * MB, audio: 50 * MB, pdf: 20 * MB, image: 10 * MB }
 const MAX_JSON_BYTES = MB
 
-const NAMES: Record<UploadKind, string> = { video: 'a video', audio: 'an audio file', pdf: 'a PDF file' }
+const NAMES: Record<UploadKind, string> = { video: 'a video', audio: 'an audio file', pdf: 'a PDF file', image: 'a JPEG, PNG or WebP image' }
 
 const CONTAINERS: Record<UploadKind, readonly string[]> = {
   video: ['mp4', 'mov', 'webm'],
   audio: ['mp3', 'aac', 'wav', 'ogg', 'flac', 'mp4', 'webm'],
   pdf: ['pdf'],
+  image: ['jpg', 'png', 'webp'],
 }
 
 function tooLarge(kind: UploadKind): string {
@@ -57,6 +58,9 @@ export function containerOf(head: Uint8Array): string | null {
   if (['moov', 'mdat', 'wide', 'free'].includes(box)) return 'mov'
   if (head[0] === 0x1a && head[1] === 0x45 && head[2] === 0xdf && head[3] === 0xa3) return 'webm'
   if (text(0, 5) === '%PDF-') return 'pdf'
+  if (head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) return 'jpg'
+  if (text(1, 4) === 'PNG') return 'png'
+  if (text(0, 4) === 'RIFF' && text(8, 12) === 'WEBP') return 'webp'
   if (text(0, 3) === 'ID3') return 'mp3'
   if (head[0] === 0xff && ((head[1] ?? 0) & 0xe0) === 0xe0) return ((head[1] ?? 0) & 0x06) === 0 ? 'aac' : 'mp3'
   if (text(0, 4) === 'RIFF' && text(8, 12) === 'WAVE') return 'wav'

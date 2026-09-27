@@ -13,6 +13,8 @@ import {
   Pause,
   Play,
   RotateCcw,
+  SkipBack,
+  SkipForward,
   Volume2,
   VolumeX,
 } from 'lucide-react'
@@ -21,11 +23,13 @@ import type { Platform } from './device.ts'
 import { ProgressBar } from './progress-bar.tsx'
 import { roundTime } from './recorder.ts'
 import { useRecorder } from './recorder-context.ts'
+import { SlideList } from './slide-list.tsx'
 import { formatClock, progressText } from './timeline.ts'
 import type { SlideTime } from './timeline.ts'
 
 const KEY_SEEK_COMMIT_MS = 600
 const SLIDE_ENTRY_S = 0.05
+const SLIDE_RESTART_S = 3
 
 interface PlayerProps {
   data: VideoPageData
@@ -34,7 +38,6 @@ interface PlayerProps {
   title: string
   platform: Platform
   onSlideChange: (slide: SlideNumber | null) => void
-  onEnded: () => void
 }
 
 interface FullscreenDocument {
@@ -66,11 +69,15 @@ function ControlButton({
   label,
   track,
   onClick,
+  disabled = false,
+  className = 'inline-flex',
   children,
 }: {
   label: string
   track: string
   onClick: () => void
+  disabled?: boolean
+  className?: string
   children: ReactNode
 }) {
   return (
@@ -80,14 +87,15 @@ function ControlButton({
       title={label}
       data-track={track}
       onClick={onClick}
-      className="inline-flex size-10 shrink-0 items-center justify-center rounded-md text-white hover:bg-white/10 focus-visible:outline-white"
+      disabled={disabled}
+      className={`${className} size-10 shrink-0 items-center justify-center rounded-md text-white hover:bg-white/10 focus-visible:outline-white disabled:opacity-40 disabled:hover:bg-transparent`}
     >
       {children}
     </button>
   )
 }
 
-export function Player({ data, strings, locale, title, platform, onSlideChange, onEnded }: PlayerProps) {
+export function Player({ data, strings, locale, title, platform, onSlideChange }: PlayerProps) {
   const recorder = useRecorder()
   const videoRef = useRef<HTMLVideoElement>(null)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -225,6 +233,12 @@ export function Player({ data, strings, locale, title, platform, onSlideChange, 
     }
   }
 
+  function jumpTo(slide: SlideTime) {
+    seek(slide.startS + SLIDE_ENTRY_S, true)
+    const video = videoRef.current
+    if (video && !failed && video.paused) video.play().catch(() => setPlaying(false))
+  }
+
   function togglePlay() {
     const video = videoRef.current
     if (!video || failed) return
@@ -319,7 +333,6 @@ export function Player({ data, strings, locale, title, platform, onSlideChange, 
     if (recordedSlide.current !== null) recorder.record('slide_end', { slide: recordedSlide.current, vt: t })
     recordedSlide.current = null
     recorder.record('complete', { slide: slideAt(slides, t), vt: t })
-    onEnded()
   }
 
   function handleTimeUpdate() {
@@ -377,6 +390,11 @@ export function Player({ data, strings, locale, title, platform, onSlideChange, 
 
   const currentSlide = slideAt(slides, time)
   const slideName = currentSlide === null ? null : strings.slideNames[currentSlide]
+  const slideIndex = slides.findIndex((slide) => slide.slide === currentSlide)
+  const thisSlide = slides[slideIndex]
+  const previousSlide =
+    thisSlide !== undefined && time - thisSlide.startS > SLIDE_RESTART_S ? thisSlide : (slides[slideIndex - 1] ?? slides[0])
+  const nextSlide = slides[slideIndex + 1]
   const clock = `${formatClock(time)} / ${formatClock(duration)}`
   const silent = muted || volume === 0
   const showOverlay = (!started || ended) && !failed
@@ -457,7 +475,7 @@ export function Player({ data, strings, locale, title, platform, onSlideChange, 
           </div>
         )}
       </div>
-      <div className="px-3 pt-1 pb-2 text-white">
+      <div className="relative px-3 pt-1 pb-2 text-white">
         <ProgressBar
           time={time}
           duration={duration}
@@ -467,7 +485,7 @@ export function Player({ data, strings, locale, title, platform, onSlideChange, 
           valueText={progressText(strings.progressValue, time, duration, slideName)}
           onSeek={(to) => seek(to)}
           onKeySeek={keyboardSeek}
-          onJump={(slide: SlideTime) => seek(slide.startS + SLIDE_ENTRY_S, true)}
+          onJump={jumpTo}
         />
         <div className="flex items-center gap-1">
           <ControlButton label={playing ? strings.pause : strings.play} track="play" onClick={togglePlay}>
@@ -476,6 +494,24 @@ export function Player({ data, strings, locale, title, platform, onSlideChange, 
             ) : (
               <Play className="size-5 fill-current" aria-hidden="true" />
             )}
+          </ControlButton>
+          <ControlButton
+            label={strings.previousSlide}
+            track="previous-slide"
+            className="hidden sm:inline-flex"
+            disabled={previousSlide === undefined || failed}
+            onClick={() => previousSlide && jumpTo(previousSlide)}
+          >
+            <SkipBack className="size-5 fill-current" aria-hidden="true" />
+          </ControlButton>
+          <ControlButton
+            label={strings.nextSlide}
+            track="next-slide"
+            className="hidden sm:inline-flex"
+            disabled={nextSlide === undefined || failed}
+            onClick={() => nextSlide && jumpTo(nextSlide)}
+          >
+            <SkipForward className="size-5 fill-current" aria-hidden="true" />
           </ControlButton>
           <ControlButton label={silent ? strings.unmute : strings.mute} track="mute" onClick={toggleMute}>
             {silent ? <VolumeX className="size-5" aria-hidden="true" /> : <Volume2 className="size-5" aria-hidden="true" />}
@@ -494,7 +530,7 @@ export function Player({ data, strings, locale, title, platform, onSlideChange, 
             />
           )}
           <span className="ml-1 shrink-0 text-sm tabular-nums">{clock}</span>
-          {slideName !== null && <span className="ml-2 hidden truncate text-sm text-white/70 sm:inline">{slideName}</span>}
+          {slides.length > 0 && <SlideList slides={slides} current={currentSlide} strings={strings} onJump={jumpTo} />}
           <span className="flex-1" />
           <ControlButton
             label={captions ? strings.captionsOff : strings.captionsOn}

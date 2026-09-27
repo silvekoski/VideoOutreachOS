@@ -95,7 +95,6 @@ test('the owner books a meeting and sees the time with an IANA time zone name', 
     expect(Number(hour.format(new Date(slot.start)))).toBeLessThan(16)
   }
 
-  await page.getByRole('button', { name: s.calendarHeading, exact: true }).click()
   const calendar = page.locator('[data-region="calendar"]')
   await expect(calendar.getByText(fill(s.timeZone, { zone: TIME_ZONE }))).toBeVisible()
   const slot = calendar.locator('label[data-track="slot-time"]').nth(projectDeal.id === state.deals.ch.id ? -1 : 0)

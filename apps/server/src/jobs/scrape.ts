@@ -16,6 +16,8 @@ const MIN_WORDS = 200
 const MAX_MARKDOWN_CHARS = 50_000
 const DEPTH_PENALTY = 10
 const FOREIGN_LANGUAGE_PENALTY = 30
+const COMPANY_NAME_WEIGHT = 60
+const MAX_EXTRA_PAGES = 3
 
 const ABOUT_WORDS: readonly [word: string, weight: number][] = [
   ['about-us', 100],
@@ -36,6 +38,8 @@ const ABOUT_WORDS: readonly [word: string, weight: number][] = [
   ['firma', 60],
   ['om', 50],
 ]
+
+const LEGAL_FORMS = new Set(['gmbh', 'aktiebolag', 'osakeyhtio', 'aktieselskab', 'aksjeselskap', 'limited', 'comp', 'group', 'holding'])
 
 const LANGUAGE_SEGMENTS = new Set(['en', 'fi', 'sv', 'se', 'de', 'da', 'dk', 'nb', 'no', 'nn', 'fr', 'es', 'it', 'nl', 'pl', 'ru', 'et'])
 const FILE_LINK = /\.(?:pdf|jpe?g|png|gif|svg|webp|zip|docx?|xlsx?|pptx?|mp4|mp3)$/iu
@@ -58,9 +62,21 @@ function segmentsOf(pathname: string): string[] {
     })
 }
 
+function fold(text: string): string {
+  return text.toLowerCase().replaceAll('ø', 'o').replaceAll('æ', 'ae').replaceAll('ß', 'ss').normalize('NFKD').replace(/\p{M}/gu, '')
+}
+
+function nameTokens(company: string): Set<string> {
+  return new Set(fold(company).split(/[^\p{L}\p{N}]+/u).filter((token) => token.length >= 4 && !LEGAL_FORMS.has(token)))
+}
+
+function segmentTokens(segment: string): string[] {
+  return segment.replace(PAGE_SUFFIX, '').split(/[-_.]+/u).filter(Boolean)
+}
+
 function segmentScore(segment: string): number {
   const name = segment.replace(PAGE_SUFFIX, '')
-  const tokens = name.split(/[-_.]+/u).filter(Boolean)
+  const tokens = segmentTokens(segment)
   let best = 0
   for (const [word, weight] of ABOUT_WORDS) {
     if (name === word) best = Math.max(best, weight)
@@ -75,16 +91,22 @@ function isLanguageSegment(segment: string | undefined): boolean {
   return segment !== undefined && LANGUAGE_SEGMENTS.has(segment.split(/[-_]/u)[0] ?? '')
 }
 
-export function pickAboutPage(homeUrl: string, links: readonly string[], extraHomes: readonly string[] = []): string | null {
+export function rankCompanyPages(
+  homeUrl: string,
+  links: readonly string[],
+  company: string,
+  extraHomes: readonly string[] = [],
+): string[] {
   let home: URL
   try {
     home = new URL(homeUrl)
   } catch {
-    return null
+    return []
   }
+  const names = nameTokens(company)
   const hosts = new Set([home, ...extraHomes.flatMap((url) => (URL.canParse(url) ? [new URL(url)] : []))].map(hostKey))
   const base = home.pathname.endsWith('/') ? home.pathname : home.pathname.slice(0, home.pathname.lastIndexOf('/') + 1)
-  let best: { url: string; score: number; length: number } | null = null
+  const ranked: { url: string; score: number; length: number }[] = []
   const seen = new Set<string>()
   for (const link of links) {
     let url: URL
@@ -95,21 +117,21 @@ export function pickAboutPage(homeUrl: string, links: readonly string[], extraHo
     }
     url.hash = ''
     if (!/^https?:$/u.test(url.protocol) || !hosts.has(hostKey(url)) || FILE_LINK.test(url.pathname)) continue
-    if (seen.has(url.href)) continue
-    seen.add(url.href)
+    const key = url.href.replace(/\/$/u, '')
+    if (seen.has(key)) continue
+    seen.add(key)
     const relative = url.pathname.startsWith(base) ? url.pathname.slice(base.length) : url.pathname
     const segments = segmentsOf(relative)
     if (segments.length === 0) continue
-    const words = Math.max(...segments.map(segmentScore))
+    const [top] = segments
+    const named = segments.length === 1 && top !== undefined && segmentTokens(top).some((token) => names.has(fold(token)))
+    const words = Math.max(named ? COMPANY_NAME_WEIGHT : 0, ...segments.map(segmentScore))
     if (words <= 0) continue
     const foreign = segments.length > 1 && isLanguageSegment(segments[0]) ? FOREIGN_LANGUAGE_PENALTY : 0
     const score = words - foreign - DEPTH_PENALTY * (segments.length - 1)
-    const length = url.pathname.length
-    if (score > 0 && (!best || score > best.score || (score === best.score && length < best.length))) {
-      best = { url: url.href, score, length }
-    }
+    if (score > 0) ranked.push({ url: url.href, score, length: url.pathname.length })
   }
-  return best?.url ?? null
+  return ranked.sort((a, b) => b.score - a.score || a.length - b.length).map((item) => item.url)
 }
 
 export function normalizeWebsite(website: string): string | null {
@@ -143,7 +165,7 @@ function failedResult(reason: ScrapeFailure, error: string, homeUrl: string | nu
     reason,
     error,
     homeUrl,
-    aboutUrl: null,
+    pageUrls: [],
     words: 0,
     markdown: null,
     siteLanguage: null,
@@ -152,21 +174,28 @@ function failedResult(reason: ScrapeFailure, error: string, homeUrl: string | nu
   }
 }
 
-async function aboutPage(ctx: JobContext, deal: DealRow, home: ScrapePageResult, requested: string): Promise<ScrapePageResult | null> {
-  const aboutUrl = pickAboutPage(home.url, home.links, [requested])
-  if (!aboutUrl) return null
+async function companyPage(ctx: JobContext, deal: DealRow, url: string): Promise<ScrapePageResult | null> {
   try {
-    const page = await ctx.providers.scraper.scrapeMarkdown(aboutUrl, deal.country)
-    assertPageOk(page, aboutUrl)
+    const page = await ctx.providers.scraper.scrapeMarkdown(url, deal.country)
+    assertPageOk(page, url)
     return page
   } catch (error) {
-    log.warn('the about page could not be scraped, the home page text is used alone', {
-      dealId: deal.id,
-      aboutUrl,
-      error: errorText(error),
-    })
+    log.warn('a company page could not be scraped and is skipped', { dealId: deal.id, url, error: errorText(error) })
     return null
   }
+}
+
+async function companyPages(ctx: JobContext, deal: DealRow, home: ScrapePageResult, requested: string): Promise<ScrapePageResult[]> {
+  const pages: ScrapePageResult[] = []
+  let words = countWords(home.markdown)
+  for (const url of rankCompanyPages(home.url, home.links, deal.snapshot.company, [requested]).slice(0, MAX_EXTRA_PAGES)) {
+    if (pages.length > 0 && words >= MIN_WORDS) break
+    const page = await companyPage(ctx, deal, url)
+    if (!page) continue
+    pages.push(page)
+    words += countWords(page.markdown)
+  }
+  return pages
 }
 
 async function scrapeWebsite(ctx: JobContext, deal: DealRow): Promise<ScrapeResult> {
@@ -178,9 +207,9 @@ async function scrapeWebsite(ctx: JobContext, deal: DealRow): Promise<ScrapeResu
 
   const home = await ctx.providers.scraper.scrapeHome(homeUrl, deal.country)
   assertPageOk(home, homeUrl)
-  const about = await aboutPage(ctx, deal, home, homeUrl)
-  const markdown = [home.markdown, about?.markdown ?? '']
-    .map((text) => text.trim())
+  const pages = await companyPages(ctx, deal, home, homeUrl)
+  const markdown = [home, ...pages]
+    .map((page) => page.markdown.trim())
     .filter(Boolean)
     .join('\n\n')
     .slice(0, MAX_MARKDOWN_CHARS)
@@ -198,7 +227,7 @@ async function scrapeWebsite(ctx: JobContext, deal: DealRow): Promise<ScrapeResu
     reason: ok ? null : 'too_few_words',
     error: ok ? null : `The website has ${words} words, ${MIN_WORDS} are needed`,
     homeUrl: home.url,
-    aboutUrl: about?.url ?? null,
+    pageUrls: pages.map((page) => page.url),
     words,
     markdown: markdown || null,
     siteLanguage: normalizeLang(home.language) ?? detectLanguage(markdown),
@@ -214,7 +243,7 @@ function logResult(dealId: number, result: ScrapeResult): void {
     reason: result.reason,
     error: result.error,
     homeUrl: result.homeUrl,
-    aboutUrl: result.aboutUrl,
+    pageUrls: result.pageUrls,
     words: result.words,
     siteLanguage: result.siteLanguage,
     screenshot: result.screenshot,

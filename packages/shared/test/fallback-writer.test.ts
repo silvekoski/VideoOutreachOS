@@ -1,11 +1,11 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { checkBriefText, checkLines, checkScript } from '../src/checks.ts'
-import { fallbackBriefText, fallbackLines, fallbackScript } from '../src/fallback-writer.ts'
+import { checkBriefText, checkLines, checkOutreach, checkScript } from '../src/checks.ts'
+import { fallbackBriefText, fallbackLines, fallbackOutreach, fallbackScript } from '../src/fallback-writer.ts'
 import type { ScriptContext } from '../src/fallback-writer.ts'
 import { SLOT_LIMITS, textLength } from '../src/slots.ts'
-import { LANGUAGES } from '../src/types.ts'
-import type { Financials, Lang, ScriptSlideNumber } from '../src/types.ts'
+import { CHANNELS, LANGUAGES, OUTREACH_LINK } from '../src/types.ts'
+import type { Channel, Financials, Lang, OutreachContext, ScriptSlideNumber } from '../src/types.ts'
 import { brief } from './fixtures.ts'
 
 const SLIDES: ScriptSlideNumber[] = [2, 3, 4, 5, 6, 7, 8]
@@ -247,7 +247,7 @@ describe('fallbackLines', () => {
   })
 
   it('drops a sentence that refers back to a dropped sentence, as on the Kivirannan website', () => {
-    const html = readFileSync(new URL('../../../seed/sites/kivirannan-konepaja/index.html', import.meta.url), 'utf8')
+    const html = readFileSync(new URL('./fixtures/kivirannan-home.html', import.meta.url), 'utf8')
     const markdown = [...html.matchAll(/<(h[1-3]|p|li)[^>]*>([\s\S]*?)<\/\1>/gu)]
       .map((match) => (match[2] ?? '').replace(/<[^>]+>/gu, ' ').trim())
       .join('\n')
@@ -391,5 +391,82 @@ describe('fallbackBriefText', () => {
       'Matti Virtanen of Nordic Steel Oy booked a meeting. The interest level is medium. The owner stopped the video at slide 6. The owner sent the form. Positive signals: Came back, Tapped a buyer link.',
     )
     expect(output.questions).toHaveLength(3)
+  })
+})
+
+const EXPIRES_ON: Record<Lang, string> = {
+  fi: '27. lokakuuta 2026',
+  sv: '27 oktober 2026',
+  nb: '27. oktober 2026',
+  da: '27. oktober 2026',
+  de: '27. Oktober 2026',
+  en: 'October 27, 2026',
+}
+
+function outreachContext(lang: Lang, channel: Channel, overrides: Partial<OutreachContext> = {}): OutreachContext {
+  return {
+    lang,
+    channel,
+    company: 'Nordic Steel Oy',
+    ownerName: 'Matti Meikäläinen',
+    ownerFirstName: 'Matti',
+    analystName: 'Johanna Virtanen',
+    expiresOn: EXPIRES_ON[lang],
+    companyLines: [NATIVE_LINES[lang]],
+    ...overrides,
+  }
+}
+
+describe('fallbackOutreach', () => {
+  it.each(LANGUAGES.flatMap((lang) => CHANNELS.map((channel) => [lang, channel] as const)))(
+    'writes a %s %s message that passes the check',
+    (lang, channel) => {
+      const context = outreachContext(lang, channel)
+      const output = fallbackOutreach(context)
+      expect(checkOutreach(output, context)).toEqual({ ok: true, errors: [] })
+      expect(output.message).toContain(OUTREACH_LINK)
+      expect(output.message).toContain(EXPIRES_ON[lang])
+      expect(output.message).not.toMatch(DASHES)
+    },
+  )
+
+  it('greets without a name when the name is missing', () => {
+    expect(fallbackOutreach(outreachContext('en', 'sms', { ownerFirstName: '' })).message).toMatch(/^Hello, this is/u)
+    expect(fallbackOutreach(outreachContext('de', 'email', { ownerName: '' })).message).toMatch(/^Guten Tag,/u)
+  })
+})
+
+describe('checkOutreach', () => {
+  const context = outreachContext('en', 'email')
+  const valid = fallbackOutreach(context)
+
+  it('rejects a message without the link placeholder or with a URL', () => {
+    expect(checkOutreach({ ...valid, message: valid.message.replace(OUTREACH_LINK, 'soon') }, context).errors).toContain(
+      'message has 0 {link} placeholders, expected 1',
+    )
+    expect(checkOutreach({ ...valid, message: `${valid.message} https://example.com` }, context).errors).toContain(
+      'message has a URL, use only the {link} placeholder',
+    )
+  })
+
+  it('rejects an email without a subject and numbers that are not in the input', () => {
+    expect(checkOutreach({ ...valid, subject: ' ' }, context).errors).toEqual(['subject has 0 characters, expected 1 to 80'])
+    expect(checkOutreach({ ...valid, message: `${valid.message} We closed 45 deals.` }, context).errors).toEqual(['numbers not in the input: 45'])
+  })
+
+  it('rejects a dash used as a pause, but not a dash in the company name', () => {
+    const error = 'text has a dash (\u2013, \u2014 or " - "), use a comma, a period or parentheses'
+    expect(checkOutreach({ ...valid, subject: `Nordic Steel \u2013 a short video` }, context).errors).toEqual([error])
+    expect(checkOutreach({ ...valid, message: valid.message.replace('. It shows', '\u2014it shows') }, context).errors).toEqual([error])
+    expect(checkOutreach({ ...valid, message: valid.message.replace('. It shows', ' - it shows') }, context).errors).toEqual([error])
+    const dashed = outreachContext('en', 'email', { company: 'Ahlskog Transport - Kuljetus Oy' })
+    expect(checkOutreach(fallbackOutreach(dashed), dashed)).toEqual({ ok: true, errors: [] })
+  })
+
+  it('rejects a message in the wrong language or of the wrong length', () => {
+    expect(checkOutreach(fallbackOutreach(outreachContext('de', 'email')), context).errors).toEqual(['language de, expected en'])
+    expect(checkOutreach({ subject: '', message: `Hello {link}` }, outreachContext('en', 'sms')).errors).toEqual([
+      'message has 1 words, expected 15 to 45',
+    ])
   })
 })

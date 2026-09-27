@@ -33,7 +33,7 @@ export const SCRAPE_OK: ScrapeResult = {
   reason: null,
   error: null,
   homeUrl: 'https://acme.test/',
-  aboutUrl: 'https://acme.test/meista',
+  pageUrls: ['https://acme.test/meista'],
   words: 420,
   markdown: '# Acme Oy\n\nAcme makes steel parts for ships.',
   siteLanguage: 'fi',

@@ -500,6 +500,30 @@ describe('applyReviewPatch', () => {
     expect(requireDeal(t.db, DEAL_ID).status).toBe('draft')
   })
 
+  it('sets the buyers of slide 5 in the chosen order, also from the MGX list', () => {
+    insertAnalyst(t.db)
+    const mgxBuyer = { id: 'm9', name: 'Tampere Industrial Capital', logoUrl: null, website: null, focus: 'Buys machine shops', namePublic: true }
+    const hidden = { ...mgxBuyer, id: 'm10', name: 'Hidden Fund', namePublic: false }
+    insertDeal(t.db, {
+      patch: {
+        scrape: SCRAPE_OK,
+        mgx: { buyers: [mgxBuyer, hidden], featuredBuyers: [], sectorDeals: [], recentDeals: [], multiples: [], fetchedAt: now.toISOString() },
+      },
+    })
+    createVersion(t.db, DEAL_ID, makeTimeline(DEAL_ID, { audio: 'ok' }), now)
+    const buyers = (timeline: Timeline | undefined) => {
+      const variables = timeline?.segments[4]?.variables
+      return variables?.template === 'buyers' ? variables.buyers.map((buyer) => buyer.id) : []
+    }
+    const picked = applyReviewPatch(t.db, DEAL_ID, { buyerIds: ['b3', 'm9', 'b1'] }, now)
+    expect(buyers(picked.timeline?.timeline)).toEqual(['b3', 'm9', 'b1'])
+    expect(picked.deal.removedBuyers).toEqual(['b2'])
+    expect(picked.timeline?.timeline.segments[4]).toMatchObject({ script: '', scriptSource: null, audio: { status: 'missing' } })
+    expect(() => applyReviewPatch(t.db, DEAL_ID, { buyerIds: ['m10'] }, now)).toThrow('is not in the MGX list')
+    const same = applyReviewPatch(t.db, DEAL_ID, { buyerIds: ['b3', 'm9', 'b1'] }, now)
+    expect(same.newVersion).toBe(false)
+  })
+
   it('removes and restores buyers on slide 5', () => {
     insertAnalyst(t.db)
     insertDeal(t.db, { patch: { scrape: SCRAPE_OK } })

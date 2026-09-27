@@ -1,5 +1,7 @@
 import type { ReviewReason, Segment, TemplateName, Timeline } from './types.ts'
 
+export const MIN_COMPANY_LINES = 2
+
 const SLOTS: Record<string, { max: number; name: string }> = {
   'facecam.name': { max: 44, name: 'analyst name' },
   'who-we-are.headline': { max: 60, name: 'headline' },
@@ -24,6 +26,8 @@ const SLOTS: Record<string, { max: number; name: string }> = {
   'what-is-possible.headline': { max: 60, name: 'headline' },
   'what-is-possible.deal-text': { max: 140, name: 'deal text' },
   'what-is-possible.empty': { max: 120, name: 'text without deals' },
+  'what-is-possible.multiple': { max: 52, name: 'multiple label' },
+  'what-is-possible.summary': { max: 48, name: 'summary label' },
   'privacy.headline': { max: 60, name: 'headline' },
   'privacy.point': { max: 90, name: 'privacy point' },
   'book-meeting.headline': { max: 60, name: 'headline' },

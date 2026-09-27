@@ -36,7 +36,7 @@ All paths are under `/Users/veikka/prompt-marketing-hackathon-monorepo/apps/serv
   - `class SeedLinkedInSource(file?)`
 - **`consent-script.ts`:**
   - `consentScript(phase: 'accept'|'cleanup'): string`
-  - `CMP_CONTAINERS`, `CONSENT_EXCLUDE_TAGS`, `CONSENT_HINT_PATTERN`, `CONSENT_SETTLE_MS`, `CONSENT_AFTER_CLICK_MS`
+  - `CMP_CONTAINERS`, `CONSENT_HINT_PATTERN`, `CONSENT_SETTLE_MS`, `CONSENT_AFTER_CLICK_MS`
   - `scrapeLocale(country)`
 - **`media/ffmpeg.ts`:**
   - `probeDurationS`, `loudnormToMp3`, `transcodeIntro`, `transcodeVoiceSample`, `faststart`, `make720`, `posterFrame`, `ogImage`, `integratedLoudness` (returns `number|null`), `silenceMp3`

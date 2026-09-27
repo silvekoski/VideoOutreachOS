@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, test } from 'vitest'
 import { mgxSeedSchema } from '../src/seed.ts'
@@ -8,7 +8,7 @@ import { seedDir } from './test-server.ts'
 interface PipedriveSeed {
   users: { id: number; name: string; email: string; active: boolean }[]
   organizations: { id: number; name: string; website: string | null; countryCode: string; businessId: string | null; nace: string | null }[]
-  persons: { id: number; name: string; firstName: string; jobTitle: string; email: string; phone: string; orgId: number }[]
+  persons: { id: number; name: string; firstName: string; jobTitle: string; email: string; phone: string | null; orgId: number }[]
   deals: { id: number; title: string; ownerId: number; personId: number; orgId: number; stage: string | null; status: string; videoUrl: string | null }[]
   activities: unknown[]
   notes: unknown[]
@@ -19,15 +19,13 @@ const readJson = <T>(file: string): T => JSON.parse(readFileSync(path.join(seedD
 const mgx = mgxSeedSchema.parse(readJson('mgx.json'))
 const pipedrive = readJson<PipedriveSeed>('pipedrive.json')
 const financials = readJson<{ companies: Record<string, { revenue: number; profit: number; fiscalYear: number }> }>('asiakastieto.json')
-const linkedin = readJson<{ profiles: Record<string, { languages: string[]; staffCount: number }> }>('linkedin.json')
+const linkedin = readJson<{ profiles: Record<string, { languages: string[]; staffCount: number | null }> }>('linkedin.json')
 const sequence = readJson<{ deals: { n: number; sentAt: string; opened: boolean; meetingBooked: boolean }[] }>('text-sequence.json')
 
 const COUNTRY_LANGUAGES: Record<string, string[]> = { FI: ['fi', 'sv'], SE: ['sv'], NO: ['nb'], DK: ['da'], DE: ['de'], AT: ['de'], CH: ['de'], IS: ['en'] }
 const ANALYST_BY_COUNTRY: Record<string, number> = { FI: 1001, SE: 1001, DE: 1002, AT: 1002, CH: 1002, NO: 1003, DK: 1003, IS: 1003 }
-const ABOUT_PATH_WORDS = ['about', 'meista', 'yritys', 'om-oss', 'om-os', 'ueber-uns']
 
 const finnishOrgs = pipedrive.organizations.filter((org) => org.countryCode === 'FI')
-const siteOrgs = pipedrive.organizations.filter((org) => org.website !== null)
 
 function validFinnishBusinessId(id: string): boolean {
   const match = /^(\d{7})-(\d)$/.exec(id)
@@ -35,33 +33,6 @@ function validFinnishBusinessId(id: string): boolean {
   const weights = [7, 9, 10, 5, 8, 4, 2]
   const remainder = [...match[1]].reduce((sum, digit, i) => sum + Number(digit) * (weights[i] ?? 0), 0) % 11
   return remainder !== 1 && (remainder === 0 ? 0 : 11 - remainder) === Number(match[2])
-}
-
-function siteDir(website: string): string {
-  const slug = /^\/sites\/([a-z0-9-]+)\/$/.exec(new URL(website).pathname)?.[1]
-  if (!slug) throw new Error(`Website is not a demo site: ${website}`)
-  return path.join(seedDir, 'sites', slug)
-}
-
-function aboutWord(dir: string): string | undefined {
-  return ABOUT_PATH_WORDS.find((word) => existsSync(path.join(dir, word, 'index.html')))
-}
-
-function countWords(html: string, withBanner: boolean): number {
-  let text = html.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<style[\s\S]*?<\/style>/g, ' ')
-  if (!withBanner) text = text.replace(/<section id="cookie-banner"[\s\S]*?<\/section>/g, ' ')
-  return text
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&[a-z]+;/g, ' ')
-    .split(/\s+/)
-    .filter((token) => /[\p{L}\p{N}]/u.test(token)).length
-}
-
-function siteWords(org: PipedriveSeed['organizations'][number], withBanner: boolean) {
-  const dir = siteDir(org.website ?? '')
-  const home = countWords(readFileSync(path.join(dir, 'index.html'), 'utf8'), withBanner)
-  const about = countWords(readFileSync(path.join(dir, aboutWord(dir) ?? '', 'index.html'), 'utf8'), withBanner)
-  return { home, total: home + about }
 }
 
 function filesUnder(dir: string): string[] {
@@ -120,10 +91,16 @@ describe('pipedrive.json', () => {
     expect(pipedrive.users.every((user) => user.active)).toBe(true)
   })
 
-  test('has 10 organizations: 3 FI, 1 SE, 1 NO, 1 DK, 1 DE, 1 AT, 1 CH, 1 IS', () => {
+  test('has 30 organizations: 9 FI, 4 SE, 3 NO, 3 DK, 4 DE, 2 AT, 3 CH, 2 IS', () => {
     const counts: Record<string, number> = {}
     for (const org of pipedrive.organizations) counts[org.countryCode] = (counts[org.countryCode] ?? 0) + 1
-    expect(counts).toEqual({ FI: 3, SE: 1, NO: 1, DK: 1, DE: 1, AT: 1, CH: 1, IS: 1 })
+    expect(counts).toEqual({ FI: 9, SE: 4, NO: 3, DK: 3, DE: 4, AT: 2, CH: 3, IS: 2 })
+  })
+
+  test('organization, person and deal IDs are unique', () => {
+    for (const items of [pipedrive.organizations, pipedrive.persons, pipedrive.deals]) {
+      expect(new Set(items.map((item) => item.id)).size).toBe(items.length)
+    }
   })
 
   test('the Finnish business ID check accepts valid IDs and rejects others', () => {
@@ -140,9 +117,15 @@ describe('pipedrive.json', () => {
     for (const org of pipedrive.organizations) expect(org.nace, org.name).toMatch(/^\d{2}\.\d{2}$/)
   })
 
-  test('exactly one Finnish company has no website', () => {
+  test('exactly one Finnish company has no website, and each website is a public https address', () => {
     expect(finnishOrgs.filter((org) => org.website === null)).toHaveLength(1)
     expect(pipedrive.organizations.filter((org) => org.website === null)).toHaveLength(1)
+    for (const org of pipedrive.organizations.filter((item) => item.website !== null)) {
+      const url = new URL(org.website ?? '')
+      expect(url.protocol, org.name).toBe('https:')
+      expect(url.hostname, org.name).toMatch(/\.[a-z]{2,}$/)
+      expect(url.hostname, org.name).not.toMatch(/^(localhost|127\.|localtest\.me$)/)
+    }
   })
 
   test('each deal points to an existing person, organization and user, and the person works there', () => {
@@ -165,29 +148,18 @@ describe('pipedrive.json', () => {
 })
 
 describe('asiakastieto.json and linkedin.json', () => {
-  test('have financials for two of the three Finnish companies', () => {
-    const ids = Object.keys(financials.companies)
-    expect(ids).toHaveLength(2)
-    expect(finnishOrgs.filter((org) => org.businessId !== null && ids.includes(org.businessId))).toHaveLength(2)
+  test('have no financials, because the demo companies are real', () => {
+    expect(financials.companies).toEqual({})
   })
 
-  test('each Finnish company with financials has a business ID, and the figures are for 2025', () => {
-    for (const [businessId, figures] of Object.entries(financials.companies)) {
-      expect(finnishOrgs.some((org) => org.businessId === businessId), businessId).toBe(true)
-      expect(figures.fiscalYear).toBe(2025)
-      expect(figures.profit).toBeGreaterThan(0)
-      expect(figures.revenue).toBeGreaterThan(figures.profit)
-    }
-  })
-
-  test('have a profile for each person with languages of the country and 20 or more staff', () => {
+  test('have a profile for each person with languages of the country and a staff count or null', () => {
     for (const person of pipedrive.persons) {
       const org = pipedrive.organizations.find((item) => item.id === person.orgId)
       const profile = linkedin.profiles[person.email.toLowerCase()]
       expect(profile, person.email).toBeDefined()
       expect(profile?.languages.every((lang) => ['fi', 'sv', 'nb', 'da', 'de', 'en'].includes(lang)), person.email).toBe(true)
       expect(profile?.languages.some((lang) => COUNTRY_LANGUAGES[org?.countryCode ?? '']?.includes(lang)), person.email).toBe(true)
-      expect(profile?.staffCount, person.email).toBeGreaterThanOrEqual(20)
+      if (profile?.staffCount !== null) expect(profile?.staffCount, person.email).toBeGreaterThan(0)
     }
   })
 
@@ -204,8 +176,8 @@ describe('MGX data for the demo companies', () => {
     for (const org of dach.filter((item) => item.countryCode !== 'AT')) expect(dealCount(org), org.name).toBeGreaterThanOrEqual(3)
   })
 
-  test('AT has 1 or 2 closed deals in its sector, so the calculator shows the text for after the meeting', () => {
-    const austrian = dach.find((org) => org.countryCode === 'AT')
+  test('the Austrian bakery has 1 or 2 closed deals in its sector, so the calculator shows the text for after the meeting', () => {
+    const austrian = dach.find((org) => org.countryCode === 'AT' && org.nace === '10.71')
     expect(austrian && dealCount(austrian)).toBeGreaterThanOrEqual(1)
     expect(austrian && dealCount(austrian)).toBeLessThan(3)
   })
@@ -219,53 +191,6 @@ describe('MGX data for the demo companies', () => {
   test('the Finnish machining company has 3 or more buyers in its sector', () => {
     const org = pipedrive.organizations.find((item) => item.countryCode === 'FI' && item.nace === '25.62')
     expect(searchBuyers(mgx, { nace: org?.nace ?? '', country: 'FI' }, 'http://localhost:3100').length).toBeGreaterThanOrEqual(3)
-  })
-})
-
-describe('demo sites', () => {
-  test('each website has a home page and an about page with a known path word that the home page links to', () => {
-    for (const org of siteOrgs) {
-      const dir = siteDir(org.website ?? '')
-      const word = aboutWord(dir)
-      expect(word, org.name).toBeDefined()
-      expect(readFileSync(path.join(dir, 'index.html'), 'utf8'), org.name).toContain(`href="${word}/"`)
-    }
-  })
-
-  test('each page sets a language of the country and has a cookie banner with an accept button', () => {
-    for (const org of siteOrgs) {
-      const dir = siteDir(org.website ?? '')
-      for (const file of [path.join(dir, 'index.html'), path.join(dir, aboutWord(dir) ?? '', 'index.html')]) {
-        const html = readFileSync(file, 'utf8')
-        const lang = /<html lang="([a-zA-Z-]+)">/.exec(html)?.[1]?.split('-')[0]
-        expect(COUNTRY_LANGUAGES[org.countryCode], file).toContain(lang)
-        expect(html, file).toMatch(/<section id="cookie-banner" class="cookie-banner"/)
-        expect(html, file).toMatch(/<button type="button" id="cookie-accept"/)
-      }
-    }
-  })
-
-  test('each site has 250 to 600 words and 200 or more on the home page, except one short site', () => {
-    const short = siteOrgs.filter((org) => siteWords(org, true).total < 200)
-    expect(short).toHaveLength(1)
-    for (const org of siteOrgs.filter((item) => !short.includes(item))) {
-      const words = siteWords(org, false)
-      expect(words.home, org.name).toBeGreaterThanOrEqual(200)
-      expect(words.total, org.name).toBeGreaterThanOrEqual(250)
-      expect(words.total, org.name).toBeLessThanOrEqual(600)
-    }
-  })
-
-  test('every site file starts with <!DOCTYPE html>', () => {
-    const files = filesUnder(path.join(seedDir, 'sites')).filter((file) => file.endsWith('.html'))
-    expect(files.length).toBeGreaterThanOrEqual(16)
-    for (const file of files) expect(readFileSync(file, 'utf8').startsWith('<!DOCTYPE html>\n'), file).toBe(true)
-  })
-
-  test('no site page loads an external resource', () => {
-    for (const file of filesUnder(path.join(seedDir, 'sites'))) {
-      expect(readFileSync(file, 'utf8'), file).not.toMatch(/(src|href)="(https?:)?\/\//)
-    }
   })
 })
 

@@ -89,13 +89,15 @@ describe('checkLines', () => {
   ]
   const input = { text: 'vuodesta 1978, 45 henkeä' }
 
-  it('accepts exactly 3 lines in the language within the slot', () => {
+  it('accepts 2 or 3 lines in the language within the slot', () => {
     expect(checkLines(lines, 'fi', input)).toEqual({ ok: true, errors: [] })
+    expect(checkLines(lines.slice(0, 2), 'fi', input)).toEqual({ ok: true, errors: [] })
   })
 
   it('rejects a wrong shape', () => {
     expect(checkLines('text', 'fi', input).ok).toBe(false)
-    expect(checkLines(lines.slice(0, 2), 'fi', input).ok).toBe(false)
+    expect(checkLines(lines.slice(0, 1), 'fi', input).errors).toEqual(['expected an array of 2 to 3 lines'])
+    expect(checkLines([...lines, lines[0]], 'fi', input).ok).toBe(false)
     expect(checkLines([...lines.slice(0, 2), ''], 'fi', input).errors).toContain('line 3 is empty')
     expect(checkLines([...lines.slice(0, 2), 5], 'fi', input).errors).toContain('line 3 is empty')
   })

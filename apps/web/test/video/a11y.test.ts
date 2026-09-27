@@ -1,4 +1,4 @@
-import { createElement, createRef } from 'react'
+import { createElement } from 'react'
 import type { ComponentProps } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -14,7 +14,6 @@ import { Player } from '../../src/video/player.tsx'
 import { ProgressBar } from '../../src/video/progress-bar.tsx'
 import { viewerTimeZone } from '../../src/video/slots.ts'
 import { progressText } from '../../src/video/timeline.ts'
-import { Transcript } from '../../src/video/transcript.tsx'
 
 const de = STRINGS.de
 
@@ -44,7 +43,6 @@ function pageData(patch: Partial<VideoPageData> = {}): VideoPageData {
     media: { video720: '/720.mp4', video1080: '/1080.mp4', poster: '/poster.jpg', captions: '/captions.v2.vtt' },
     slides: SLIDES,
     durationS: 118,
-    transcript: [],
     buyers: [],
     buyerScope: 'sector',
     calculator: null,
@@ -181,7 +179,7 @@ describe('preview mode', () => {
   it('disables Book in the calendar and says why', () => {
     const calendar = (preview: boolean) =>
       renderToStaticMarkup(
-        createElement(Calendar, { data: pageData({ preview }), strings: de.page, locale: de.locale, headingRef: createRef<HTMLHeadingElement>() }),
+        createElement(Calendar, { data: pageData({ preview }), strings: de.page, locale: de.locale }),
       )
     const html = calendar(true)
     const book = openTags(html, 'button').find((tag) => attr(tag, 'type') === 'submit')
@@ -194,7 +192,7 @@ describe('preview mode', () => {
 describe('calendar', () => {
   it('names the time zone with the IANA name and shows no email error at first', () => {
     const html = renderToStaticMarkup(
-      createElement(Calendar, { data: pageData(), strings: de.page, locale: de.locale, headingRef: createRef<HTMLHeadingElement>() }),
+      createElement(Calendar, { data: pageData(), strings: de.page, locale: de.locale }),
     )
     expect(html).toContain(fill(de.page.timeZone, { zone: viewerTimeZone() }))
     const email = openTags(html, 'input').find((tag) => attr(tag, 'type') === 'email')
@@ -206,7 +204,7 @@ describe('calendar', () => {
 
 describe('buyer links', () => {
   it('names the heading after the scope of slide 5', () => {
-    const buyers = [{ id: 'b1', name: 'Nordic Industrial Partners', focus: 'Metal', website: null }]
+    const buyers = [{ id: 'b1', name: 'Nordic Industrial Partners', focus: 'Metal', website: null, logoUrl: null }]
     const heading = (scope: 'sector' | 'featured') =>
       renderToStaticMarkup(createElement(BuyerLinks, { buyers, scope, strings: de.page }))
     expect(heading('sector')).toContain(de.page.buyersHeading)
@@ -216,15 +214,16 @@ describe('buyer links', () => {
 
   it('puts the buyer name in the accessible name of each link', () => {
     const buyers = [
-      { id: 'b1', name: 'Nordic Industrial Partners', focus: 'Metal', website: 'https://nip.test' },
-      { id: 'b2', name: 'Baltic Growth Fund', focus: 'Family firms', website: null },
-      { id: 'b3', name: 'Alpen Holding', focus: 'Services', website: 'alpen.test' },
+      { id: 'b1', name: 'Nordic Industrial Partners', focus: 'Metal', website: 'https://nip.test', logoUrl: '/v/abc/logos/0' },
+      { id: 'b2', name: 'Baltic Growth Fund', focus: 'Family firms', website: null, logoUrl: null },
+      { id: 'b3', name: 'Alpen Holding', focus: 'Services', website: 'alpen.test', logoUrl: null },
     ]
     const html = renderToStaticMarkup(createElement(BuyerLinks, { buyers, scope: 'sector', strings: de.page }))
     expect(openTags(html, 'a').map((tag) => attr(tag, 'aria-label'))).toEqual([
       'Website besuchen: Nordic Industrial Partners',
       'Website besuchen: Alpen Holding',
     ])
+    expect(openTags(html, 'img').map((tag) => [attr(tag, 'src'), attr(tag, 'alt')])).toEqual([['/v/abc/logos/0', '']])
   })
 })
 
@@ -266,7 +265,6 @@ describe('player', () => {
         title: 'Video',
         platform: detectPlatform('curl/8.9', 0),
         onSlideChange: () => {},
-        onEnded: () => {},
       }),
     )
     const track = openTags(html, 'track')[0]
@@ -275,29 +273,6 @@ describe('player', () => {
     expect(attr(track, 'src')).toBe('/captions.v2.vtt')
     const slider = openTags(html, 'div').find((tag) => attr(tag, 'role') === 'slider')
     expect(attr(slider, 'aria-valuetext')).toBe(`0:00 of 1:58, ${STRINGS.en.page.slideNames[1]}`)
-  })
-})
-
-describe('transcript', () => {
-  it('lists the text on screen of each slide under a label, in the video language', () => {
-    const html = renderToStaticMarkup(
-      createElement(Transcript, {
-        transcript: [
-          { slide: 1, text: 'Hei, olen Aino Mergerosta.', screen: ['Aino Analyst'] },
-          { slide: 6, text: '', screen: ['Mahdollisuudet toimialallasi', '2025, Saksa: Hydraulic cylinder maker sold to a strategic buyer'] },
-        ],
-        lang: 'fi',
-        strings: STRINGS.en.page,
-      }),
-    )
-    const lists = openTags(html, 'ul')
-    expect(lists).toHaveLength(2)
-    for (const list of lists) {
-      expect(attr(list, 'lang')).toBe('fi')
-      expect(textById(html, attr(list, 'aria-labelledby') ?? '')).toBe(STRINGS.en.page.onScreen)
-    }
-    expect(html).toContain('<li>2025, Saksa: Hydraulic cylinder maker sold to a strategic buyer</li>')
-    expect(openTags(html, 'p').filter((tag) => attr(tag, 'lang') === 'fi')).toHaveLength(1)
   })
 })
 

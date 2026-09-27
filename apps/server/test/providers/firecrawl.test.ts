@@ -5,17 +5,28 @@ import { FirecrawlScraper } from '../../src/providers/firecrawl.ts'
 const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3])
 const screenshotUrl = 'https://storage.googleapis.com/firecrawl-scrape-media/screenshot-1.png?Expires=1'
 
+const mapUrl = 'https://api.firecrawl.dev/v2/map'
+
 type Handler = (url: string, body: Record<string, unknown> | null) => Response
 
-function mockFetch(handler: Handler) {
+function mapped(): Response {
+  return Response.json({ success: true, links: [{ url: 'https://acme.fi/meista' }, { url: 'https://acme.fi/tuotteet', title: 'Tuotteet' }] })
+}
+
+function mockFetch(handler: Handler, map: () => Response = mapped) {
   const bodies: Record<string, unknown>[] = []
+  const maps: Record<string, unknown>[] = []
   const fn = vi.fn(async (input: string, init: RequestInit = {}) => {
     const body = typeof init.body === 'string' ? (JSON.parse(init.body) as Record<string, unknown>) : null
+    if (String(input) === mapUrl) {
+      if (body) maps.push(body)
+      return map()
+    }
     if (body) bodies.push(body)
     return handler(String(input), body)
   })
   vi.stubGlobal('fetch', fn)
-  return { fn, bodies }
+  return { fn, bodies, maps }
 }
 
 function scraped(extra: Record<string, unknown> = {}): Response {
@@ -36,18 +47,19 @@ afterEach(() => {
 })
 
 describe('FirecrawlScraper', () => {
-  it('scrapes the home page with the consent actions, the location and the screenshot', async () => {
-    const { fn, bodies } = mockFetch((url) => (url === screenshotUrl ? new Response(png) : scraped()))
+  it('scrapes the home page with the consent actions, the location and the screenshot, and adds the site map links', async () => {
+    const { fn, bodies, maps } = mockFetch((url) => (url === screenshotUrl ? new Response(png) : scraped()))
     const page = await new FirecrawlScraper('fc-key').scrapeHome('https://acme.fi', 'fi')
     expect(page).toEqual({
       url: 'https://acme.fi/',
       markdown: '# Acme Oy\n\nValmistamme metallia.',
-      links: ['https://acme.fi/', 'https://acme.fi/meista'],
+      links: ['https://acme.fi/', 'https://acme.fi/meista', 'https://acme.fi/tuotteet'],
       screenshotPng: png,
       language: 'fi-FI',
       statusCode: 200,
     })
-    const [url, init] = fn.mock.calls[0]!
+    expect(maps).toEqual([{ url: 'https://acme.fi', limit: 500, includeSubdomains: false }])
+    const [url, init] = fn.mock.calls.find(([called]) => called !== mapUrl)!
     expect(url).toBe('https://api.firecrawl.dev/v2/scrape')
     expect(new Headers(init?.headers).get('authorization')).toBe('Bearer fc-key')
     const body = bodies[0]!
@@ -56,10 +68,10 @@ describe('FirecrawlScraper', () => {
       onlyMainContent: true,
       maxAge: 0,
       location: { country: 'FI', languages: ['fi-FI'] },
-      formats: ['markdown', 'links', { type: 'screenshot', fullPage: false, viewport: { width: 1440, height: 900 } }],
+      formats: ['markdown', 'links', { type: 'screenshot', fullPage: true, viewport: { width: 1440, height: 900 } }],
     })
     expect(body).not.toHaveProperty('blockAds')
-    expect(body.excludeTags).toContain('[class*="cookie" i]')
+    expect(body).not.toHaveProperty('excludeTags')
     const actions = body.actions as { type: string; script?: string }[]
     expect(actions.map((action) => action.type)).toEqual(['wait', 'executeJavascript', 'wait', 'executeJavascript'])
     expect(actions[1]?.script?.startsWith('(function consentPage(')).toBe(true)
@@ -82,14 +94,24 @@ describe('FirecrawlScraper', () => {
     expect(bodies[1]).toMatchObject({ location: { country: 'DE', languages: ['de-DE'] } })
   })
 
-  it('scrapes an about page for Markdown only', async () => {
-    const { bodies } = mockFetch(() => scraped({ screenshot: undefined, links: undefined }))
+  it('keeps the home page links when the site map fails', async () => {
+    mockFetch(
+      (url) => (url === screenshotUrl ? new Response(png) : scraped()),
+      () => Response.json({ success: false, error: 'Rate limit exceeded' }, { status: 429 }),
+    )
+    const page = await new FirecrawlScraper('fc-key').scrapeHome('https://acme.fi', 'fi')
+    expect(page.links).toEqual(['https://acme.fi/', 'https://acme.fi/meista'])
+  })
+
+  it('scrapes an about page for Markdown only, without the site map', async () => {
+    const { bodies, maps } = mockFetch(() => scraped({ screenshot: undefined, links: undefined }))
     const page = await new FirecrawlScraper('fc-key').scrapeMarkdown('https://acme.fi/meista')
     expect(page.screenshotPng).toBeNull()
     expect(page.links).toEqual([])
     expect(bodies[0]).toMatchObject({ formats: ['markdown'] })
     expect(bodies[0]).not.toHaveProperty('actions')
     expect(bodies[0]).not.toHaveProperty('location')
+    expect(maps).toEqual([])
   })
 
   it.each([

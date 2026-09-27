@@ -28,15 +28,17 @@ Request guard for each `/api/*` request:
 | `POST /api/deals/:id/approve` | | `ReviewDto`, or 409 with `ApiError.detail = ReviewReason[]` |
 | `POST /api/deals/:id/remake` | | `ReviewDto`. Makes the video of an unpublished deal again from the current Pipedrive data (review reason `remake_needed`): a new scrape, then a new version with Asiakastieto, MGX and new scripts. 409 when the link is published, the deal is lost or expired, no version exists, or a remake runs. During a remake, the approval and each script, lines or buyer edit give 409. |
 | `POST /api/deals/:id/expiry` | `{ days: number }` (1 to 365) | `DealDetailDto` |
+| `POST /api/deals/:id/outreach` | `{ channel: Channel }` | `OutreachDto`. The model writes the message in the page language with the `{link}` placeholder, and the server puts the channel link in its place. If the model fails, a template gives the draft (`drafted: 'template'`). 409 before publication and after expiry. |
 | `GET /api/deals/:id/files/:file` | `download=1` optional | any file of the deal folder (range requests) |
 | `GET /api/deals/:id/captions.v:n.vtt` | | WebVTT of rendered version n: the scripts, the slide times of that version, and the intro transcript in the face-cam variables (the analyst transcript when the version has none). 404 before the render. |
 | `POST /api/deals/:id/brief/read` | | 204, writes a `brief_read` deal event (not twice for one brief version in 10 minutes) |
 | `GET /api/sessions/:id/events` | | `SessionEventsDto` |
+| `GET /api/sessions/:id/recording` | | `RecordingEvent[]`: the rrweb events of the session, chunks in the order first event time, then part. An empty array when the session has no recording. 404 for an unknown session. |
 | `POST /api/tasks/:id/done` | | 204 |
 | `POST /api/jobs/:id/retry` | | 204, 409 for a job that did not fail or a pipeline job of an expired deal. A retried voice clone gets the clone status `pending` again. |
 | `GET /api/alerts` | `analyst` | `AlertDto[]` (newest 50 of the last 14 days) |
 | `POST /api/alerts/seen` | `{ analyst: number }` | 204 |
-| `GET /api/metrics` | `from`, `to` (YYYY-MM-DD), `tz` (IANA time zone of the days, default `UTC`) | `MetricsDto` |
+| `GET /api/metrics` | `from`, `to` (YYYY-MM-DD), `tz` (IANA time zone of the days, default `UTC`), `source` (`real` or `mock`, default `real`) | `MetricsDto` |
 | `GET /api/templates` | | `TemplatePreviewDto[]` |
 | `GET /api/templates/:file` | | template preview JPEG |
 
@@ -52,6 +54,7 @@ Request guard for each `/api/*` request:
 | `POST /v/:code/book` | `BookBody` gives `BookResult`. 409 "This time is not free" when the slot is taken. 409 "A meeting is already booked" with `detail: BookConflictDetail` (`meetingAt`) when the deal has a meeting |
 | `POST /v/:code/form` | `FormSubmitBody` gives `FormSubmitResult`, 409 when the form was already sent or another send of the same link is in progress (checked before the MGX call, so MGX gets one form per link), 502 when MGX fails |
 | `POST /v/:code/events` | `EventBatch` gives 204 |
+| `POST /v/:code/recording` | `RecordingChunk` gives 204. The body limit is 2 MB (256 KB for the other POST routes). The chunk file is `deals/{deal}/recordings/{session}/{first event ms}-{part}.json`. A chunk that exists already gives 204 and the server does not write it again. 413 when the session recording would be above 50 MB. The same preview, expiry and publish rules as `/events`. The chunk starts the session row when it arrives before the first event batch. |
 
 ## Mock services
 

@@ -1,3 +1,5 @@
+import { mkdirSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { requireDeal } from '../../src/domain/deals.ts'
 import { publish } from '../../src/domain/pipeline.ts'
@@ -130,5 +132,30 @@ describe('parseRange', () => {
     expect(parseRange('bytes=5-2', 10)).toBeNull()
     expect(parseRange('bytes=-', 10)).toBeNull()
     expect(parseRange('items=0-1', 10)).toBeNull()
+  })
+})
+
+describe('GET /v/:code/logos/:index', () => {
+  const logos = () => path.join(h.storageDir, 'cache', 'logos')
+
+  beforeEach(() => {
+    mkdirSync(logos(), { recursive: true })
+    writeFileSync(path.join(logos(), 'b1.png'), 'png bytes')
+  })
+
+  it('serves the cached logo of the buyer at the index of slide 5', async () => {
+    const res = await h.request(`/v/${code}/logos/0`)
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toBe('image/png')
+    expect(res.headers.get('content-security-policy')).toBe("default-src 'none'; style-src 'unsafe-inline'; sandbox; frame-ancestors 'none'")
+    expect(res.headers.get('cache-control')).toBe('private, max-age=86400')
+    expect(res.headers.get('x-robots-tag')).toBe('noindex, nofollow')
+    expect(await res.text()).toBe('png bytes')
+  })
+
+  it('gives 404 for a buyer without a logo, a missing file, an unknown index and a path', async () => {
+    for (const index of ['1', '2', '3', '..%2Fb1.png', '-1']) {
+      expect((await h.request(`/v/${code}/logos/${index}`)).status, index).toBe(404)
+    }
   })
 })

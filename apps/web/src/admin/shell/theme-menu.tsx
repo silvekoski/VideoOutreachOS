@@ -16,7 +16,7 @@ export function ThemeMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon-sm" aria-label={`Theme: ${current.label}`}>
+        <Button variant="ghost" size="icon" className="rounded-full" aria-label={`Theme: ${current.label}`}>
           <current.icon aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>

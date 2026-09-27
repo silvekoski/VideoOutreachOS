@@ -14,6 +14,7 @@ import {
   markClonePending,
   requireAnalyst,
   setConsent,
+  setPhoto,
   setVoiceId,
   setVoiceSample,
   startIntro,
@@ -25,7 +26,7 @@ import { DomainError } from '../../domain/errors.ts'
 import { alertsFor } from '../../domain/events.ts'
 import { advanceAnalystDeals } from '../../domain/pipeline.ts'
 import { log } from '../../log.ts'
-import { FfmpegError, transcodeVoiceSample } from '../../media/ffmpeg.ts'
+import { FfmpegError, squarePhoto, transcodeVoiceSample } from '../../media/ffmpeg.ts'
 import { insideDir, paths } from '../../paths.ts'
 import { enqueue, jobKeys } from '../../queue/index.ts'
 import { isIsoDate, localDate } from '../../views/dates.ts'
@@ -36,13 +37,15 @@ import { formText, readUpload, saveUpload, uploadLimit } from './uploads.ts'
 const MAX_TRANSCRIPT = 5000
 const ALERT_DAYS = 14
 const DAY_MS = 86_400_000
-const ANALYST_FILE = new RegExp(`^(?:intro-(?:${LANGUAGES.join('|')})\\.mp4|voice-sample\\.mp3|consent\\.pdf)$`, 'u')
+const PHOTO_PX = 512
+const ANALYST_FILE = new RegExp(`^(?:intro-(?:${LANGUAGES.join('|')})\\.mp4|voice-sample\\.mp3|consent\\.pdf|photo\\.jpg)$`, 'u')
 
 const analystQuery = z.object({ analyst: z.string() })
 const alertsSeenBody = z.object({ analyst: z.int().positive() })
 
 const voiceFile = (id: number) => `analysts/${id}/voice-sample.mp3`
 const consentFile = (id: number) => `analysts/${id}/consent.pdf`
+const photoFile = (id: number) => `analysts/${id}/photo.jpg`
 
 export const analystRoutes = new Hono()
 
@@ -167,6 +170,25 @@ analystRoutes.post('/analysts/:id/consent', uploadLimit('pdf'), async (c) => {
     return clone ? queueClone(db, row, sampleAt, now) : row
   })
   return c.json(toAnalystDto(analyst))
+})
+
+analystRoutes.post('/analysts/:id/photo', uploadLimit('image'), async (c) => {
+  const { db, now } = adminContext()
+  const id = analystId(c)
+  requireAnalyst(db, id)
+  const upload = await readUpload(c, 'image')
+  const raw = path.join(paths.uploadsDir, `photo-${id}-${randomUUID()}.${upload.ext}`)
+  await saveUpload(upload.file, raw)
+  try {
+    await squarePhoto(raw, paths.photo(id), PHOTO_PX)
+  } catch (error) {
+    if (!rejectedInput(error)) throw error
+    log.warn('photo could not be transcoded', { analystId: id, error: error.message, stderr: error.stderrTail })
+    throw new DomainError(400, 'The image could not be read. Choose another file.')
+  } finally {
+    await rm(raw, { force: true })
+  }
+  return c.json(toAnalystDto(setPhoto(db, id, photoFile(id), now)))
 })
 
 analystRoutes.get('/analysts/:id/files/:file', async (c) => {

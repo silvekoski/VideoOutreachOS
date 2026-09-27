@@ -1,19 +1,23 @@
 import path from 'node:path'
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
-import { closeDb, getDb } from './db/index.ts'
+import { closeDb, getDb, watchDatabase } from './db/index.ts'
 import { syncAnalysts } from './domain/analysts.ts'
 import { env } from './env.ts'
 import { handleError, handleNotFound } from './html/errors.ts'
 import { createHtmlRoutes } from './html/routes.ts'
 import { viteAssets } from './html/vite.ts'
+import { LiveHub } from './live/hub.ts'
+import { PipedrivePoller } from './live/pipedrive-poller.ts'
 import { log } from './log.ts'
+import { paths } from './paths.ts'
 import { createProviders } from './providers/index.ts'
 import { adminRoutes, configureAdmin } from './routes/admin/index.ts'
 import { createMockRoutes } from './routes/mock/index.ts'
 import { createVideoRoutes } from './routes/video/index.ts'
 
 const SHUTDOWN_GRACE_MS = 5000
+const DB_WATCH_MS = 500
 
 const assets = viteAssets({ production: env.production, devUrl: env.viteDevUrl, distDir: env.webDistDir })
 if (env.production) {
@@ -28,7 +32,12 @@ if (env.production) {
 
 const db = getDb()
 const providers = createProviders()
-configureAdmin({ db, providers })
+const hub = new LiveHub()
+configureAdmin({ db, providers, hub })
+const stopWatch = watchDatabase(paths.database, () => hub.publish({ type: 'db' }), DB_WATCH_MS)
+const poller = new PipedrivePoller({ db, providers, hub })
+hub.onJoin(() => poller.wake())
+poller.start()
 
 const app = new Hono()
 app.use('*', async (c, next) => {
@@ -72,6 +81,9 @@ async function shutdown(signal: NodeJS.Signals): Promise<void> {
   }
   stopping = true
   log.info('api stopping', { signal })
+  poller.stop()
+  stopWatch()
+  hub.close()
   const force = setTimeout(() => {
     if ('closeAllConnections' in server) server.closeAllConnections()
   }, SHUTDOWN_GRACE_MS)

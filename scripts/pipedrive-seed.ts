@@ -49,13 +49,6 @@ interface SeedItem {
 
 const regionNames = new Intl.DisplayNames(['en'], { type: 'region' })
 
-// Pipedrive rejects a website without a top-level domain. localtest.me resolves to 127.0.0.1 in public DNS.
-function pipedriveWebsite(website: string): string {
-  const url = new URL(website)
-  if (url.hostname === 'localhost') url.hostname = 'localtest.me'
-  return url.href
-}
-
 function mapped(ids: Map<number, number>, seedId: number, what: string): number {
   const id = ids.get(seedId)
   if (id === undefined) throw new Error(`No Pipedrive ${what} for seed ID ${seedId}`)
@@ -131,7 +124,7 @@ async function main(): Promise<void> {
         return {
           name: org.name,
           owner_id: orgOwner(org.id),
-          ...(org.website === null ? {} : { website: pipedriveWebsite(org.website) }),
+          ...(org.website === null ? {} : { website: org.website }),
           address: { value: country, country },
           custom_fields: Object.fromEntries(Object.entries(custom).filter(([, value]) => value !== null)),
         }

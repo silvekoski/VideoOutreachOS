@@ -9,7 +9,7 @@ export const MAX_ATTEMPTS = 3
 const BASE_DELAY_MS = 30_000
 const MAX_ERROR_LENGTH = 2000
 const WORKER_STOPPED = 'The worker stopped while the job was running'
-const SUPERSEDABLE: readonly JobType[] = ['audio', 'render', 'write-brief']
+const SUPERSEDABLE: readonly JobType[] = ['scrape', 'audio', 'render', 'write-brief']
 
 export class NonRetryableError extends Error {
   constructor(message: string, options?: ErrorOptions) {

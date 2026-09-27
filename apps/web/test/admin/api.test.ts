@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ApiRequestError, apiUrl, errorMessage, isReviewReasonList, request, reviewNeedsPolling } from '../../src/admin/api'
+import { ApiRequestError, apiUrl, errorMessage, isReviewReasonList, request, reviewIsWorking } from '../../src/admin/api'
 import { ADMIN_REQUEST_HEADER } from '@mergero/shared'
 import type { ReviewDto } from '@mergero/shared'
 
@@ -76,7 +76,7 @@ describe('errorMessage', () => {
   })
 })
 
-describe('reviewNeedsPolling', () => {
+describe('reviewIsWorking', () => {
   const base = {
     status: 'review',
     version: 2,
@@ -90,27 +90,27 @@ describe('reviewNeedsPolling', () => {
   } as unknown as ReviewDto
 
   it('polls while the pipeline runs', () => {
-    expect(reviewNeedsPolling({ ...base, pipeline: { running: true, step: 'audio' } })).toBe(true)
+    expect(reviewIsWorking({ ...base, pipeline: { running: true, step: 'audio' } })).toBe(true)
   })
 
   it('polls after approval until this version is published', () => {
-    expect(reviewNeedsPolling({ ...base, approved: true })).toBe(true)
-    expect(reviewNeedsPolling({ ...base, approved: true, status: 'link_sent', publishedVersion: 1 })).toBe(true)
-    expect(reviewNeedsPolling({ ...base, approved: true, status: 'link_sent', publishedVersion: 2 })).toBe(false)
+    expect(reviewIsWorking({ ...base, approved: true })).toBe(true)
+    expect(reviewIsWorking({ ...base, approved: true, status: 'link_sent', publishedVersion: 1 })).toBe(true)
+    expect(reviewIsWorking({ ...base, approved: true, status: 'link_sent', publishedVersion: 2 })).toBe(false)
   })
 
   it('stops when a job failed or nothing runs', () => {
-    expect(reviewNeedsPolling(base)).toBe(false)
+    expect(reviewIsWorking(base)).toBe(false)
     expect(
-      reviewNeedsPolling({ ...base, approved: true, failedJobs: [{ id: 1, type: 'render', error: 'x', updatedAt: '' }] }),
+      reviewIsWorking({ ...base, approved: true, failedJobs: [{ id: 1, type: 'render', error: 'x', updatedAt: '' }] }),
     ).toBe(false)
-    expect(reviewNeedsPolling(undefined)).toBe(false)
+    expect(reviewIsWorking(undefined)).toBe(false)
   })
 
   it('stops for an approved version that a review reason blocks, a lost deal or an expired link', () => {
     const reason = { code: 'model_failed' as const, slide: 5 as const, detail: 'The model failed twice' }
-    expect(reviewNeedsPolling({ ...base, approved: true, renderStatus: 'pending', reviewReasons: [reason] })).toBe(false)
-    expect(reviewNeedsPolling({ ...base, approved: true, status: 'lost' })).toBe(false)
-    expect(reviewNeedsPolling({ ...base, renderStatus: 'rendering', expired: true })).toBe(false)
+    expect(reviewIsWorking({ ...base, approved: true, renderStatus: 'pending', reviewReasons: [reason] })).toBe(false)
+    expect(reviewIsWorking({ ...base, approved: true, status: 'lost' })).toBe(false)
+    expect(reviewIsWorking({ ...base, renderStatus: 'rendering', expired: true })).toBe(false)
   })
 })

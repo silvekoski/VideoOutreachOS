@@ -52,6 +52,7 @@ export interface AnalystColumns {
   clone_status: string
   consent_date: string | null
   consent_file: string | null
+  photo_file: string | null
   default_expiry_days: number
   default_second_channel: string
   brief_language: string
@@ -71,6 +72,7 @@ export interface AnalystRow {
   cloneStatus: CloneStatus
   consentDate: string | null
   consentFile: string | null
+  photoFile: string | null
   defaultExpiryDays: number
   defaultSecondChannel: Channel
   briefLanguage: Lang
@@ -91,6 +93,7 @@ export function toAnalystRow(c: AnalystColumns): AnalystRow {
     cloneStatus: c.clone_status as CloneStatus,
     consentDate: c.consent_date,
     consentFile: c.consent_file,
+    photoFile: c.photo_file,
     defaultExpiryDays: c.default_expiry_days,
     defaultSecondChannel: c.default_second_channel as Channel,
     briefLanguage: c.brief_language as Lang,

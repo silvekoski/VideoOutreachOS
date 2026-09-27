@@ -15,9 +15,12 @@ function optional(name: string): string | null {
 const port = Number(str('PORT', '3000'))
 const publicBaseUrl = str('PUBLIC_BASE_URL', `http://localhost:${port}`).replace(/\/+$/, '')
 
+const production = process.env.NODE_ENV === 'production'
+
 export const env = {
   repoRoot,
-  production: process.env.NODE_ENV === 'production',
+  production,
+  devBypass: !production && process.env.DEV_BYPASS === '1',
   port,
   publicBaseUrl,
   adminBaseUrl: str('ADMIN_BASE_URL', publicBaseUrl).replace(/\/+$/, ''),

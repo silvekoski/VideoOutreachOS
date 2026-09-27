@@ -8,7 +8,7 @@ import { MODEL_MAX_TOKENS, rejectionNote } from './prompts.ts'
 const ATTEMPTS = 2
 const REJECTED_CODES = new Set(['no_json', 'truncated'])
 
-export type ModelAnswer<T> = { ok: true; value: T } | { ok: false; errors: string[] }
+export type ModelAnswer<T> = { ok: true; value: T } | { ok: false; errors: string[]; last?: T }
 
 export interface ModelQuestion<T> {
   system: string
@@ -28,6 +28,7 @@ export async function askModel<T>(model: LanguageModelClient, question: ModelQue
     maxTokens: MODEL_MAX_TOKENS,
   }
   let errors: string[] = []
+  let last: T | undefined
   for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
     const system = attempt === 1 ? question.system : `${question.system}\n\n${rejectionNote(errors)}`
     let output: unknown
@@ -44,8 +45,9 @@ export async function askModel<T>(model: LanguageModelClient, question: ModelQue
         ? question.check(parsed.data).errors
         : parsed.error.issues.map((issue) => `${issue.path.join('.') || 'output'}: ${issue.message}`)
       if (parsed.success && errors.length === 0) return { ok: true, value: parsed.data }
+      if (parsed.success) last = parsed.data
     }
     log.warn('model output rejected', { schema: question.schemaName, attempt, errors, ...fields })
   }
-  return { ok: false, errors }
+  return last === undefined ? { ok: false, errors } : { ok: false, errors, last }
 }

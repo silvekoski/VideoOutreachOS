@@ -3,12 +3,16 @@ import { log } from '../log.ts'
 import { ProviderError, fetchFailure, isRetryableStatus } from './errors.ts'
 import type {
   PipedriveActivityInput,
+  PipedriveChange,
+  PipedriveChanges,
   PipedriveClient,
   PipedriveConfig,
   PipedriveDeal,
   PipedriveDealFields,
   PipedriveOrg,
+  PipedriveOrgPatch,
   PipedrivePerson,
+  PipedrivePersonPatch,
   PipedriveUser,
 } from './types.ts'
 
@@ -24,7 +28,7 @@ type Query = Record<string, string | number | boolean | undefined>
 interface Envelope<T> {
   success?: boolean
   data: T
-  additional_data?: { next_cursor?: string | null } | null
+  additional_data?: ({ next_cursor?: string | null } & V1RecentsPage) | null
   error?: string
   error_info?: string
 }
@@ -70,6 +74,18 @@ interface V2Org {
   custom_fields?: Record<string, unknown> | null
 }
 
+interface V1Recent {
+  item: string
+  id: number
+  data: { update_time?: string | null; status?: string; deleted?: boolean; user_id?: number; person_id?: number | null; org_id?: number | null; lost_reason?: string | null } | null
+}
+
+interface V1RecentsPage {
+  since_timestamp?: string
+  last_timestamp_on_page?: string
+  pagination?: { more_items_in_collection?: boolean; next_start?: number }
+}
+
 interface V1User {
   id: number
   name: string
@@ -90,6 +106,7 @@ export class RealPipedriveClient implements PipedriveClient {
   readonly #token: string
   readonly #base: string
   readonly #config: PipedriveConfig
+  #budget: PipedriveChanges['budget'] = null
 
   constructor(options: RealPipedriveOptions) {
     this.#token = options.token
@@ -144,20 +161,64 @@ export class RealPipedriveClient implements PipedriveClient {
     }
   }
 
-  async listDealsWithoutVideoField(): Promise<PipedriveDeal[]> {
+  async listOpenDeals(): Promise<PipedriveDeal[]> {
     const deals: PipedriveDeal[] = []
     let cursor: string | undefined
     do {
       const page = await this.#call<V2Deal[] | null>('GET', '/api/v2/deals', {
         query: { status: 'open', limit: PAGE_LIMIT, custom_fields: this.#config.dealFields.video, cursor },
       })
-      for (const raw of page.data ?? []) {
-        const deal = this.#toDeal(raw)
-        if (!deal.videoUrl) deals.push(deal)
-      }
+      for (const raw of page.data ?? []) deals.push(this.#toDeal(raw))
       cursor = page.additional_data?.next_cursor ?? undefined
     } while (cursor)
     return deals
+  }
+
+  async listChanges(since: string): Promise<PipedriveChanges> {
+    const changes: PipedriveChange[] = []
+    let cursor = since
+    let start = 0
+    for (;;) {
+      const page = await this.#call<V1Recent[] | null>('GET', '/api/v1/recents', {
+        query: { since_timestamp: since, items: 'deal,person,organization', start, limit: PAGE_LIMIT },
+      })
+      for (const recent of page.data ?? []) {
+        const updatedAt = text(recent.data?.update_time)
+        if (recent.item === 'deal') changes.push({ type: 'deal', id: recent.id, updatedAt, deal: recentDeal(recent.data) })
+        else if (recent.item === 'person' || recent.item === 'organization') changes.push({ type: recent.item, id: recent.id, updatedAt, deal: null })
+      }
+      cursor = page.additional_data?.last_timestamp_on_page ?? cursor
+      const next = page.additional_data?.pagination
+      if (!next?.more_items_in_collection) break
+      start = next.next_start ?? start + PAGE_LIMIT
+    }
+    return { changes, cursor, budget: this.#budget }
+  }
+
+  async updateOrg(id: number, patch: PipedriveOrgPatch): Promise<void> {
+    const { businessId, nace } = this.#config.orgFields
+    const custom = { ...(patch.businessId === undefined ? {} : { [businessId]: patch.businessId }), ...(patch.nace === undefined ? {} : { [nace]: patch.nace }) }
+    await this.#call('PATCH', `/api/v2/organizations/${id}`, {
+      body: {
+        ...(patch.name === undefined ? {} : { name: patch.name }),
+        ...(patch.website === undefined ? {} : { website: patch.website }),
+        ...(Object.keys(custom).length === 0 ? {} : { custom_fields: custom }),
+      },
+    })
+  }
+
+  async updatePerson(id: number, patch: PipedrivePersonPatch): Promise<void> {
+    const roleKey = this.#config.personFields.role
+    const contact = (value: string | null) => (value === null ? [] : [{ value, primary: true, label: 'work' }])
+    const role = patch.jobTitle === undefined ? {} : roleKey ? { custom_fields: { [roleKey]: patch.jobTitle } } : { job_title: patch.jobTitle }
+    await this.#call('PATCH', `/api/v2/persons/${id}`, {
+      body: {
+        ...(patch.name === undefined ? {} : { name: patch.name }),
+        ...(patch.email === undefined ? {} : { emails: contact(patch.email) }),
+        ...(patch.phone === undefined ? {} : { phones: contact(patch.phone) }),
+        ...role,
+      },
+    })
   }
 
   async setVideoField(dealId: number, url: string): Promise<void> {
@@ -289,6 +350,10 @@ export class RealPipedriveClient implements PipedriveClient {
         continue
       }
 
+      const limit = Number(res.headers.get('x-daily-ratelimit-token-limit'))
+      const remaining = Number(res.headers.get('x-daily-ratelimit-token-remaining'))
+      if (limit > 0 && Number.isFinite(remaining)) this.#budget = { limit, remaining }
+
       let body: string
       try {
         body = await res.text()
@@ -343,6 +408,17 @@ function companySubdomain(domain: string): string {
   const host = domain.trim().replace(/^https?:\/\//i, '').replace(/\/.*$/, '').replace(/\.pipedrive\.com$/i, '')
   if (!/^[a-z0-9-]+$/i.test(host)) throw new Error(`PIPEDRIVE_COMPANY_DOMAIN is not a valid company domain: "${domain}"`)
   return host.toLowerCase()
+}
+
+function recentDeal(data: V1Recent['data']): PipedriveChange['deal'] {
+  if (!data || typeof data.user_id !== 'number') return null
+  return {
+    status: data.deleted ? 'deleted' : dealStatus(data.status ?? 'open'),
+    ownerId: data.user_id,
+    personId: data.person_id ?? null,
+    orgId: data.org_id ?? null,
+    lostReason: text(data.lost_reason),
+  }
 }
 
 function dealStatus(status: string): PipedriveDeal['status'] {

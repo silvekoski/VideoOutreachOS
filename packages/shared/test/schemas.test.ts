@@ -134,7 +134,7 @@ describe('model output JSON Schemas', () => {
   it('describe the three outputs', () => {
     expect(scriptOutputJsonSchema).toMatchObject({ type: 'object', required: ['script'], additionalProperties: false })
     expect(linesOutputJsonSchema).toMatchObject({
-      properties: { lines: { type: 'array', minItems: 3, maxItems: 3, items: { type: 'string', maxLength: 90 } } },
+      properties: { lines: { type: 'array', minItems: 3, maxItems: 3, items: { type: 'string' } } },
     })
     expect(briefOutputJsonSchema).toMatchObject({
       required: ['summary', 'questions'],
