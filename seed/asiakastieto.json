@@ -1,3 +1,64 @@
 {
-  "companies": {}
+  "companies": {
+    "3184207-5": {
+      "revenue": 14200000,
+      "profit": 1120000,
+      "fiscalYear": 2025
+    },
+    "2957316-0": {
+      "revenue": 22800000,
+      "profit": 1640000,
+      "fiscalYear": 2025
+    },
+    "2481935-2": {
+      "revenue": 18500000,
+      "profit": 930000,
+      "fiscalYear": 2025
+    },
+    "1873643-8": {
+      "revenue": 9700000,
+      "profit": 610000,
+      "fiscalYear": 2025
+    },
+    "3302518-3": {
+      "revenue": 16300000,
+      "profit": 1280000,
+      "fiscalYear": 2025
+    },
+    "2716084-8": {
+      "revenue": 4100000,
+      "profit": 520000,
+      "fiscalYear": 2025
+    },
+    "2634718-4": {
+      "revenue": 31500000,
+      "profit": 2400000,
+      "fiscalYear": 2025
+    },
+    "2245873-3": {
+      "revenue": 11800000,
+      "profit": 950000,
+      "fiscalYear": 2025
+    },
+    "1928364-5": {
+      "revenue": 27400000,
+      "profit": 1100000,
+      "fiscalYear": 2025
+    },
+    "3051927-6": {
+      "revenue": 42000000,
+      "profit": 1900000,
+      "fiscalYear": 2025
+    },
+    "2387105-2": {
+      "revenue": 19600000,
+      "profit": 800000,
+      "fiscalYear": 2025
+    },
+    "2810364-2": {
+      "revenue": 15200000,
+      "profit": 700000,
+      "fiscalYear": 2025
+    }
+  }
 }

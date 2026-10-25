@@ -11,6 +11,7 @@ import type { PipedriveClient } from '../providers/types.ts'
 import { DomainError } from './errors.ts'
 
 const DEFAULT_TIME_ZONE = 'Europe/Helsinki'
+export const INTRO_LANG: Lang = 'fi'
 
 const PATCH_COLUMNS: Record<keyof AnalystPatch, keyof AnalystColumns> = {
   name: 'name',
@@ -152,8 +153,8 @@ export function failIntro(db: Db, id: number, lang: Lang, recordedAt: string, no
   })
 }
 
-export function readyIntro(analyst: AnalystRow | null, lang: Lang): (AnalystIntro & { file: string; durationS: number }) | null {
-  const intro = analyst?.intros[lang]
+export function readyIntro(analyst: AnalystRow | null): (AnalystIntro & { file: string; durationS: number }) | null {
+  const intro = analyst?.intros[INTRO_LANG]
   if (intro?.status === 'ready' && intro.file !== null && intro.durationS !== null) {
     return { ...intro, file: intro.file, durationS: intro.durationS }
   }

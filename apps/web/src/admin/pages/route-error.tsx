@@ -10,7 +10,7 @@ export function RouteError() {
       : 'Unknown error'
   return (
     <main className="mx-auto grid max-w-xl gap-3 p-6">
-      <title>Error | Mergero video tool</title>
+      <title>Error | Velho Video Outreach</title>
       <h1 className="text-lg font-semibold">The page stopped with an error</h1>
       <p role="alert" className="text-sm text-muted-foreground">
         {message}

@@ -1,5 +1,4 @@
 import path from 'node:path'
-import type { Lang } from '@mergero/shared'
 import { z } from 'zod'
 import { ProviderError, fetchFailure, isRetryableStatus } from './errors.ts'
 import type { SpeechClient, SpeechRequest } from './types.ts'
@@ -10,7 +9,6 @@ const CLONE_TIMEOUT_MS = 180_000
 const PROVIDER = 'elevenlabs'
 const VOICE_TTL_MS = 3_600_000
 const TRAINED_MODELS = ['eleven_multilingual_v2', 'eleven_flash_v2_5']
-const MISSING_LANGUAGES: Partial<Record<string, readonly Lang[]>> = { eleven_multilingual_v2: ['nb'] }
 
 const AUDIO_TYPES: Record<string, string> = {
   '.mp3': 'audio/mpeg',
@@ -30,8 +28,6 @@ const voiceSchema = z.object({
 
 type Voice = z.infer<typeof voiceSchema>
 
-const speaks = (model: string, language: Lang) => !MISSING_LANGUAGES[model]?.includes(language)
-
 export class ElevenLabsClient implements SpeechClient {
   readonly mode = 'real' as const
   readonly #apiKey: string
@@ -44,7 +40,7 @@ export class ElevenLabsClient implements SpeechClient {
   }
 
   async synthesize(request: SpeechRequest): Promise<Buffer> {
-    const model = await this.#modelFor(request.voiceId, request.language)
+    const model = await this.#modelFor(request.voiceId)
     const body: Record<string, unknown> = { text: request.text, model_id: model }
     if (!model.startsWith('eleven_multilingual_v2')) {
       body.language_code = request.language === 'nb' ? 'no' : request.language
@@ -70,7 +66,7 @@ export class ElevenLabsClient implements SpeechClient {
       fileName,
     )
     form.append('remove_background_noise', 'false')
-    form.append('description', `Voice of ${name} for Mergero video outreach. The written consent is stored in the Mergero tool.`)
+    form.append('description', `Voice of ${name} for Velho video outreach. The written consent is stored in the Velho Video Outreach tool.`)
     const res = await this.#send('/v1/voices/add', { method: 'POST', body: form }, CLONE_TIMEOUT_MS)
     const parsed = cloneSchema.safeParse(await res.json().catch(() => null))
     if (!parsed.success) {
@@ -89,10 +85,10 @@ export class ElevenLabsClient implements SpeechClient {
     return { voiceId: parsed.data.voice_id }
   }
 
-  async #modelFor(voiceId: string, language: Lang): Promise<string> {
+  async #modelFor(voiceId: string): Promise<string> {
     const { category, fine_tuning } = await this.#voice(voiceId)
     if (category !== 'professional') return this.#model
-    const trained = (model: string) => fine_tuning?.state?.[model] === 'fine_tuned' && speaks(model, language)
+    const trained = (model: string) => fine_tuning?.state?.[model] === 'fine_tuned'
     if (trained(this.#model)) return this.#model
     return TRAINED_MODELS.find(trained) ?? this.#model
   }

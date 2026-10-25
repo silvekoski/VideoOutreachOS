@@ -54,7 +54,7 @@ export async function writeOutreach(db: Db, model: LanguageModelClient, dealId: 
     company: deal.snapshot.company,
     ownerName: deal.snapshot.ownerName,
     ownerFirstName: deal.snapshot.ownerFirstName,
-    analystName: getAnalyst(db, deal.analystId)?.name ?? 'Mergero',
+    analystName: getAnalyst(db, deal.analystId)?.name ?? 'Velho',
     expiresOn: new Intl.DateTimeFormat(LANGUAGE_LOCALES[lang], { dateStyle: 'long', timeZone: countryTimeZone(deal.country) }).format(
       new Date(deal.expiresAt),
     ),

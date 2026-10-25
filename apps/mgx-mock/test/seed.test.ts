@@ -2,7 +2,6 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, test } from 'vitest'
 import { mgxSeedSchema } from '../src/seed.ts'
-import { listClosedDeals, nace2, searchBuyers } from '../src/tools.ts'
 import { seedDir } from './test-server.ts'
 
 interface PipedriveSeed {
@@ -23,7 +22,6 @@ const linkedin = readJson<{ profiles: Record<string, { languages: string[]; staf
 const sequence = readJson<{ deals: { n: number; sentAt: string; opened: boolean; meetingBooked: boolean }[] }>('text-sequence.json')
 
 const COUNTRY_LANGUAGES: Record<string, string[]> = { FI: ['fi', 'sv'], SE: ['sv'], NO: ['nb'], DK: ['da'], DE: ['de'], AT: ['de'], CH: ['de'], IS: ['en'] }
-const ANALYST_BY_COUNTRY: Record<string, number> = { FI: 1001, SE: 1001, DE: 1002, AT: 1002, CH: 1002, NO: 1003, DK: 1003, IS: 1003 }
 
 const finnishOrgs = pipedrive.organizations.filter((org) => org.countryCode === 'FI')
 
@@ -42,9 +40,6 @@ function filesUnder(dir: string): string[] {
   })
 }
 
-const nace2Of = (org: PipedriveSeed['organizations'][number]) => nace2(org.nace ?? '') ?? ''
-const dealCount = (org: PipedriveSeed['organizations'][number]) =>
-  mgx.closedDeals.filter((deal) => nace2(deal.nace) === nace2Of(org)).length
 
 describe('mgx.json', () => {
   test('has 25 or more buyers and about 30 closed deals', () => {
@@ -91,10 +86,9 @@ describe('pipedrive.json', () => {
     expect(pipedrive.users.every((user) => user.active)).toBe(true)
   })
 
-  test('has 30 organizations: 9 FI, 4 SE, 3 NO, 3 DK, 4 DE, 2 AT, 3 CH, 2 IS', () => {
-    const counts: Record<string, number> = {}
-    for (const org of pipedrive.organizations) counts[org.countryCode] = (counts[org.countryCode] ?? 0) + 1
-    expect(counts).toEqual({ FI: 9, SE: 4, NO: 3, DK: 3, DE: 4, AT: 2, CH: 3, IS: 2 })
+  test('has 12 Finnish demo companies for the Velho story', () => {
+    expect(pipedrive.organizations).toHaveLength(12)
+    expect(pipedrive.organizations.every((org) => org.countryCode === 'FI')).toBe(true)
   })
 
   test('organization, person and deal IDs are unique', () => {
@@ -117,14 +111,11 @@ describe('pipedrive.json', () => {
     for (const org of pipedrive.organizations) expect(org.nace, org.name).toMatch(/^\d{2}\.\d{2}$/)
   })
 
-  test('exactly one Finnish company has no website, and each website is a public https address', () => {
-    expect(finnishOrgs.filter((org) => org.website === null)).toHaveLength(1)
-    expect(pipedrive.organizations.filter((org) => org.website === null)).toHaveLength(1)
-    for (const org of pipedrive.organizations.filter((item) => item.website !== null)) {
+  test('each website is a demo site that the MGX mock serves from seed/sites', () => {
+    for (const org of pipedrive.organizations) {
       const url = new URL(org.website ?? '')
-      expect(url.protocol, org.name).toBe('https:')
-      expect(url.hostname, org.name).toMatch(/\.[a-z]{2,}$/)
-      expect(url.hostname, org.name).not.toMatch(/^(localhost|127\.|localtest\.me$)/)
+      expect(url.pathname, org.name).toMatch(/^\/sites\/[a-z-]+\/index\.html$/)
+      expect(statSync(path.join(seedDir, url.pathname)).isFile(), org.name).toBe(true)
     }
   })
 
@@ -138,18 +129,20 @@ describe('pipedrive.json', () => {
     }
   })
 
-  test('each organization has one open deal before the tool stages, owned by the analyst of its country', () => {
+  test('each organization has one open deal before the tool stages, owned by Jonas Weber', () => {
     for (const org of pipedrive.organizations) {
       const deals = pipedrive.deals.filter((deal) => deal.orgId === org.id)
       expect(deals, org.name).toHaveLength(1)
-      expect(deals[0], org.name).toMatchObject({ ownerId: ANALYST_BY_COUNTRY[org.countryCode], stage: null, status: 'open', videoUrl: null })
+      expect(deals[0], org.name).toMatchObject({ ownerId: 1002, stage: null, status: 'open', videoUrl: null })
     }
   })
 })
 
 describe('asiakastieto.json and linkedin.json', () => {
-  test('have no financials, because the demo companies are real', () => {
-    expect(financials.companies).toEqual({})
+  test('have figures for each demo company, because the companies are fictional', () => {
+    for (const org of pipedrive.organizations) {
+      expect(financials.companies[org.businessId ?? '']?.revenue, org.name).toBeGreaterThan(0)
+    }
   })
 
   test('have a profile for each person with languages of the country and a staff count or null', () => {
@@ -163,35 +156,6 @@ describe('asiakastieto.json and linkedin.json', () => {
     }
   })
 
-  test('one Finnish owner has Swedish as the first language', () => {
-    const finnishEmails = pipedrive.persons.filter((person) => finnishOrgs.some((org) => org.id === person.orgId)).map((person) => person.email)
-    expect(finnishEmails.filter((email) => linkedin.profiles[email]?.languages[0] === 'sv')).toHaveLength(1)
-  })
-})
-
-describe('MGX data for the demo companies', () => {
-  const dach = pipedrive.organizations.filter((org) => ['DE', 'AT', 'CH'].includes(org.countryCode))
-
-  test('DE and CH have 3 or more closed deals in their sector, so the calculator shows a range', () => {
-    for (const org of dach.filter((item) => item.countryCode !== 'AT')) expect(dealCount(org), org.name).toBeGreaterThanOrEqual(3)
-  })
-
-  test('the Austrian bakery has 1 or 2 closed deals in its sector, so the calculator shows the text for after the meeting', () => {
-    const austrian = dach.find((org) => org.countryCode === 'AT' && org.nace === '10.71')
-    expect(austrian && dealCount(austrian)).toBeGreaterThanOrEqual(1)
-    expect(austrian && dealCount(austrian)).toBeLessThan(3)
-  })
-
-  test('each demo company has at least one closed deal in its sector', () => {
-    for (const org of pipedrive.organizations) {
-      expect(listClosedDeals(mgx, { nace: org.nace ?? '' }).length, org.name).toBeGreaterThanOrEqual(1)
-    }
-  })
-
-  test('the Finnish machining company has 3 or more buyers in its sector', () => {
-    const org = pipedrive.organizations.find((item) => item.countryCode === 'FI' && item.nace === '25.62')
-    expect(searchBuyers(mgx, { nace: org?.nace ?? '', country: 'FI' }, 'http://localhost:3100').length).toBeGreaterThanOrEqual(3)
-  })
 })
 
 describe('text-sequence.json', () => {

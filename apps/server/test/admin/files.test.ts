@@ -181,7 +181,7 @@ describe('analyst files and template previews', () => {
     expect(body).toHaveLength(8)
     expect(body[0]?.imageUrl).toMatch(/^\/api\/templates\/slide-1\.jpg\?v=\d+$/u)
     expect(body.slice(1).every((preview) => preview.imageUrl === null)).toBe(true)
-    expect(body[4]).toEqual({ slide: 5, name: 'Buyers from Mergero deals', imageUrl: null })
+    expect(body[4]).toEqual({ slide: 5, name: 'Where time goes', imageUrl: null })
     const image = await h.request('/api/templates/slide-1.jpg')
     expect(image.status).toBe(200)
     expect(image.headers.get('content-type')).toBe('image/jpeg')

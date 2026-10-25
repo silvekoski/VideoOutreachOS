@@ -42,7 +42,7 @@ export function mergeroConfig(): MergeroConfig {
   if (cached) return cached
   const file = path.join(env.configDir, 'mergero.json')
   const parsed = configSchema.safeParse(JSON.parse(readFileSync(file, 'utf8')))
-  if (!parsed.success) throw new Error(`${file} is not a valid Mergero config:\n${z.prettifyError(parsed.error)}`)
+  if (!parsed.success) throw new Error(`${file} is not a valid Velho Video Outreach config:\n${z.prettifyError(parsed.error)}`)
   cached = parsed.data
   return cached
 }
@@ -51,7 +51,7 @@ export function contactFor(country: string): MergeroContact {
   const config = mergeroConfig()
   const key = config.officeByCountry[country.trim().toUpperCase()] ?? config.defaultOffice
   const office = config.offices[key] ?? config.offices[config.defaultOffice]
-  if (!office) throw new Error(`The Mergero config has no office "${key}"`)
+  if (!office) throw new Error(`The Velho Video Outreach config has no office "${key}"`)
   return {
     company: config.company,
     address: office.address,

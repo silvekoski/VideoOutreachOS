@@ -22,7 +22,7 @@ function pageText(status: number): { title: string; text: string } {
   if (status === 404) return { title: page.notFoundTitle, text: page.notFoundText }
   if (status === 410) return { title: page.expiredTitle, text: page.expiredText }
   if (status >= 500) {
-    return { title: 'Something went wrong', text: 'Please try again later. If the problem continues, contact Mergero.' }
+    return { title: 'Something went wrong', text: 'Please try again later. If the problem continues, contact Velho.' }
   }
   return { title: 'The request could not be completed', text: 'Please check the link and try again.' }
 }

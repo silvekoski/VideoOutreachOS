@@ -146,8 +146,8 @@ describe('advance', () => {
     expect(scrapeDone()).toMatchObject({ action: 'write-script', status: 'draft' })
     const write = pipelineJobs().at(-1)
     expect(write).toMatchObject({
-      key: 'write-script:100:1:2-3-4-5-6-7-8',
-      payload: { dealId: DEAL_ID, version: 1, slides: [2, 3, 4, 5, 6, 7, 8], lines: true },
+      key: 'write-script:100:1:3-4-7-8',
+      payload: { dealId: DEAL_ID, version: 1, slides: [3, 4, 7, 8], lines: true },
     })
 
     expect(writeScriptDone()).toMatchObject({ action: 'audio', status: 'draft', reasons: [] })
@@ -691,7 +691,7 @@ describe('remakeDeal', () => {
 
     expect(scrapeDone()).toMatchObject({ action: 'write-script', reasons: [] })
     const build = claim(t.db, 'write-script', now)
-    expect(build).toMatchObject({ key: 'write-script:100:2:2-3-4-5-6-7-8', payload: { version: 2, lines: true } })
+    expect(build).toMatchObject({ key: 'write-script:100:2:3-4-7-8', payload: { version: 2, lines: true } })
     createVersion(t.db, DEAL_ID, { ...makeTimeline(DEAL_ID, { version: 2 }), basis: { ...basis, website: 'https://acme-group.test/', nace: '28.12' } }, now)
     finish(t.db, build, now)
     expect(advance(t.db, DEAL_ID, now)).toMatchObject({ action: 'audio', reasons: [] })

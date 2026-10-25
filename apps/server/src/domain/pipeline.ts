@@ -2,7 +2,6 @@ import { LANGUAGE_NAMES, MIN_COMPANY_LINES, checkTimelineSlots, isClosedStatus, 
 import type {
   BuyerSlideItem,
   DealStatus,
-  Lang,
   ReviewPatch,
   ReviewReason,
   ScriptSlideNumber,
@@ -15,7 +14,7 @@ import type { Db } from '../db/index.ts'
 import type { AnalystRow, DealPatch, DealRow, TimelineRow } from '../db/rows.ts'
 import { enqueue, jobKeys, jobsForDeal, retryJob } from '../queue/index.ts'
 import type { AnyJob, Job, JobType } from '../queue/index.ts'
-import { getAnalyst, readyIntro, voiceIdFor } from './analysts.ts'
+import { INTRO_LANG, getAnalyst, readyIntro, voiceIdFor } from './analysts.ts'
 import { buyerPool } from './buyers.ts'
 import { isExpired, linkExpiresAt, listDeals, requireDeal, setExpiry, updateDeal } from './deals.ts'
 import { DomainError } from './errors.ts'
@@ -30,7 +29,7 @@ import {
   updateVersion,
 } from './timelines.ts'
 
-export const SCRIPT_SLIDES: readonly ScriptSlideNumber[] = [2, 3, 4, 5, 6, 7, 8]
+export const SCRIPT_SLIDES: readonly ScriptSlideNumber[] = [3, 4, 7, 8]
 export const LINES_SLOT = 'your-company.line'
 export const PIPELINE_JOBS: readonly JobType[] = ['scrape', 'write-script', 'audio', 'render']
 const CHECK_CAUSES: Partial<Record<ScriptSlideNumber, string>> = { 3: 'company name, the website or the lines', 5: 'buyer list' }
@@ -107,10 +106,10 @@ function scriptEmpty(timeline: Timeline, slide: number): boolean {
   return segment !== undefined && segment.script.trim() === ''
 }
 
-function introDetail(analyst: AnalystRow | null, lang: Lang): string {
-  const language = LANGUAGE_NAMES[lang]
+function introDetail(analyst: AnalystRow | null): string {
+  const language = LANGUAGE_NAMES[INTRO_LANG]
   if (!analyst) return 'The analyst of this deal is unknown'
-  switch (analyst.intros[lang]?.status) {
+  switch (analyst.intros[INTRO_LANG]?.status) {
     case 'processing':
       return `The ${language} face-cam intro of ${analyst.name} is still processing`
     case 'failed':
@@ -160,8 +159,8 @@ export function recomputeReviewReasons(
       detail: `Slide ${segment.slide}: ${segment.audio.error ?? 'the audio could not be made'}`,
     })
   }
-  if (!readyIntro(analyst, timeline.language)) {
-    reasons.push({ code: 'no_intro', slide: 1, detail: introDetail(analyst, timeline.language) })
+  if (!readyIntro(analyst)) {
+    reasons.push({ code: 'no_intro', slide: 1, detail: introDetail(analyst) })
   }
   if (!analyst || !voiceIdFor(analyst)) {
     const detail = !analyst
@@ -318,7 +317,7 @@ function scriptWrite(state: PipelineState, approved: boolean): ScriptWrite | nul
 }
 
 export function withCurrentIntro(timeline: Timeline, analyst: AnalystRow | null): Timeline {
-  const intro = readyIntro(analyst, timeline.language)
+  const intro = readyIntro(analyst)
   if (!intro || !analyst) return timeline
   return {
     ...timeline,
@@ -587,7 +586,7 @@ export interface PipedriveRefresh {
 }
 
 function newOwner(timeline: Timeline, analyst: AnalystRow): void {
-  const intro = readyIntro(analyst, timeline.language)
+  const intro = readyIntro(analyst)
   for (const segment of timeline.segments) {
     if (segment.template !== 'facecam') {
       markNewAudio(segment)

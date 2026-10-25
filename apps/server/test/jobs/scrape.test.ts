@@ -145,7 +145,7 @@ describe('scrape job', () => {
     expect((await stat(paths.screenshot(DEAL_ID))).size).toBeGreaterThan(0)
     expect((await stat(paths.ogImage(DEAL_ID))).size).toBeGreaterThan(0)
     expect(writeScriptJobs().map((item) => item.payload)).toEqual([
-      { dealId: DEAL_ID, version: 1, slides: [2, 3, 4, 5, 6, 7, 8], lines: true },
+      { dealId: DEAL_ID, version: 1, slides: [3, 4, 7, 8], lines: true },
     ])
   })
 

@@ -229,6 +229,6 @@ describe('buildCaptions', () => {
 describe('SLIDE_NAMES_EN', () => {
   it('names all 8 slides', () => {
     expect(Object.keys(SLIDE_NAMES_EN)).toHaveLength(8)
-    expect(SLIDE_NAMES_EN[5]).toBe('Buyers from Mergero deals')
+    expect(SLIDE_NAMES_EN[5]).toBe('Where time goes')
   })
 })

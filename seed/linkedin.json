@@ -1,34 +1,88 @@
 {
   "profiles": {
-    "aku.litmanen@example.com": { "languages": ["fi", "en"], "staffCount": 18 },
-    "daniel.sundqvist@example.com": { "languages": ["sv", "en"], "staffCount": 14 },
-    "tomi.poutiainen@example.com": { "languages": ["fi", "en", "sv"], "staffCount": 47 },
-    "wladyslaw.pacocha@example.com": { "languages": ["sv", "en"], "staffCount": 17 },
-    "nils.aarseth@example.com": { "languages": ["nb", "en"], "staffCount": 24 },
-    "kim.dolva@example.com": { "languages": ["da", "en", "de"], "staffCount": 16 },
-    "roland.renzhofer@example.com": { "languages": ["de", "en"], "staffCount": 150 },
-    "dominik.kunz@example.com": { "languages": ["de", "en"], "staffCount": null },
-    "sacha.eigl@example.com": { "languages": ["de", "en"], "staffCount": null },
-    "olafur.ormsson@example.com": { "languages": ["en"], "staffCount": 90 },
-    "janne.vainikainen@example.com": { "languages": ["fi", "en"], "staffCount": 15 },
-    "jukka.peurala@example.com": { "languages": ["fi", "en"], "staffCount": 18 },
-    "marja.haapanen@example.com": { "languages": ["fi", "en"], "staffCount": 16 },
-    "katri.savolainen@example.com": { "languages": ["fi", "en"], "staffCount": 23 },
-    "joel.jarvimaki@example.com": { "languages": ["fi", "en"], "staffCount": 49 },
-    "arto.orjasniemi@example.com": { "languages": ["fi", "en"], "staffCount": 37 },
-    "nils.stahl@example.com": { "languages": ["sv", "en"], "staffCount": 30 },
-    "juha.rosenstrom@example.com": { "languages": ["sv", "en"], "staffCount": 20 },
-    "kjell.hammar@example.com": { "languages": ["sv", "en"], "staffCount": 37 },
-    "jan.olsen@example.com": { "languages": ["nb", "en"], "staffCount": 26 },
-    "rune.ommedal@example.com": { "languages": ["nb", "en"], "staffCount": 74 },
-    "christian.agger@example.com": { "languages": ["da", "en"], "staffCount": 60 },
-    "frank.rasmussen@example.com": { "languages": ["da", "en"], "staffCount": 13 },
-    "markus.fehrenbach@example.com": { "languages": ["de", "en"], "staffCount": 15 },
-    "matthias.richter@example.com": { "languages": ["de", "en"], "staffCount": 50 },
-    "franz.schapermeier@example.com": { "languages": ["de", "en"], "staffCount": 15 },
-    "manuel.nocker@example.com": { "languages": ["de", "en"], "staffCount": 95 },
-    "stephan.laderach@example.com": { "languages": ["de", "en"], "staffCount": 53 },
-    "andreas.albrecht@example.com": { "languages": ["de", "en"], "staffCount": 60 },
-    "skjoldur.palmason@example.com": { "languages": ["en"], "staffCount": 86 }
+    "mikko.rantala@example.com": {
+      "languages": [
+        "fi",
+        "en"
+      ],
+      "staffCount": 85
+    },
+    "anna.lehtola@example.com": {
+      "languages": [
+        "fi",
+        "en"
+      ],
+      "staffCount": 120
+    },
+    "juha.salonen@example.com": {
+      "languages": [
+        "fi",
+        "en"
+      ],
+      "staffCount": 210
+    },
+    "sari.mäkelä@example.com": {
+      "languages": [
+        "fi",
+        "en"
+      ],
+      "staffCount": 64
+    },
+    "petri.kaarna@example.com": {
+      "languages": [
+        "fi",
+        "en"
+      ],
+      "staffCount": 95
+    },
+    "laura.virtanen@example.com": {
+      "languages": [
+        "fi",
+        "en"
+      ],
+      "staffCount": 38
+    },
+    "timo.hakala@example.com": {
+      "languages": [
+        "fi",
+        "en"
+      ],
+      "staffCount": 140
+    },
+    "kristian.nyholm@example.com": {
+      "languages": [
+        "fi",
+        "en"
+      ],
+      "staffCount": 72
+    },
+    "marja.heikkinen@example.com": {
+      "languages": [
+        "fi",
+        "en"
+      ],
+      "staffCount": 88
+    },
+    "antti.turunen@example.com": {
+      "languages": [
+        "fi",
+        "en"
+      ],
+      "staffCount": 160
+    },
+    "jari.lehtinen@example.com": {
+      "languages": [
+        "fi",
+        "en"
+      ],
+      "staffCount": 110
+    },
+    "elina.koskinen@example.com": {
+      "languages": [
+        "fi",
+        "en"
+      ],
+      "staffCount": 230
+    }
   }
 }

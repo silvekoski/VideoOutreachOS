@@ -22,6 +22,7 @@ function jsonRpcError(res: ServerResponse, status: number, message: string): voi
 export function createMgxServer(options: MgxServerOptions): Server {
   const submissionsFile = path.join(options.storageDir, 'data', 'mgx-submissions.jsonl')
   const logos: StaticMount = { prefix: '/logos/', root: path.join(options.seedDir, 'logos') }
+  const sites: StaticMount = { prefix: '/sites/', root: path.join(options.seedDir, 'sites') }
   const allowedOriginHosts = new Set(['localhost', '127.0.0.1', '[::1]'])
   if (options.publicUrl !== null) allowedOriginHosts.add(new URL(options.publicUrl).hostname)
 
@@ -51,6 +52,7 @@ export function createMgxServer(options: MgxServerOptions): Server {
     if (url === null) return sendText(res, 400, 'Bad request')
     if (url.pathname === '/mcp') return handleMcp(req, res)
     if (url.pathname.startsWith(logos.prefix)) return serveStatic(req, res, url, logos)
+    if (url.pathname.startsWith(sites.prefix)) return serveStatic(req, res, url, sites)
     if (url.pathname === '/health') {
       if (req.method !== 'GET' && req.method !== 'HEAD') return sendText(res, 405, 'Method not allowed', { allow: 'GET, HEAD' })
       res.writeHead(200, { 'content-type': 'application/json' }).end('{"status":"ok"}')

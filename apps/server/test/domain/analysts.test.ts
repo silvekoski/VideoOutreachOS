@@ -108,37 +108,36 @@ describe('analysts', () => {
     insertAnalyst(t.db, { intros: {}, voiceId: null })
     const first = '2026-09-26T10:00:00.000Z'
     const second = '2026-09-26T10:05:00.000Z'
-    startIntro(t.db, 10, 'de', { recordedAt: first, transcript: 'Guten Tag.' }, T0)
-    startIntro(t.db, 10, 'de', { recordedAt: second, transcript: 'Hallo.' }, T0)
-    expect(completeIntro(t.db, 10, 'de', first, { file: 'analysts/10/intro-de.mp4', durationS: 30 }, T0)).toBeNull()
-    expect(failIntro(t.db, 10, 'de', first, T0)).toBeNull()
-    const ready = completeIntro(t.db, 10, 'de', second, { file: 'analysts/10/intro-de.mp4', durationS: 28.5 }, T0)
-    expect(ready?.intros.de).toEqual({ file: 'analysts/10/intro-de.mp4', durationS: 28.5, recordedAt: second, transcript: 'Hallo.', status: 'ready' })
-    expect(readyIntro(ready ?? null, 'de')?.file).toBe('analysts/10/intro-de.mp4')
-    expect(readyIntro(ready ?? null, 'fi')).toBeNull()
-  })
+    startIntro(t.db, 10, 'fi', { recordedAt: first, transcript: 'Guten Tag.' }, T0)
+    startIntro(t.db, 10, 'fi', { recordedAt: second, transcript: 'Hallo.' }, T0)
+    expect(completeIntro(t.db, 10, 'fi', first, { file: 'analysts/10/intro-fi.mp4', durationS: 30 }, T0)).toBeNull()
+    expect(failIntro(t.db, 10, 'fi', first, T0)).toBeNull()
+    const ready = completeIntro(t.db, 10, 'fi', second, { file: 'analysts/10/intro-fi.mp4', durationS: 28.5 }, T0)
+    expect(ready?.intros.fi).toEqual({ file: 'analysts/10/intro-fi.mp4', durationS: 28.5, recordedAt: second, transcript: 'Hallo.', status: 'ready' })
+    expect(readyIntro(ready ?? null)?.file).toBe('analysts/10/intro-fi.mp4')
+      })
 
   it('keeps the ready intro in use while a new recording processes or after it fails', () => {
     insertAnalyst(t.db, { intros: {}, voiceId: null })
     const first = '2026-09-26T10:00:00.000Z'
     const third = later(5).toISOString()
-    startIntro(t.db, 10, 'de', { recordedAt: first, transcript: 'Guten Tag.' }, T0)
-    completeIntro(t.db, 10, 'de', first, { file: 'analysts/10/intro-de.mp4', durationS: 28.5 }, T0)
-    const ready = { file: 'analysts/10/intro-de.mp4', durationS: 28.5, recordedAt: first, transcript: 'Guten Tag.', status: 'ready' }
+    startIntro(t.db, 10, 'fi', { recordedAt: first, transcript: 'Guten Tag.' }, T0)
+    completeIntro(t.db, 10, 'fi', first, { file: 'analysts/10/intro-fi.mp4', durationS: 28.5 }, T0)
+    const ready = { file: 'analysts/10/intro-fi.mp4', durationS: 28.5, recordedAt: first, transcript: 'Guten Tag.', status: 'ready' }
 
-    const again = startIntro(t.db, 10, 'de', { recordedAt: third, transcript: 'Hallo.' }, later(5))
-    expect(again.intros.de).toEqual({ ...ready, pending: { recordedAt: third, transcript: 'Hallo.', status: 'processing' } })
-    expect(readyIntro(again, 'de')).toMatchObject({ file: 'analysts/10/intro-de.mp4', durationS: 28.5, transcript: 'Guten Tag.' })
+    const again = startIntro(t.db, 10, 'fi', { recordedAt: third, transcript: 'Hallo.' }, later(5))
+    expect(again.intros.fi).toEqual({ ...ready, pending: { recordedAt: third, transcript: 'Hallo.', status: 'processing' } })
+    expect(readyIntro(again)).toMatchObject({ file: 'analysts/10/intro-fi.mp4', durationS: 28.5, transcript: 'Guten Tag.' })
     expect(toAnalystDto(again).intros[0]).toMatchObject({ status: 'ready', recordedAt: first, pending: { status: 'processing', recordedAt: third } })
 
-    const failed = failIntro(t.db, 10, 'de', third, later(6))
-    expect(failed?.intros.de).toEqual({ ...ready, pending: { recordedAt: third, transcript: 'Hallo.', status: 'failed' } })
-    expect(readyIntro(failed ?? null, 'de')?.file).toBe('analysts/10/intro-de.mp4')
-    expect(failIntro(t.db, 10, 'de', first, later(6))).toBeNull()
+    const failed = failIntro(t.db, 10, 'fi', third, later(6))
+    expect(failed?.intros.fi).toEqual({ ...ready, pending: { recordedAt: third, transcript: 'Hallo.', status: 'failed' } })
+    expect(readyIntro(failed ?? null)?.file).toBe('analysts/10/intro-fi.mp4')
+    expect(failIntro(t.db, 10, 'fi', first, later(6))).toBeNull()
 
-    startIntro(t.db, 10, 'de', { recordedAt: third, transcript: 'Hallo.' }, later(7))
-    const replaced = completeIntro(t.db, 10, 'de', third, { file: 'analysts/10/intro-de.mp4', durationS: 20 }, later(8))
-    expect(replaced?.intros.de).toEqual({ file: 'analysts/10/intro-de.mp4', durationS: 20, recordedAt: third, transcript: 'Hallo.', status: 'ready' })
+    startIntro(t.db, 10, 'fi', { recordedAt: third, transcript: 'Hallo.' }, later(7))
+    const replaced = completeIntro(t.db, 10, 'fi', third, { file: 'analysts/10/intro-fi.mp4', durationS: 20 }, later(8))
+    expect(replaced?.intros.fi).toEqual({ file: 'analysts/10/intro-fi.mp4', durationS: 20, recordedAt: third, transcript: 'Hallo.', status: 'ready' })
   })
 
   it('keeps the voice state and builds the DTO with file URLs', () => {
@@ -189,22 +188,22 @@ describe('dev bypass', () => {
 
   it('gives an analyst without an intro or a voice clone the placeholder intro and the dev voice', () => {
     const analyst = insertAnalyst(t.db, { intros: {}, voiceId: null })
-    expect(readyIntro(analyst, 'fi')).toBeNull()
+    expect(readyIntro(analyst)).toBeNull()
     expect(voiceIdFor(analyst)).toBeNull()
 
     env.devBypass = true
-    expect(readyIntro(analyst, 'fi')).toEqual(DEV_INTRO)
+    expect(readyIntro(analyst)).toEqual(DEV_INTRO)
     expect(voiceIdFor(analyst)).toBe(DEV_VOICE_ID)
-    expect(readyIntro(null, 'fi')).toBeNull()
+    expect(readyIntro(null)).toBeNull()
   })
 
   it('keeps the own intro and voice clone of the analyst', () => {
     env.devBypass = true
     const analyst = insertAnalyst(t.db, {
-      intros: { de: { file: 'analysts/10/intro-de.mp4', durationS: 9, recordedAt: '2026-09-01T00:00:00.000Z', transcript: 'Hallo.', status: 'ready' } },
+      intros: { fi: { file: 'analysts/10/intro-fi.mp4', durationS: 9, recordedAt: '2026-09-01T00:00:00.000Z', transcript: 'Hei.', status: 'ready' } },
       voiceId: 'voice-10',
     })
-    expect(readyIntro(analyst, 'de')?.file).toBe('analysts/10/intro-de.mp4')
+    expect(readyIntro(analyst)?.file).toBe('analysts/10/intro-fi.mp4')
     expect(voiceIdFor(analyst)).toBe('voice-10')
   })
 })
@@ -256,8 +255,8 @@ describe('deals', () => {
 
 describe('config', () => {
   it('reads the Mergero config and picks the office per country', () => {
-    expect(mergeroConfig().company).toBe('Mergero')
-    expect(contactFor('de')).toMatchObject({ company: 'Mergero', phone: '+41 79 558 4490', email: 'office@mergero.com' })
+    expect(mergeroConfig().company).toBe('Velho')
+    expect(contactFor('de')).toMatchObject({ company: 'Velho', phone: '+41 79 558 4490', email: 'office@mergero.com' })
     expect(contactFor('CH').address).toContain('Zürich')
     expect(contactFor('US').address).toContain('Helsinki')
     expect(brand().primary).toMatch(/^#[0-9A-F]{6}$/u)

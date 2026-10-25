@@ -3,13 +3,13 @@ import type { Segment, SlideNumber, Timeline } from './types.ts'
 
 export const SLIDE_NAMES_EN: Record<SlideNumber, string> = {
   1: 'Face-cam intro',
-  2: 'Who Mergero is',
+  2: 'Who Velho is',
   3: 'Your company',
-  4: 'Your figures',
-  5: 'Buyers from Mergero deals',
-  6: 'What is possible',
-  7: 'Your data stays private',
-  8: 'Book a meeting',
+  4: 'Your growth',
+  5: 'Where time goes',
+  6: 'A first proof',
+  7: 'How Velho works',
+  8: 'Book a working session',
 }
 
 const CAPTION_LINE = 42

@@ -103,7 +103,7 @@ describe('write-script job, version 1', () => {
     advance(t.db, DEAL_ID, T0)
   })
 
-  it('collects the data, builds all eight segments and hands over to the audio step', async () => {
+  it('collects the data, builds the five segments and hands over to the audio step', async () => {
     await runWriteScript()
 
     const deal = requireDeal(t.db, DEAL_ID)
@@ -116,18 +116,14 @@ describe('write-script job, version 1', () => {
     const timeline = getTimeline(t.db, DEAL_ID, 1)?.timeline as Timeline
     expect(timeline).toMatchObject({ dealId: DEAL_ID, version: 1, language: 'fi', fps: 30, width: 1920, height: 1080, pauseS: 0.4 })
     expect(timeline.segments.map((segment) => segment.template)).toEqual([
-      'facecam', 'who-we-are', 'your-company', 'your-figures', 'buyers', 'what-is-possible', 'privacy', 'book-meeting',
+      'facecam', 'your-company', 'your-figures', 'privacy', 'book-meeting',
     ])
     expect(timeline.segments[0]).toMatchObject({
       durationS: 31.2,
       variables: { videoFile: 'analysts/10/intro-fi.mp4', analystName: 'Aino Analyst', transcript: 'Hei, olen Aino Mergerosta.' },
     })
 
-    const who = slide(timeline, 2)
-    if (who.variables.template !== 'who-we-are') throw new Error('slide 2 template')
-    expect(who.variables.buyers.map((item) => item.id)).toEqual(['f1', 'f2', 'f3', 'f4', 'f7', 'f8'])
-    expect(who.variables.deals.map((item) => item.id)).toEqual(['r1', 'r2', 'r3'])
-    expect(who.labels.headline).toMatch(/2\s200/u)
+    expect(timeline.segments.map((segment) => ('slide' in segment ? segment.slide : 1))).toEqual([1, 3, 4, 7, 8])
 
     const company = slide(timeline, 3)
     if (company.variables.template !== 'your-company') throw new Error('slide 3 template')
@@ -146,27 +142,6 @@ describe('write-script job, version 1', () => {
     })
     expect(figures.labels['fiscal-year']).toContain('2025')
 
-    const buyers = slide(timeline, 5)
-    if (buyers.variables.template !== 'buyers') throw new Error('slide 5 template')
-    expect(buyers.variables.buyers.map((item) => [item.id, item.logoFile])).toEqual([
-      ['b1', `cache/logos/${createHash('sha1').update(`${logos.url}/b1.svg`).digest('hex')}.svg`],
-      ['missing', null],
-      ['b4', null],
-    ])
-    expect((await stat(path.join(paths.root, buyers.variables.buyers[0]?.logoFile ?? ''))).size).toBeGreaterThan(0)
-    expect(buyers.variables.scope).toBe('sector')
-    expect(buyers.labels.headline).toBe('Ostajat Mergeron kaupoista toimialallasi')
-    expect(buyers.labels).not.toHaveProperty('headline-featured')
-
-    const possible = slide(timeline, 6)
-    if (possible.variables.template !== 'what-is-possible') throw new Error('slide 6 template')
-    expect(possible.variables.deals.map((item) => [item.id, item.profitMultiple])).toEqual([['s1', 6], ['s3', 6]])
-    expect(possible.variables.scope).toBe('sector')
-    expect(possible.variables.summary).toEqual({ dealCount: 3, p25: 6, p75: 6 })
-    expect(possible.labels).toMatchObject({ multiple: 'Kauppahinta suhteessa liikevoittoon', 'summary-deals': 'Mergeron toteutunutta kauppaa toimialallasi' })
-    expect(possible.labels.headline).toBe('Mikä on mahdollista toimialallasi')
-    expect(possible.labels).not.toHaveProperty('headline-recent')
-
     for (const segment of timeline.segments.slice(1) as SlideSegment[]) {
       expect(segment.script.length).toBeGreaterThan(0)
       expect(segment.scriptSource).toBe('fallback')
@@ -177,121 +152,11 @@ describe('write-script job, version 1', () => {
     expect(jobsForDeal(t.db, DEAL_ID, ['audio'])).toHaveLength(1)
   })
 
-  it('fills slide 6 with recent deals of all sectors when MGX has no deal in the sector', async () => {
-    const model = new ScriptedModel()
-    ctx.providers.model = model
-    ctx.stub.mgx.sectorDeals = [closedDeal('s2', `${'A very long deal text. '.repeat(10)}`)]
-
-    await runWriteScript()
-
-    const possible = slide(getTimeline(t.db, DEAL_ID, 1)?.timeline as Timeline, 6)
-    if (possible.variables.template !== 'what-is-possible') throw new Error('slide 6 template')
-    expect(possible.variables.deals.map((item) => item.id)).toEqual(['r4'])
-    expect(possible.variables.scope).toBe('recent')
-    expect(possible.variables.summary).toBeNull()
-    expect(possible.labels.headline).toBe('Mikä on mahdollista kaltaisillesi omistajille')
-    expect(possible.labels).not.toHaveProperty('headline-recent')
-    expect(possible.labels.empty).toBeTruthy()
-    const request = model.requests.find((item) => JSON.parse(item.user).slide === 6)
-    expect(JSON.parse(request?.user ?? '{}')).toMatchObject({ context: { dealScope: 'recent' }, facts: { scope: 'recent' } })
-    expect(request?.system).toContain('Do not say that the deals are from the sector of the company')
-    expect(possible.script).toContain('kaltaisillesi omistajille')
-    expect(possible.script).not.toContain('toimialallasi')
-  })
-
-  it('fills slide 5 with featured buyers of the country when MGX has no public buyer for the sector', async () => {
-    const model = new ScriptedModel()
-    ctx.providers.model = model
-    ctx.stub.mgx.buyers = [buyer('b3', { namePublic: false })]
-    ctx.stub.mgx.countryFeatured = [buyer('f1'), buyer('f2'), buyer('c1'), buyer('c2', { namePublic: false }), buyer('c3')]
-
-    await runWriteScript()
-
-    expect(ctx.stub.mgx.calls).toContainEqual({ tool: 'search_buyers', input: { country: 'FI' } })
-    expect(requireDeal(t.db, DEAL_ID).mgx?.countryFeaturedBuyers?.map((item) => item.id)).toEqual(['f1', 'f2', 'c1', 'c3'])
-    const buyers = slide(getTimeline(t.db, DEAL_ID, 1)?.timeline as Timeline, 5)
-    if (buyers.variables.template !== 'buyers') throw new Error('slide 5 template')
-    expect(buyers.variables.buyers.map((item) => item.id)).toEqual(['c1', 'c3', 'f1', 'f2'])
-    expect(buyers.variables.scope).toBe('featured')
-    expect(buyers.labels.headline).toBe('Ostajat Mergeron kaupoista')
-    expect(buyers.labels).not.toHaveProperty('headline-featured')
-    const request = model.requests.find((item) => JSON.parse(item.user).slide === 5)
-    expect(JSON.parse(request?.user ?? '{}')).toMatchObject({ context: { buyerScope: 'featured' }, facts: { scope: 'featured' } })
-    expect(request?.system).toContain('Do not say that a buyer wants to buy the company')
-    expect(buyers.script).toContain('Buyer C1')
-    expect(buyers.script).not.toMatch(/kaltaisiasi|toimialaltasi/u)
-    expect(requireDeal(t.db, DEAL_ID)).toMatchObject({ status: 'draft', reviewReasons: [] })
-    expect(jobsForDeal(t.db, DEAL_ID, ['audio'])).toHaveLength(1)
-  })
-
-  it('falls back to all featured buyers, first those that slide 2 does not show, when the country has none', async () => {
-    ctx.stub.mgx.buyers = []
-    ctx.stub.mgx.countryFeatured = []
-
-    await runWriteScript()
-
-    const buyers = slide(getTimeline(t.db, DEAL_ID, 1)?.timeline as Timeline, 5)
-    if (buyers.variables.template !== 'buyers') throw new Error('slide 5 template')
-    expect(buyers.variables.buyers.map((item) => item.id)).toEqual(['f9', 'f1', 'f2', 'f3', 'f4', 'f7'])
-    expect(buyers.variables.scope).toBe('featured')
-    expect(requireDeal(t.db, DEAL_ID).reviewReasons).toEqual([])
-  })
-
-  it('shows the empty buyer panel and goes on to the audio when MGX has no public buyer at all', async () => {
-    const model = new ScriptedModel()
-    ctx.providers.model = model
-    ctx.stub.mgx.featured = [buyer('f5', { namePublic: false })]
-    ctx.stub.mgx.countryFeatured = []
-    ctx.stub.mgx.buyers = []
-
-    await runWriteScript()
-
-    const buyers = slide(getTimeline(t.db, DEAL_ID, 1)?.timeline as Timeline, 5)
-    expect(buyers.variables).toEqual({ template: 'buyers', buyers: [], scope: 'featured' })
-    expect(buyers.labels).toEqual({
-      headline: 'Ostajat Mergeron kaupoista',
-      empty: 'Tapaamisessa käymme läpi alustamme ostajat, jotka sopivat yrityksellesi.',
-    })
-    const request = model.requests.find((item) => JSON.parse(item.user).slide === 5)
-    expect(request?.system).toContain('The slide shows no buyers')
-    expect(buyers.script).toContain('Jokainen alustamme ostaja')
-    expect(buyers.script).not.toMatch(/linkit/u)
-    expect(requireDeal(t.db, DEAL_ID)).toMatchObject({ status: 'draft', reviewReasons: [] })
-    expect(jobsForDeal(t.db, DEAL_ID, ['audio']).map((job) => job.status)).toEqual(['queued'])
-  })
-
-  it('takes the buyers that fit first and cuts a long name or focus instead of dropping the buyer', async () => {
-    ctx.stub.mgx.buyers = [
-      buyer('x1', { focus: `Buys machining workshops ${'and metal subcontractors '.repeat(4)}in Finland` }),
-      buyer('x2', { name: 'Nordic Industrial Holdings Acquisition Partners AB' }),
-      buyer('b1'),
-    ]
-    updateDeal(t.db, DEAL_ID, { removedBuyers: [] }, T0)
-
-    await runWriteScript()
-
-    const buyers = slide(getTimeline(t.db, DEAL_ID, 1)?.timeline as Timeline, 5)
-    if (buyers.variables.template !== 'buyers') throw new Error('slide 5 template')
-    const [fitting, longFocus, longName] = buyers.variables.buyers
-    expect([fitting?.id, longFocus?.id, longName?.id]).toEqual(['b1', 'x1', 'x2'])
-    expect(longFocus?.focus).toMatch(/^Buys machining workshops and metal subcontractors .*\u2026$/u)
-    expect(longFocus?.focus.length).toBeLessThanOrEqual(80)
-    expect(longName?.name).toBe('Nordic Industrial Holdings Acquisition\u2026')
-    expect(buyers.variables.scope).toBe('sector')
-    expect(requireDeal(t.db, DEAL_ID).reviewReasons).toEqual([])
-  })
-
   it('asks the model once more after a rejection and marks the slide for review after a second failure', async () => {
     const model = new ScriptedModel()
     ctx.providers.model = model
-    const finnish: Record<string, string> = {
-      'buyer:b1': 'Ostaa konepajoja, jotka muistuttavat yritystä b1',
-      'deal:s1': 'Suomalainen koneistusyritys, jossa on 40 työntekijää, löysi strategisen ostajan kahdeksassa kuukaudessa.',
-    }
     model.answers.push(
-      (request) => ({
-        texts: (JSON.parse(request.user) as { texts: { id: string; text: string }[] }).texts.map(({ id, text }) => ({ id, text: finnish[id] ?? text })),
-      }),
+      (request) => ({ texts: (JSON.parse(request.user) as { texts: { id: string; text: string }[] }).texts }),
       () => ({ lines: ['Liian lyhyt.'] }),
       () => {
         throw new ModelError('Kimi-K3 output for company-lines contains no JSON value', { code: 'no_json', retryable: false })
@@ -302,65 +167,23 @@ describe('write-script job, version 1', () => {
 
     await runWriteScript()
 
-    expect(model.requests).toHaveLength(11)
-    expect(model.requests[0]?.schemaName).toBe('translate-texts')
-    expect(JSON.parse(model.requests[0]?.user ?? '{}')).toMatchObject({
-      task: 'translate-texts',
-      lang: 'fi',
-      texts: [
-        { id: 'buyer:b1', text: 'Buys machining workshops like b1', max: 80 },
-        { id: 'buyer:missing', max: 80 },
-        { id: 'buyer:b4', max: 80 },
-        { id: 'deal:r1', max: 90 },
-        { id: 'deal:r2', max: 90 },
-        { id: 'deal:r3', max: 90 },
-        { id: 'deal:s1', max: 140 },
-        { id: 'deal:s3', max: 140 },
-      ],
-    })
-    expect(model.requests[1]?.system).not.toContain('previous answer was rejected')
+    expect(model.requests.map((request) => request.schemaName)).toEqual([
+      'translate-texts', 'company-lines', 'company-lines', 'slide-script', 'slide-script', 'slide-script', 'slide-script', 'slide-script',
+    ])
     expect(model.requests[2]?.system).toContain('Your previous answer was rejected')
     expect(model.requests[4]?.system).toContain('script has 3 words, expected 30 to 60')
-    expect(JSON.parse(model.requests[3]?.user ?? '{}')).toMatchObject({ task: 'slide-script', slide: 2, context: { lang: 'fi', company: 'Acme Oy' } })
-    expect(JSON.parse(model.requests[6]?.user ?? '{}')).toMatchObject({
-      slide: 4,
-      facts: { revenueText: formatMoney(7_450_000, 'fi'), profitText: formatMoney(980_000, 'fi'), fiscalYear: 2025 },
-    })
-
+    expect(JSON.parse(model.requests[3]?.user ?? '{}')).toMatchObject({ task: 'slide-script', slide: 3, context: { lang: 'fi', company: 'Acme Oy' } })
     const timeline = getTimeline(t.db, DEAL_ID, 1)?.timeline as Timeline
-    expect(slide(timeline, 5).variables).toMatchObject({ buyers: [{ id: 'b1', focus: finnish['buyer:b1'] }, { id: 'missing', focus: 'Buys machining workshops like missing' }, { id: 'b4' }] })
-    expect(slide(timeline, 6).variables).toMatchObject({ deals: [{ id: 's1', text: finnish['deal:s1'] }, { id: 's3' }] })
-    expect(JSON.parse(model.requests[7]?.user ?? '{}')).toMatchObject({ slide: 5, facts: { buyers: [{ name: 'Buyer B1', focus: finnish['buyer:b1'] }, {}, {}] } })
-    expect(slide(timeline, 2)).toMatchObject({ script: '', scriptSource: null })
     expect(slide(timeline, 3).variables).toMatchObject({ lines: [], linesSource: null })
-    expect(slide(timeline, 3).script).not.toBe('')
+    expect(slide(timeline, 3)).toMatchObject({ script: '', scriptSource: null })
+    expect(slide(timeline, 4).script).not.toBe('')
     const deal = requireDeal(t.db, DEAL_ID)
     expect(deal.status).toBe('review')
     expect(deal.reviewReasons.filter((reason) => reason.code === 'model_failed')).toEqual([
       expect.objectContaining({ slide: 3, slot: 'your-company.line' }),
-      expect.objectContaining({ slide: 2 }),
+      expect.objectContaining({ slide: 3 }),
     ])
     expect(jobsForDeal(t.db, DEAL_ID, ['audio'])).toEqual([])
-  })
-
-  it('keeps the original buyer and deal texts when the translation fails the checks', async () => {
-    const model = new ScriptedModel()
-    ctx.providers.model = model
-    const english = (request: { user: string }) => ({
-      texts: (JSON.parse(request.user) as { texts: { id: string }[] }).texts.map(({ id }) => ({
-        id,
-        text: 'This buyer looks for companies of any kind in any country of the world',
-      })),
-    })
-    model.answers.push(english, english)
-
-    await runWriteScript()
-
-    expect(model.requests.slice(0, 3).map((request) => request.schemaName)).toEqual(['translate-texts', 'translate-texts', 'company-lines'])
-    const timeline = getTimeline(t.db, DEAL_ID, 1)?.timeline as Timeline
-    expect(slide(timeline, 5).variables).toMatchObject({ buyers: [{ id: 'b1', focus: 'Buys machining workshops like b1' }, {}, {}] })
-    expect(slide(timeline, 6).variables).toMatchObject({ deals: [{ id: 's1', text: 'A Finnish machining company with 40 staff found a strategic buyer in eight months.' }, {}] })
-    expect(requireDeal(t.db, DEAL_ID).reviewReasons).toEqual([])
   })
 })
 
@@ -390,9 +213,8 @@ describe('write-script job, language and figures', () => {
     const timeline = getTimeline(t.db, DEAL_ID, 1)?.timeline as Timeline
     expect(timeline.language).toBe('de')
     expect(slide(timeline, 4).variables).toEqual({ template: 'your-figures', mode: 'ask', calculator: true })
-    expect(slide(timeline, 4).script).toContain('Rechner')
     expect(slide(timeline, 4).labels['fiscal-year']).toBeUndefined()
-    expect(deal.reviewReasons.map((reason) => reason.code)).toContain('no_intro')
+    expect(deal.reviewReasons.map((reason) => reason.code)).not.toContain('no_intro')
 
     updateDeal(t.db, DEAL_ID, { snapshot: { ...requireDeal(t.db, DEAL_ID).snapshot, nace: '33.12' } }, T0)
     expect(calculatorFor(requireDeal(t.db, DEAL_ID))).toMatchObject({ dealCount: 3 })
@@ -416,10 +238,10 @@ describe('write-script job, making the video again', () => {
     ctx.stub.mgx.sectorDeals = ['s1', 's2', 's3'].map((id) => closedDeal(id, `A workshop ${id} was sold to a group.`, '28.12'))
     ctx.stub.financials.records.set('7654321-0', { businessId: '7654321-0', revenue: 3_100_000, profit: 420_000, fiscalYear: 2025 })
     const lines = ['Acme welds steel parts.', 'Acme has 46 staff.']
-    const scripts = { 5: 'Analyst text of slide 5.', 7: 'Analyst text of slide 7.' }
+    const scripts = { 4: 'Analyst text of slide 4.', 7: 'Analyst text of slide 7.' }
     createVersion(t.db, DEAL_ID, { ...makeTimeline(DEAL_ID, { lines, linesSource: 'analyst', scripts }), basis: { website: 'https://acme.test/', businessId: '1234567-8', nace: '25.62' } }, T0)
     updateVersion(t.db, DEAL_ID, 1, (timeline) => {
-      for (const n of [5, 7]) slide(timeline, n).scriptSource = 'analyst'
+      for (const n of [4, 7]) slide(timeline, n).scriptSource = 'analyst'
       return timeline
     })
     updateDeal(t.db, DEAL_ID, { snapshot: { ...snapshot(), businessId: '7654321-0', nace: '28.12' } }, T0)
@@ -442,12 +264,11 @@ describe('write-script job, making the video again', () => {
     expect(timeline.basis).toEqual({ website: 'https://acme.test/', businessId: '7654321-0', nace: '28.12' })
     expect(slide(timeline, 3).variables).toMatchObject({ lines, linesSource: 'analyst' })
     expect(slide(timeline, 4).variables).toMatchObject({ mode: 'figures', revenue: 3_100_000 })
-    expect(slide(timeline, 5)).toMatchObject({ script: 'Analyst text of slide 5.', scriptSource: 'analyst', scriptCheck: true })
-    expect((slide(timeline, 5).variables as { buyers: { id: string }[] }).buyers.map((item) => item.id)).toEqual(['b1', 'b2'])
+    expect(slide(timeline, 4)).toMatchObject({ script: 'Analyst text of slide 4.', scriptSource: 'analyst', scriptCheck: true })
     expect(slide(timeline, 7)).toMatchObject({ script: 'Analyst text of slide 7.', scriptSource: 'analyst' })
     expect(slide(timeline, 7).scriptCheck).toBeUndefined()
-    expect(slide(timeline, 2)).toMatchObject({ scriptSource: 'fallback' })
-    expect(deal.reviewReasons.map((reason) => [reason.code, reason.slide])).toEqual([['script_check', 5]])
+    expect(slide(timeline, 3)).toMatchObject({ scriptSource: 'fallback' })
+    expect(deal.reviewReasons.map((reason) => [reason.code, reason.slide])).toEqual([['script_check', 4]])
   })
 })
 

@@ -4,14 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>Mergero video tool</title>
+    <title>Signal Room</title>
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="description" content="Find the work growth is hiding. Signal Room turns public company signals into useful conversations." />
     <script>
       (function () {
         try {
-          var theme = localStorage.getItem('theme') || 'dark'
-          var dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
-          document.documentElement.classList.toggle('dark', dark)
-          document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
+          document.documentElement.classList.remove('dark')
+          document.documentElement.style.colorScheme = 'light'
         } catch (error) {}
       })()
     </script>

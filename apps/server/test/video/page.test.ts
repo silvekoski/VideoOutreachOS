@@ -52,7 +52,7 @@ describe('GET /v/:code', () => {
     expect(meta(html, 'og:description')).toBe(t('fi').og.description)
     expect(meta(html, 'og:url')).toBe(pageUrl)
     expect(meta(html, 'og:type')).toBe('website')
-    expect(meta(html, 'og:site_name')).toBe('Mergero')
+    expect(meta(html, 'og:site_name')).toBe('Velho')
     expect(meta(html, 'og:image')).toBe(`${pageUrl}/og-image.jpg`)
     expect(meta(html, 'og:image:width')).toBe('1200')
     expect(meta(html, 'og:image:height')).toBe('630')
@@ -87,7 +87,7 @@ describe('GET /v/:code', () => {
       meetingAt: null,
       expiresAt: '2026-10-26T12:00:00.000Z',
       preview: false,
-      contact: { company: 'Mergero', address: 'Mannerheiminaukio 1A, 00100 Helsinki, Finland', email: 'office@mergero.com' },
+      contact: { company: 'Velho', address: 'Mannerheiminaukio 1A, 00100 Helsinki, Finland', email: 'office@mergero.com' },
     })
     expect(data.slides).toEqual(SLIDE_TIMES)
     expect(data.buyers).toEqual([
@@ -154,7 +154,7 @@ describe('GET /v/:code', () => {
   it('shows the calculator range for a DACH deal with enough closed deals', async () => {
     const deal = publishedDeal(h, { patch: { country: 'DE', pageLanguage: 'de', mgx: mgxData([4, 5, 6, 7]) } })
     const data = bootstrap(await (await h.request(`/v/${deal.linkCode}`)).text())
-    expect(data.calculatorEnabled).toBe(true)
+    expect(data.calculatorEnabled).toBe(false)
     expect(data.calculator).toEqual({ p25: 4.75, p75: 6.25, dealCount: 4 })
     expect(data.contact.address).toContain('Frankfurt')
   })

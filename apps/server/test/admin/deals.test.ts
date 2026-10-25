@@ -51,7 +51,7 @@ describe('POST /api/deals/:id/ensure', () => {
     expect(await h.json('/api/deals/4001/ensure', { method: 'POST' })).toEqual({ status: 200, body: { id: 4001, created: true, refreshed: true, refreshError: null } })
     expect(await h.json('/api/deals/4001/ensure', { method: 'POST' })).toEqual({ status: 200, body: { id: 4001, created: false, refreshed: true, refreshError: null } })
     const deal = requireDeal(h.db, 4001)
-    expect(deal).toMatchObject({ analystId: 1001, status: 'draft', country: 'FI', expiryDays: 30 })
+    expect(deal).toMatchObject({ analystId: 1002, status: 'draft', country: 'FI', expiryDays: 30 })
     expect(sql<{ n: number }>(h.db, `SELECT COUNT(*) AS n FROM jobs WHERE type = 'scrape'`).get()?.n).toBe(1)
   })
 
@@ -65,12 +65,12 @@ describe('POST /api/deals/:id/ensure', () => {
 
 describe('GET /api/prospects', () => {
   it('lists the open Pipedrive deals of the analyst that have no video yet', async () => {
-    insertAnalyst(h.db, { id: 1001, name: 'Linnea Aaltonen' })
+    insertAnalyst(h.db, { id: 1002, name: 'Jonas Weber' })
     await h.request('/api/deals/4001/ensure', { method: 'POST' })
-    const { status, body } = await h.json<ProspectDto[]>('/api/prospects?analyst=1001')
+    const { status, body } = await h.json<ProspectDto[]>('/api/prospects?analyst=1002')
     expect(status).toBe(200)
-    expect(body.map((prospect) => prospect.dealId)).toEqual([4002, 4003, 4004, 4011, 4012, 4013, 4014, 4015, 4016, 4017, 4018, 4019])
-    expect(body[0]).toEqual({ dealId: 4002, company: 'Ab Ahlskog Transport - Kuljetus Oy', ownerName: 'Daniel Sundqvist', ownerRole: 'CEO', country: 'FI' })
+    expect(body.map((prospect) => prospect.dealId)).toEqual([4002, 4003, 4004, 4005, 4006, 4007, 4008, 4009, 4010, 4011, 4012])
+    expect(body[0]).toEqual({ dealId: 4002, company: 'Saimaan Terminaalit Oy', ownerName: 'Anna Lehtola', ownerRole: 'CEO', country: 'FI' })
   })
 
   it('needs a known analyst', async () => {
@@ -206,7 +206,7 @@ describe('GET /api/deals/:id', () => {
     })
     expect(body.sessions.map((session) => session.id)).toEqual(['s-new', 's-old'])
     expect(body.events.map((event) => event.type)).toEqual(['link_sent', 'open', 'task_created', 'task_created', 'brief_written'])
-    expect(body.slideNames[5]).toBe('Buyers from Mergero deals')
+    expect(body.slideNames[5]).toBe('Where time goes')
 
     writeStorageFile('deals/100/video-720.v1.mp4', 'video')
     expect((await h.json<DealDetailDto>('/api/deals/100')).body.download720).toBe('/api/deals/100/files/video-720.v1.mp4?download=1')

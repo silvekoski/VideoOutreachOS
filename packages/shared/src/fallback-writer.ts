@@ -68,69 +68,69 @@ const TEXTS: Record<Lang, WriterTexts> = {
   en: {
     scripts: {
       2: [
-        'Thank you for taking a few minutes, {first}. Mergero helps owners of established companies find the right buyer. On our MGX platform, {buyerCount} buyers look for companies to acquire. On the screen you see some buyers from our deals, and a few deals that we closed recently.',
+        'Thank you for taking a few minutes, {first}. Velho is a strategic AI growth partner. We find the manual work that slows a company down, build the fix with AI and automation, and make sure people actually use it.',
       ],
       3: {
         site: [
-          'We took a close look at the website of {company}, {first}. This is how we understand your business: {line} Companies like yours are exactly what our buyers ask about. If we missed something, you can correct us in the meeting.',
-          'We took a close look at the website of {company}, {first}. On the screen you see in three short lines how we understand your business. Companies like yours are exactly what our buyers ask about. If we missed something, you can correct us in the meeting.',
-          'We took a close look at your website. On the screen you see in three short lines how we understand your business. Companies like yours are exactly what our buyers ask about. If we missed something, you can correct us in the meeting.',
+          'We took a close look at the website of {company}, {first}. This is how we understand your business: {line} Growing companies like yours often lose time to manual handoffs, and that is where we start looking.',
+          'We took a close look at the website of {company}, {first}. On the screen you see in three short lines how we understand your business. Growing companies like yours often lose time to manual handoffs, and that is where we start looking.',
+          'We took a close look at your website. On the screen you see in three short lines how we understand your business. Growing companies often lose time to manual handoffs, and that is where we start looking.',
         ],
         noSite: [
-          'This is how we understand the business of {company}, {first}: {line} Companies like yours are exactly what our buyers ask about. If we missed something, you can correct us in the meeting, so that the picture of your company is right.',
-          'On the screen you see in three short lines how we understand the business of {company}, {first}. Companies like yours are exactly what our buyers ask about. If we missed something, you can correct us in the meeting, so that the picture of your company is right.',
-          'On the screen you see in three short lines how we understand your business. Companies like yours are exactly what our buyers ask about. If we missed something, you can correct us in the meeting, so that the picture of your company is right.',
+          'This is how we understand the business of {company}, {first}: {line} Growing companies like yours often lose time to manual handoffs, and that is where we start looking.',
+          'On the screen you see in three short lines how we understand the business of {company}, {first}. Growing companies like yours often lose time to manual handoffs, and that is where we start looking.',
+          'On the screen you see in three short lines how we understand your business. Growing companies often lose time to manual handoffs, and that is where we start looking.',
         ],
       },
       4: {
         figures: [
-          'According to Asiakastieto, {company} had a revenue of {revenue} euros and an operating profit of {profit} euros in the fiscal year {year}. These public figures are a good starting point. In the meeting we can look at what they mean for the value of your company.',
-          'According to Asiakastieto, your company had a revenue of {revenue} euros and an operating profit of {profit} euros in the fiscal year {year}. These public figures are a good starting point. In the meeting we can look at what they mean for the value of your company.',
+          'According to Asiakastieto, {company} had a revenue of {revenue} euros and an operating profit of {profit} euros in the fiscal year {year}. Growth like this usually adds manual work: more handoffs, more checks and more copying between tools. That is where we look first.',
+          'According to Asiakastieto, your company had a revenue of {revenue} euros and an operating profit of {profit} euros in the fiscal year {year}. Growth like this usually adds manual work: more handoffs, more checks and more copying between tools. That is where we look first.',
         ],
         loss: [
-          'According to Asiakastieto, {company} had a revenue of {revenue} euros and an operating loss of {profit} euros in the fiscal year {year}. These public figures are a good starting point. In the meeting we can look at what they mean for the value of your company.',
-          'According to Asiakastieto, your company had a revenue of {revenue} euros and an operating loss of {profit} euros in the fiscal year {year}. These public figures are a good starting point. In the meeting we can look at what they mean for the value of your company.',
+          'According to Asiakastieto, {company} had a revenue of {revenue} euros and an operating loss of {profit} euros in the fiscal year {year}. Growth usually adds manual work: more handoffs, more checks and more copying between tools. That is where we look first.',
+          'According to Asiakastieto, your company had a revenue of {revenue} euros and an operating loss of {profit} euros in the fiscal year {year}. Growth usually adds manual work: more handoffs, more checks and more copying between tools. That is where we look first.',
         ],
         calculator: [
-          'We do not have public figures for your company. If you enter a range for revenue and profit in the form on this page, the calculator shows a value range for your company. It uses real deals from your sector. A rough range is enough, and your answers go to Mergero only.',
+          'We do not have public figures for your company. Please tell us your size in the form on this page. A rough range is enough. It shows us where manual work grows fastest, and your answers go to Velho only.',
         ],
         form: [
-          'We do not have public figures for your company. If you like, you can enter your revenue and profit in the form on this page. A rough range is enough. With these figures we can prepare a better meeting for you, and your answers go to Mergero only.',
+          'We do not have public figures for your company. Please tell us your size in the form on this page. A rough range is enough. With it we can prepare a better working session for you, and your answers go to Velho only.',
         ],
       },
       5: {
         sector: [
-          'These buyers made deals in your sector with Mergero. On the list you find, for example, {buyers}. Under each name you see the deal that the buyer made with us. In the meeting we look at which buyers could fit {company}. Below the video you find the links to their websites.',
-          'These buyers made deals in your sector with Mergero. Under each name you see the deal that the buyer made with us. In the meeting we look at which buyers could fit {company}. Below the video you find the links to their websites, so you can see for yourself who they are.',
-          'These buyers made deals in your sector with Mergero. Under each name you see the deal that the buyer made with us. In the meeting we look at which buyers could fit your company. Below the video you find the links to their websites, so you can see for yourself who they are.',
+          'These are tools we often connect in your sector, for example {buyers}. Time usually goes into copying data between them. In the working session we map where manual work slows {company} down. Below the video you find links to their websites.',
+          'These are tools we often connect in your sector. Time usually goes into copying data between them. In the working session we map where manual work slows {company} down. Below the video you find links to their websites, so you can see for yourself what they are.',
+          'These are tools we often connect in your sector. Time usually goes into copying data between them. In the working session we map where manual work slows your team down. Below the video you find links to their websites, so you can see for yourself what they are.',
         ],
         featured: [
-          'These buyers made deals with Mergero, for example {buyers}. Under each name you see the deal that the buyer made with us. In the meeting we look at which buyers could fit {company}. Below the video you find the links to their websites.',
-          'On the screen you see some buyers that made deals with Mergero. Under each name you see the deal that the buyer made with us. In the meeting we look at which buyers could fit your company. Below the video you find the links to their websites.',
+          'These are tools we often connect, for example {buyers}. Time usually goes into copying data between them. In the working session we map where manual work slows {company} down. Below the video you find links to their websites.',
+          'On the screen you see some tools we often connect. Time usually goes into copying data between them. In the working session we map where manual work slows your team down. Below the video you find links to their websites.',
         ],
         empty: [
-          'Each buyer on our platform has told us what kind of companies it wants to buy. In the meeting we go through the buyers that fit {company} best and what each of them looks for. This way you see who could be interested, before you decide anything.',
-          'Each buyer on our platform has told us what kind of companies it wants to buy. In the meeting we go through the buyers that fit your company best and what each of them looks for. This way you see who could be interested, before you decide anything.',
+          'Every company loses time in different places. In the working session we map where manual work slows {company} down and which tools are involved. This way you see where time goes, before you decide anything.',
+          'Every company loses time in different places. In the working session we map where manual work slows your team down and which tools are involved. This way you see where time goes, before you decide anything.',
         ],
       },
       6: {
         sector: [
-          'Here is what is possible in your sector. {deal} Deals like this show that there is real demand for companies like {company}. Every sale is different, and in the meeting we can talk about what a deal could look like for you.',
-          'Here is what is possible in your sector. In recent years, owners of similar companies have sold to buyers on our platform. Every sale is different, and in the meeting we can talk about what a deal could look like for {company}.',
-          'Here is what is possible in your sector. In recent years, owners of similar companies have sold to buyers on our platform. Every sale is different, and in the meeting we can talk about what a deal could look like for you and your company.',
+          'Here is a first proof in your sector. {deal} Every company is different, and in the working session we pick the smallest fix that proves the value for {company}.',
+          'Here is a first proof in your sector. A good first proof is small, practical and quick to check with your own team. Every company is different, and in the working session we pick the smallest fix that proves the value for {company}.',
+          'Here is a first proof in your sector. A good first proof is small, practical and quick to check with your own team. Every company is different, and in the working session we pick the smallest fix that proves the value for you and your company.',
         ],
         recent: [
-          'Here is what is possible for owners like you. {deal} Deals like this show that buyers on our platform look for established companies. Every sale is different, and in the meeting we can talk about what a deal could look like for {company}.',
-          'Here is what is possible for owners like you. In recent years, owners of established companies have sold to buyers on our platform. Every sale is different, and in the meeting we can talk about what a deal could look like for {company}.',
-          'Here is what is possible for owners like you. In recent years, owners of established companies have sold to buyers on our platform. Every sale is different, and in the meeting we can talk about what a deal could look like for you and your company.',
+          'Here is a first proof for teams like yours. {deal} Every company is different, and in the working session we pick the smallest fix that proves the value for {company}.',
+          'Here is a first proof for teams like yours. A good first proof is small, practical and quick to check with your own team. Every company is different, and in the working session we pick the smallest fix that proves the value for {company}.',
+          'Here is a first proof for teams like yours. A good first proof is small, practical and quick to check with your own team. Every company is different, and in the working session we pick the smallest fix that proves the value for you and your company.',
         ],
       },
       7: [
-        'Your data stays private, {first}. Buyers see your company only as an anonymous profile, and we reveal its name only after you say yes. Your answers in the form go to Mergero only, and we delete the recording of this page when the link expires.',
+        'This is how Velho works, {first}. First, we find the manual work that slows your team down. Then we build the fix with AI and automation. Finally, we make sure people actually use it, so the time saved stays saved.',
       ],
       8: [
-        'Thank you for watching, {first}. If you want to hear more, book a short meeting with me below the video. On Teams we talk about your goals, the interested buyers and a possible value range for {company}. The meeting does not commit you to anything. I look forward to our talk.',
-        'Thank you for watching, {first}. If you want to hear more, book a short meeting with me below the video. On Teams we talk about your goals, the interested buyers and a possible value range for your company. The meeting does not commit you to anything. I look forward to our talk.',
+        'Thank you for watching, {first}. If you want to hear more, book a twenty-minute working session with me below the video. On Teams we pick one manual workflow at {company} and sketch a practical fix. There is no commitment. I look forward to our talk.',
+        'Thank you for watching, {first}. If you want to hear more, book a twenty-minute working session with me below the video. On Teams we pick one manual workflow at your company and sketch a practical fix. There is no commitment. I look forward to our talk.',
       ],
     },
     lines: [
@@ -141,9 +141,9 @@ const TEXTS: Record<Lang, WriterTexts> = {
     outreach: {
       subject: 'A short video about {company}',
       email:
-        'Hello {first},\n\nI am {analyst}, an analyst at Mergero. We help owners of established companies find the right buyer. I made a short personal video about {company}. It shows buyers from Mergero deals and what other owners have done.\n\nYou can watch it here: {link}\n\nBelow the video, you can book a meeting with me. The link is personal and works until {expires}.\n\nBest regards,\n{analyst}\nMergero',
+        'Hello {first},\n\nI am {analyst}, an analyst at Velho. We are a strategic AI growth partner: we find the manual work that slows a company down, build the fix with AI and automation, and make sure people actually use it. I made a short personal video about {company}.\n\nYou can watch it here: {link}\n\nBelow the video, you can book a twenty-minute working session with me. The link is personal and works until {expires}.\n\nBest regards,\n{analyst}\nVelho',
       short:
-        'Hello {first}, this is {analyst} from Mergero. I made a short personal video for you about {company}: {link} It takes only a few minutes to watch. The link works until {expires}.',
+        'Hello {first}, this is {analyst} from Velho. I made a short personal video for you about {company}: {link} It takes only a few minutes to watch. The link works until {expires}.',
     },
     brief: {
       booked: '{owner} of {company} booked a meeting.',
@@ -163,83 +163,86 @@ const TEXTS: Record<Lang, WriterTexts> = {
         revenue: 'What was the revenue of your company in the last fiscal year?',
         profit: 'What was the operating profit of your company in the last fiscal year?',
         custom: 'Can we go through the questions in the form that you did not answer yet?',
-        timing: 'When could a sale be a realistic option for you?',
+        timing: 'When would a first automation be useful for you?',
         staff: 'How many people work in your company today?',
-        slide2: 'What do you already know about Mergero and how we work?',
+        slide2: 'What do you already know about Velho and how we work?',
         slide3: 'How would you describe your company in a few words?',
-        slide4: 'How do you see the financial development of your company in the next years?',
-        slide5: 'What kind of buyer would suit your company best?',
-        slide6: 'Do you know of other company sales in your sector in recent years?',
-        slide7: 'How important is confidentiality to you in a possible sale?',
+        slide4: 'Where does manual work grow fastest as your company grows?',
+        slide5: 'Which tools and handoffs take the most time in your team?',
+        slide6: 'Which small workflow would be the best first proof?',
+        slide7: 'What would make sure your team actually uses a new tool?',
         goals: 'What are your goals for the company in the next few years?',
-        decision: 'Who else would take part in a decision about a sale?',
-        successor: 'Is there a successor in the family or in the management team?',
+        decision: 'Who else would take part in a decision about this?',
+        successor: 'Who in your team would own the change?',
       },
     },
   },
   fi: {
     scripts: {
       2: [
-        'Kiitos, että käytät hetken tähän videoon, {first}. Mergero auttaa vakiintuneiden yritysten omistajia löytämään yritykselleen oikean ostajan. MGX-alustallamme on {buyerCount} ostajaa, jotka etsivät jatkuvasti uusia yrityksiä ostettavaksi. Ruudulla näet joitakin ostajia kaupoistamme ja muutaman kaupan, jonka olemme saaneet päätökseen viime aikoina.',
+        'Kiitos, että käytät hetken tähän videoon, {first}. Velho on strateginen tekoälykasvukumppani. Löydämme manuaalisen työn, joka hidastaa yrityksesi arkea, rakennamme ratkaisun tekoälyllä ja automaatiolla ja varmistamme, että ihmiset oikeasti käyttävät sitä myös arjessa.',
       ],
       3: {
         site: [
-          'Tutustuimme verkkosivuihisi huolella, {first}. Näin ymmärrämme liiketoimintasi: {line} {company} on juuri sellainen yritys, josta ostajamme kysyvät meiltä. Jos jokin meni mielestäsi väärin, voit korjata sen tapaamisessa, niin kuva yrityksestäsi on oikea.',
-          'Tutustuimme verkkosivuihisi huolella, {first}. Ruudulla näet kolmella lyhyellä rivillä, miten ymmärrämme liiketoimintasi. {company} on juuri sellainen yritys, josta ostajamme kysyvät meiltä. Jos jokin meni mielestäsi väärin, voit korjata sen tapaamisessa, niin kuva yrityksestäsi on oikea.',
-          'Tutustuimme verkkosivuihisi huolella. Ruudulla näet kolmella lyhyellä rivillä, miten ymmärrämme liiketoimintasi. Yrityksesi on juuri sellainen, josta ostajamme kysyvät meiltä usein. Jos jokin meni mielestäsi väärin, voit korjata sen tapaamisessa, niin kuva yrityksestäsi on varmasti oikea.',
+          'Tutustuimme verkkosivuihisi huolella, {first}. Näin ymmärrämme liiketoimintasi: {line} Kasvavat yritykset menettävät usein aikaa manuaalisiin työvaiheiden välisiin siirtoihin, ja juuri sieltä alamme etsiä parannuksia, jotka säästävät aikaa tiimiltäsi ja vapauttavat sen kasvuun.',
+          'Tutustuimme verkkosivuihisi huolella, {first}. Ruudulla näet kolmella lyhyellä rivillä, miten ymmärrämme liiketoimintasi. Kasvavat yritykset menettävät usein aikaa manuaalisiin työvaiheiden välisiin siirtoihin, ja juuri sieltä alamme etsiä parannuksia, jotka säästävät aikaa tiimiltäsi ja vapauttavat sen kasvuun.',
+          'Tutustuimme verkkosivuihisi huolella. Ruudulla näet kolmella lyhyellä rivillä, miten ymmärrämme liiketoimintasi. Kasvavat yritykset menettävät usein aikaa manuaalisiin työvaiheiden välisiin siirtoihin, ja juuri sieltä alamme etsiä parannuksia, jotka säästävät aikaa tiimiltäsi ja vapauttavat sen kasvuun.',
         ],
         noSite: [
-          'Näin ymmärrämme liiketoimintasi, {first}: {line} {company} on juuri sellainen yritys, josta ostajamme kysyvät meiltä. Jos jokin meni mielestäsi väärin, voit korjata sen tapaamisessa, niin kuva yrityksestäsi on varmasti oikea.',
-          'Ruudulla näet kolmella lyhyellä rivillä, miten ymmärrämme liiketoimintasi, {first}. {company} on juuri sellainen yritys, josta ostajamme kysyvät meiltä. Jos jokin meni mielestäsi väärin, voit korjata sen tapaamisessa, niin kuva yrityksestäsi on varmasti oikea.',
-          'Ruudulla näet kolmella lyhyellä rivillä, miten ymmärrämme liiketoimintasi. Yrityksesi on juuri sellainen, josta ostajamme kysyvät meiltä usein. Jos jokin meni mielestäsi väärin, voit korjata sen tapaamisessa, niin kuva yrityksestäsi on varmasti oikea ja ajan tasalla.',
+          'Näin ymmärrämme liiketoimintasi, {first}: {line} Kasvavat yritykset menettävät usein aikaa manuaalisiin työvaiheiden välisiin siirtoihin, ja juuri sieltä alamme etsiä parannuksia, jotka säästävät aikaa tiimiltäsi ja vapauttavat sen kasvuun.',
+          'Ruudulla näet kolmella lyhyellä rivillä, miten ymmärrämme liiketoimintasi, {first}. Kasvavat yritykset menettävät usein aikaa manuaalisiin työvaiheiden välisiin siirtoihin, ja juuri sieltä alamme etsiä parannuksia, jotka säästävät aikaa tiimiltäsi ja vapauttavat sen kasvuun.',
+          'Ruudulla näet kolmella lyhyellä rivillä, miten ymmärrämme liiketoimintasi. Kasvavat yritykset menettävät usein aikaa manuaalisiin työvaiheiden välisiin siirtoihin, ja juuri sieltä alamme etsiä parannuksia, jotka säästävät aikaa tiimiltäsi ja vapauttavat sen kasvuun.',
         ],
       },
       4: {
         figures: [
-          'Asiakastiedon mukaan {company} teki tilikaudella {year} liikevaihtoa {revenue} euroa ja liikevoittoa {profit} euroa. Nämä julkiset luvut ovat hyvä lähtökohta keskustelullemme. Tapaamisessa voimme katsoa yhdessä, mitä luvut tarkoittavat yrityksesi arvolle ja millaisia ostajia ne kiinnostavat.',
-          'Asiakastiedon mukaan yrityksesi teki tilikaudella {year} liikevaihtoa {revenue} euroa ja liikevoittoa {profit} euroa. Nämä julkiset luvut ovat hyvä lähtökohta keskustelullemme. Tapaamisessa voimme katsoa yhdessä, mitä luvut tarkoittavat yrityksesi arvolle ja millaisia ostajia ne kiinnostavat.',
+          'Asiakastiedon mukaan {company} teki tilikaudella {year} liikevaihtoa {revenue} euroa ja liikevoittoa {profit} euroa. Kasvu lisää yleensä manuaalista työtä: enemmän siirtoja, tarkistuksia ja kopiointia työkalujen välillä. Sieltä me aloitamme.',
+          'Asiakastiedon mukaan yrityksesi teki tilikaudella {year} liikevaihtoa {revenue} euroa ja liikevoittoa {profit} euroa. Kasvu lisää yleensä manuaalista työtä: enemmän siirtoja, tarkistuksia ja kopiointia työkalujen välillä. Sieltä me aloitamme.',
         ],
         loss: [
-          'Asiakastiedon mukaan {company} teki tilikaudella {year} liikevaihtoa {revenue} euroa, ja liiketappio oli {profit} euroa. Nämä julkiset luvut ovat hyvä lähtökohta keskustelullemme. Tapaamisessa voimme katsoa yhdessä, mitä luvut tarkoittavat yrityksesi arvolle ja millaisia ostajia ne kiinnostavat.',
-          'Asiakastiedon mukaan yrityksesi teki tilikaudella {year} liikevaihtoa {revenue} euroa, ja liiketappio oli {profit} euroa. Nämä julkiset luvut ovat hyvä lähtökohta keskustelullemme. Tapaamisessa voimme katsoa yhdessä, mitä luvut tarkoittavat yrityksesi arvolle ja millaisia ostajia ne kiinnostavat.',
+          'Asiakastiedon mukaan {company} teki tilikaudella {year} liikevaihtoa {revenue} euroa, ja liiketappio oli {profit} euroa. Kasvu lisää yleensä manuaalista työtä: enemmän siirtoja, tarkistuksia ja kopiointia työkalujen välillä. Sieltä me aloitamme.',
+          'Asiakastiedon mukaan yrityksesi teki tilikaudella {year} liikevaihtoa {revenue} euroa, ja liiketappio oli {profit} euroa. Kasvu lisää yleensä manuaalista työtä: enemmän siirtoja, tarkistuksia ja kopiointia työkalujen välillä. Sieltä me aloitamme.',
         ],
         calculator: [
-          'Yrityksestäsi ei ole saatavilla julkisia lukuja. Jos annat liikevaihdon ja liikevoiton suuruusluokan tämän sivun lomakkeella, laskuri näyttää yrityksesi arvohaarukan. Laskuri perustuu toimialasi toteutuneisiin kauppoihin. Karkea arvio riittää hyvin, ja vastauksesi menevät vain Mergerolle.',
+          'Yrityksestäsi ei ole saatavilla julkisia lukuja. Kerro meille yrityksesi koko tämän sivun lomakkeella. Karkea suuruusluokka riittää hyvin. Sen avulla näemme tarkemmin, missä manuaalinen työ kasvaa nopeimmin, ja vastauksesi menevät vain Velholle.',
         ],
         form: [
-          'Yrityksestäsi ei ole saatavilla julkisia lukuja. Jos haluat, voit kertoa liikevaihdon ja liikevoiton tämän sivun lomakkeella. Karkea suuruusluokka riittää hyvin. Lukujen avulla voimme valmistella tapaamisen paremmin juuri sinua varten, ja vastauksesi menevät vain Mergerolle.',
+          'Yrityksestäsi ei ole saatavilla julkisia lukuja. Kerro meille yrityksesi koko tämän sivun lomakkeella. Karkea suuruusluokka riittää hyvin. Sen avulla voimme valmistella työsession paremmin juuri sinua ja tiimiäsi varten, ja vastauksesi menevät vain Velholle.',
         ],
       },
       5: {
         sector: [
-          'Nämä ostajat ovat ostaneet yrityksiä toimialaltasi Mergeron kautta. Listalla on esimerkiksi {buyers}. Jokaisen nimen alla näet kaupan, jonka ostaja teki kanssamme. Tapaamisessa katsomme yhdessä, mitkä ostajat voisivat sopia yritykselle {company}. Videon alta löydät linkit niiden verkkosivuille.',
-          'Nämä ostajat ovat ostaneet yrityksiä toimialaltasi Mergeron kautta. Jokaisen nimen alla näet kaupan, jonka ostaja teki kanssamme. Tapaamisessa katsomme yhdessä, mitkä ostajat voisivat sopia yritykselle {company}. Videon alta löydät linkit niiden verkkosivuille, joten voit itse tutustua niihin.',
-          'Nämä ostajat ovat ostaneet yrityksiä toimialaltasi Mergeron kautta. Jokaisen nimen alla näet kaupan, jonka ostaja teki kanssamme. Tapaamisessa katsomme yhdessä, mitkä ostajat voisivat sopia sinun yrityksellesi. Videon alta löydät linkit niiden verkkosivuille, joten voit itse tutustua niihin.',
+          'Nämä ovat työkaluja, joita yhdistämme usein toimialallasi, esimerkiksi {buyers}. Aika kuluu yleensä tiedon kopioimiseen niiden välillä. Työsessiossa kartoitamme, missä manuaalinen työ hidastaa yritystä {company}. Videon alta löydät linkit niiden verkkosivuille.',
+          'Nämä ovat työkaluja, joita yhdistämme usein toimialallasi. Aika kuluu yleensä tiedon kopioimiseen niiden välillä. Työsessiossa kartoitamme, missä manuaalinen työ hidastaa yritystä {company}. Videon alta löydät linkit niiden verkkosivuille, joten voit itse tutustua niihin.',
+          'Nämä ovat työkaluja, joita yhdistämme usein toimialallasi. Aika kuluu yleensä tiedon kopioimiseen niiden välillä. Työsessiossa kartoitamme, missä manuaalinen työ hidastaa tiimiäsi. Videon alta löydät linkit niiden verkkosivuille, joten voit itse tutustua niihin.',
         ],
         featured: [
-          'Nämä ostajat ovat tehneet kauppoja Mergeron kanssa, esimerkiksi {buyers}. Jokaisen nimen alla näet kaupan, jonka ostaja teki kanssamme. Tapaamisessa katsomme yhdessä, mitkä ostajat voisivat sopia yritykselle {company}. Videon alta löydät linkit niiden verkkosivuille, joten voit itse tutustua niihin.',
-          'Ruudulla näet joitakin ostajia, jotka ovat tehneet kauppoja Mergeron kanssa. Jokaisen nimen alla näet kaupan, jonka ostaja teki kanssamme. Tapaamisessa katsomme yhdessä, mitkä ostajat voisivat sopia sinun yrityksellesi. Videon alta löydät linkit niiden verkkosivuille, joten voit itse tutustua niihin.',
+          'Nämä ovat työkaluja, joita yhdistämme usein, esimerkiksi {buyers}. Aika kuluu yleensä tiedon kopioimiseen niiden välillä. Työsessiossa kartoitamme, missä manuaalinen työ hidastaa yritystä {company}. Videon alta löydät linkit niiden verkkosivuille.',
+          'Ruudulla näet joitakin työkaluja, joita yhdistämme usein. Aika kuluu yleensä tiedon kopioimiseen niiden välillä. Työsessiossa kartoitamme, missä manuaalinen työ hidastaa tiimiäsi. Videon alta löydät linkit niiden verkkosivuille.',
         ],
         empty: [
-          'Jokainen alustamme ostaja on kertonut meille, millaisia yrityksiä se haluaa ostaa. Tapaamisessa käymme yhdessä läpi ostajat, joille {company} sopisi parhaiten, ja kerromme, mitä kukin niistä etsii. Näin näet, ketkä voisivat olla kiinnostuneita, ennen kuin teet päätöksiä.',
-          'Jokainen alustamme ostaja on kertonut meille, millaisia yrityksiä se haluaa ostaa. Tapaamisessa käymme yhdessä läpi ostajat, jotka sopivat parhaiten yrityksellesi, ja kerromme, mitä kukin niistä etsii. Näin näet, ketkä voisivat olla kiinnostuneita, ennen kuin teet päätöksiä.',
+          'Jokainen yritys menettää aikaa eri paikoissa. Työsessiossa kartoitamme, missä manuaalinen työ hidastaa yritystä {company} ja mitkä työkalut liittyvät asiaan. Näin näet, mihin aika kuluu, ennen kuin päätät mitään.',
+          'Jokainen yritys menettää aikaa eri paikoissa. Työsessiossa kartoitamme, missä manuaalinen työ hidastaa tiimiäsi ja mitkä työkalut liittyvät asiaan. Näin näet, mihin aika kuluu, ennen kuin päätät mitään.',
         ],
       },
       6: {
         sector: [
-          'Tässä on esimerkki siitä, mikä toimialallasi on mahdollista. {deal} Tällaiset kaupat osoittavat, että kaltaisillesi yrityksille on todellista kysyntää. Jokainen kauppa on erilainen, ja tapaamisessa voimme keskustella siitä, miltä kauppa voisi näyttää sinun kohdallasi.',
-          'Tässä näet, mikä toimialallasi on mahdollista. Viime vuosina samankaltaisten yritysten omistajat ovat myyneet yrityksensä alustamme ostajille, ja kysyntä jatkuu edelleen. Jokainen kauppa on erilainen, ja tapaamisessa voimme keskustella siitä, miltä kauppa voisi näyttää sinun kohdallasi.',
+          'Tässä on ensimmäinen todiste toimialallasi. {deal} Jokainen yritys on erilainen, ja työsessiossa valitsemme pienimmän ratkaisun, joka osoittaa hyödyn yritykselle {company}.',
+          'Tässä on ensimmäinen todiste toimialallasi. Hyvä ensimmäinen todiste on pieni, käytännöllinen ja nopea tarkistaa oman tiimin kanssa. Jokainen yritys on erilainen, ja työsessiossa valitsemme pienimmän ratkaisun, joka osoittaa hyödyn yritykselle {company}.',
+          'Tässä on ensimmäinen todiste toimialallasi. Hyvä ensimmäinen todiste on pieni, käytännöllinen ja nopea tarkistaa oman tiimin kanssa. Jokainen yritys on erilainen, ja työsessiossa valitsemme pienimmän ratkaisun, joka osoittaa hyödyn sinun yrityksellesi.',
         ],
         recent: [
-          'Tässä on esimerkki siitä, mikä kaltaisillesi omistajille on mahdollista. {deal} Tällaiset kaupat osoittavat, että alustamme ostajat etsivät vakiintuneita yrityksiä. Jokainen kauppa on erilainen, ja tapaamisessa voimme keskustella siitä, miltä kauppa voisi näyttää sinun kohdallasi.',
-          'Tässä näet, mikä kaltaisillesi omistajille on mahdollista. Viime vuosina vakiintuneiden yritysten omistajat ovat myyneet yrityksensä alustamme ostajille, ja kysyntä jatkuu edelleen. Jokainen kauppa on erilainen, ja tapaamisessa voimme keskustella siitä, miltä kauppa voisi näyttää sinun kohdallasi.',
+          'Tässä on ensimmäinen todiste kaltaisillesi tiimeille. {deal} Jokainen yritys on erilainen, ja työsessiossa valitsemme pienimmän ratkaisun, joka osoittaa hyödyn yritykselle {company}.',
+          'Tässä on ensimmäinen todiste kaltaisillesi tiimeille. Hyvä ensimmäinen todiste on pieni, käytännöllinen ja nopea tarkistaa oman tiimin kanssa. Jokainen yritys on erilainen, ja työsessiossa valitsemme pienimmän ratkaisun, joka osoittaa hyödyn yritykselle {company}.',
+          'Tässä on ensimmäinen todiste kaltaisillesi tiimeille. Hyvä ensimmäinen todiste on pieni, käytännöllinen ja nopea tarkistaa oman tiimin kanssa. Jokainen yritys on erilainen, ja työsessiossa valitsemme pienimmän ratkaisun, joka osoittaa hyödyn sinun yrityksellesi.',
         ],
       },
       7: [
-        'Tietosi pysyvät luottamuksellisina, {first}. Ostajat näkevät yrityksesi vain nimettömänä profiilina, ja kerromme yrityksesi nimen vasta, kun annat siihen luvan. Lomakkeen vastauksesi menevät vain Mergerolle, ja tämän sivun tallenne poistetaan, kun linkki vanhenee. Sinä päätät, mitä seuraavaksi tapahtuu.',
+        'Näin Velho toimii, {first}. Ensin löydämme manuaalisen työn, joka hidastaa tiimiäsi. Sitten rakennamme ratkaisun tekoälyllä ja automaatiolla. Lopuksi varmistamme, että ihmiset oikeasti käyttävät sitä, jotta säästynyt aika pysyy säästyneenä ja on tiimisi käytössä myös jatkossa.',
       ],
       8: [
-        'Kiitos, että katsoit videon, {first}. Jos haluat kuulla lisää, varaa lyhyt tapaaminen kanssani tämän videon alta ja valitse sinulle sopiva aika. Teamsissa keskustelemme tavoitteistasi, kiinnostuneista ostajista ja yrityksesi mahdollisesta arvosta. Tapaaminen ei sido sinua mihinkään. Odotan keskusteluamme mielenkiinnolla.',
+        'Kiitos, että katsoit videon, {first}. Jos haluat kuulla lisää, varaa kanssani kahdenkymmenen minuutin työsessio tämän videon alta. Teamsissa valitsemme yrityksestä {company} yhden manuaalisen työnkulun ja hahmottelemme sille käytännöllisen ratkaisun. Tapaaminen ei sido sinua mihinkään. Odotan keskusteluamme mielenkiinnolla.',
+        'Kiitos, että katsoit videon, {first}. Jos haluat kuulla lisää, varaa kanssani kahdenkymmenen minuutin työsessio tämän videon alta. Teamsissa valitsemme yrityksestäsi yhden manuaalisen työnkulun ja hahmottelemme sille käytännöllisen ratkaisun. Tapaaminen ei sido sinua mihinkään. Odotan keskusteluamme mielenkiinnolla.',
       ],
     },
     lines: [
@@ -250,9 +253,9 @@ const TEXTS: Record<Lang, WriterTexts> = {
     outreach: {
       subject: 'Lyhyt video yrityksestä {company}',
       email:
-        'Hei {first},\n\nolen {analyst}, analyytikko Mergerolta. Autamme vakiintuneiden yritysten omistajia löytämään oikean ostajan. Tein yrityksestä {company} lyhyen henkilökohtaisen videon. Siinä näkyy ostajia Mergeron kaupoista ja se, mitä muut omistajat ovat tehneet.\n\nVoit katsoa videon tästä: {link}\n\nVideon alla voit varata tapaamisen kanssani. Linkki on henkilökohtainen ja toimii {expires} asti.\n\nYstävällisin terveisin\n{analyst}\nMergero',
+        'Hei {first},\n\nolen {analyst}, analyytikko Velholta. Olemme strateginen tekoälykasvukumppani: löydämme manuaalisen työn, joka hidastaa yritystä, rakennamme ratkaisun tekoälyllä ja automaatiolla ja varmistamme, että ihmiset oikeasti käyttävät sitä. Tein yrityksestä {company} lyhyen henkilökohtaisen videon.\n\nVoit katsoa videon tästä: {link}\n\nVideon alla voit varata kanssani kahdenkymmenen minuutin työsession. Linkki on henkilökohtainen ja toimii {expires} asti.\n\nYstävällisin terveisin\n{analyst}\nVelho',
       short:
-        'Hei {first}, täällä {analyst} Mergerolta. Tein sinulle lyhyen henkilökohtaisen videon yrityksestä {company}: {link} Videon katsominen vie vain muutaman minuutin. Linkki toimii {expires} asti.',
+        'Hei {first}, täällä {analyst} Velholta. Tein sinulle lyhyen henkilökohtaisen videon yrityksestä {company}: {link} Videon katsominen vie vain muutaman minuutin. Linkki toimii {expires} asti.',
     },
     brief: {
       booked: '{owner} ({company}) varasi tapaamisen.',
@@ -272,86 +275,86 @@ const TEXTS: Record<Lang, WriterTexts> = {
         revenue: 'Mikä oli yrityksesi liikevaihto viime tilikaudella?',
         profit: 'Mikä oli yrityksesi liikevoitto viime tilikaudella?',
         custom: 'Voimmeko käydä läpi lomakkeen kysymykset, joihin et vielä vastannut?',
-        timing: 'Milloin myynti voisi olla sinulle realistinen vaihtoehto?',
+        timing: 'Milloin ensimmäinen automaatio olisi sinulle hyödyllinen?',
         staff: 'Kuinka monta henkilöä yrityksessäsi työskentelee tällä hetkellä?',
-        slide2: 'Mitä tiedät jo Mergerosta ja tavastamme toimia?',
+        slide2: 'Mitä tiedät jo Velhosta ja tavastamme toimia?',
         slide3: 'Miten kuvailisit yritystäsi muutamalla sanalla?',
-        slide4: 'Miten näet yrityksesi taloudellisen kehityksen lähivuosina?',
-        slide5: 'Millainen ostaja sopisi yrityksellesi parhaiten?',
-        slide6: 'Tiedätkö muista yrityskaupoista toimialallasi viime vuosilta?',
-        slide7: 'Kuinka tärkeää luottamuksellisuus on sinulle mahdollisessa myynnissä?',
+        slide4: 'Missä manuaalinen työ kasvaa nopeimmin yrityksesi kasvaessa?',
+        slide5: 'Mitkä työkalut ja työvaiheiden siirrot vievät tiimiltäsi eniten aikaa?',
+        slide6: 'Mikä pieni työnkulku olisi paras ensimmäinen todiste?',
+        slide7: 'Mikä varmistaisi, että tiimisi oikeasti käyttää uutta työkalua?',
         goals: 'Mitkä ovat tavoitteesi yrityksen suhteen lähivuosina?',
-        decision: 'Kuka muu osallistuisi päätökseen myynnistä?',
-        successor: 'Onko perheessä tai johdossa jatkajaa yritykselle?',
+        decision: 'Kuka muu osallistuisi tätä koskevaan päätökseen?',
+        successor: 'Kuka tiimissäsi vastaisi muutoksesta?',
       },
     },
   },
   sv: {
     scripts: {
       2: [
-        'Tack för att du tar dig tid, {first}. Mergero hjälper ägare till etablerade företag att hitta rätt köpare. På vår plattform MGX finns {buyerCount} köpare som letar efter företag att förvärva. På skärmen ser du några köpare från våra affärer och några affärer som vi har genomfört nyligen.',
+        'Tack för att du tar dig tid, {first}. Velho är en strategisk AI-partner för tillväxt. Vi hittar det manuella arbete som bromsar ett företag, bygger lösningen med AI och automation och ser till att människor faktiskt använder den.',
       ],
       3: {
         site: [
-          'Vi har tittat noga på webbplatsen för {company}, {first}. Så här förstår vi din verksamhet: {line} Företag som ditt är precis vad våra köpare frågar efter. Om vi har missat något kan du rätta oss på mötet.',
-          'Vi har tittat noga på webbplatsen för {company}, {first}. På skärmen ser du i tre korta rader hur vi förstår din verksamhet. Företag som ditt är precis vad våra köpare frågar efter. Om vi har missat något kan du rätta oss på mötet.',
-          'Vi har tittat noga på din webbplats. På skärmen ser du i tre korta rader hur vi förstår din verksamhet. Företag som ditt är precis vad våra köpare frågar efter. Om vi har missat något kan du rätta oss på mötet.',
+          'Vi har tittat noga på webbplatsen för {company}, {first}. Så här förstår vi din verksamhet: {line} Växande företag förlorar ofta tid på manuella överlämningar, och det är där vi börjar leta.',
+          'Vi har tittat noga på webbplatsen för {company}, {first}. På skärmen ser du i tre korta rader hur vi förstår din verksamhet. Växande företag förlorar ofta tid på manuella överlämningar, och det är där vi börjar leta.',
+          'Vi har tittat noga på din webbplats. På skärmen ser du i tre korta rader hur vi förstår din verksamhet. Växande företag förlorar ofta tid på manuella överlämningar, och det är där vi börjar leta.',
         ],
         noSite: [
-          'Så här förstår vi verksamheten i {company}, {first}: {line} Företag som ditt är precis vad våra köpare frågar efter. Om vi har missat något kan du rätta oss på mötet, så att bilden av ditt företag blir rätt.',
-          'På skärmen ser du i tre korta rader hur vi förstår verksamheten i {company}, {first}. Företag som ditt är precis vad våra köpare frågar efter. Om vi har missat något kan du rätta oss på mötet, så att bilden av ditt företag blir rätt.',
-          'På skärmen ser du i tre korta rader hur vi förstår din verksamhet. Företag som ditt är precis vad våra köpare frågar efter. Om vi har missat något kan du rätta oss på mötet, så att bilden av ditt företag blir rätt.',
+          'Så här förstår vi verksamheten i {company}, {first}: {line} Växande företag förlorar ofta tid på manuella överlämningar, och det är där vi börjar leta.',
+          'På skärmen ser du i tre korta rader hur vi förstår verksamheten i {company}, {first}. Växande företag förlorar ofta tid på manuella överlämningar, och det är där vi börjar leta.',
+          'På skärmen ser du i tre korta rader hur vi förstår din verksamhet. Växande företag förlorar ofta tid på manuella överlämningar, och det är där vi börjar leta.',
         ],
       },
       4: {
         figures: [
-          'Enligt Asiakastieto hade {company} en omsättning på {revenue} euro och ett rörelseresultat på {profit} euro under räkenskapsåret {year}. De här offentliga siffrorna är en bra utgångspunkt. På mötet kan vi titta på vad de betyder för värdet på ditt företag.',
-          'Enligt Asiakastieto hade ditt företag en omsättning på {revenue} euro och ett rörelseresultat på {profit} euro under räkenskapsåret {year}. De här offentliga siffrorna är en bra utgångspunkt. På mötet kan vi titta på vad de betyder för värdet på ditt företag.',
+          'Enligt Asiakastieto hade {company} en omsättning på {revenue} euro och ett rörelseresultat på {profit} euro under räkenskapsåret {year}. Tillväxt innebär oftast mer manuellt arbete: fler överlämningar, fler kontroller och mer kopiering mellan verktyg. Det är där vi tittar först.',
+          'Enligt Asiakastieto hade ditt företag en omsättning på {revenue} euro och ett rörelseresultat på {profit} euro under räkenskapsåret {year}. Tillväxt innebär oftast mer manuellt arbete: fler överlämningar, fler kontroller och mer kopiering mellan verktyg. Det är där vi tittar först.',
         ],
         loss: [
-          'Enligt Asiakastieto hade {company} en omsättning på {revenue} euro och en rörelseförlust på {profit} euro under räkenskapsåret {year}. De här offentliga siffrorna är en bra utgångspunkt. På mötet kan vi titta på vad de betyder för värdet på ditt företag.',
-          'Enligt Asiakastieto hade ditt företag en omsättning på {revenue} euro och en rörelseförlust på {profit} euro under räkenskapsåret {year}. De här offentliga siffrorna är en bra utgångspunkt. På mötet kan vi titta på vad de betyder för värdet på ditt företag.',
+          'Enligt Asiakastieto hade {company} en omsättning på {revenue} euro och en rörelseförlust på {profit} euro under räkenskapsåret {year}. Tillväxt innebär oftast mer manuellt arbete: fler överlämningar, fler kontroller och mer kopiering mellan verktyg. Det är där vi tittar först.',
+          'Enligt Asiakastieto hade ditt företag en omsättning på {revenue} euro och en rörelseförlust på {profit} euro under räkenskapsåret {year}. Tillväxt innebär oftast mer manuellt arbete: fler överlämningar, fler kontroller och mer kopiering mellan verktyg. Det är där vi tittar först.',
         ],
         calculator: [
-          'Vi har inga offentliga siffror för ditt företag. Om du anger ett intervall för omsättning och resultat i formuläret på den här sidan visar kalkylatorn ett värdeintervall för ditt företag. Den bygger på verkliga affärer i din bransch. Ett ungefärligt intervall räcker, och dina svar går bara till Mergero.',
+          'Vi har inga offentliga siffror för ditt företag. Berätta hur stort ni är i formuläret på den här sidan. Ett ungefärligt intervall räcker. Då ser vi var manuellt arbete växer snabbast, och dina svar går bara till Velho.',
         ],
         form: [
-          'Vi har inga offentliga siffror för ditt företag. Om du vill kan du ange omsättning och resultat i formuläret på den här sidan. Ett ungefärligt intervall räcker. Med siffrorna kan vi förbereda ett bättre möte för dig, och dina svar går bara till Mergero.',
+          'Vi har inga offentliga siffror för ditt företag. Berätta hur stort ni är i formuläret på den här sidan. Ett ungefärligt intervall räcker. Då kan vi förbereda en bättre arbetssession för dig, och dina svar går bara till Velho.',
         ],
       },
       5: {
         sector: [
-          'De här köparna har gjort affärer i din bransch med Mergero. På listan finns till exempel {buyers}. Under varje namn ser du affären som köparen gjorde med oss. På mötet tittar vi på vilka köpare som kan passa {company}. Under videon hittar du länkar till deras webbplatser.',
-          'De här köparna har gjort affärer i din bransch med Mergero. Under varje namn ser du affären som köparen gjorde med oss. På mötet tittar vi på vilka köpare som kan passa {company}. Under videon hittar du länkar till deras webbplatser, så att du själv kan se vilka de är.',
-          'De här köparna har gjort affärer i din bransch med Mergero. Under varje namn ser du affären som köparen gjorde med oss. På mötet tittar vi på vilka köpare som kan passa ditt företag. Under videon hittar du länkar till deras webbplatser, så att du själv kan se vilka de är.',
+          'Det här är verktyg som vi ofta kopplar ihop i din bransch, till exempel {buyers}. Tiden går oftast åt till att kopiera data mellan dem. I arbetssessionen kartlägger vi var manuellt arbete bromsar {company}. Under videon hittar du länkar till deras webbplatser.',
+          'Det här är verktyg som vi ofta kopplar ihop i din bransch. Tiden går oftast åt till att kopiera data mellan dem. I arbetssessionen kartlägger vi var manuellt arbete bromsar {company}. Under videon hittar du länkar till deras webbplatser, så att du själv kan se vilka de är.',
+          'Det här är verktyg som vi ofta kopplar ihop i din bransch. Tiden går oftast åt till att kopiera data mellan dem. I arbetssessionen kartlägger vi var manuellt arbete bromsar ditt team. Under videon hittar du länkar till deras webbplatser, så att du själv kan se vilka de är.',
         ],
         featured: [
-          'De här köparna har gjort affärer med Mergero, till exempel {buyers}. Under varje namn ser du affären som köparen gjorde med oss. På mötet tittar vi på vilka köpare som kan passa {company}. Under videon hittar du länkar till deras webbplatser.',
-          'På skärmen ser du några köpare som har gjort affärer med Mergero. Under varje namn ser du affären som köparen gjorde med oss. På mötet tittar vi på vilka köpare som kan passa ditt företag. Under videon hittar du länkar till deras webbplatser.',
+          'Det här är verktyg som vi ofta kopplar ihop, till exempel {buyers}. Tiden går oftast åt till att kopiera data mellan dem. I arbetssessionen kartlägger vi var manuellt arbete bromsar {company}. Under videon hittar du länkar till deras webbplatser.',
+          'På skärmen ser du några verktyg som vi ofta kopplar ihop. Tiden går oftast åt till att kopiera data mellan dem. I arbetssessionen kartlägger vi var manuellt arbete bromsar ditt team. Under videon hittar du länkar till deras webbplatser.',
         ],
         empty: [
-          'Varje köpare på vår plattform har berättat för oss vilka företag den vill köpa. På mötet går vi igenom de köpare som passar {company} bäst och vad var och en av dem letar efter. Så ser du vem som kan vara intresserad, innan du bestämmer något.',
-          'Varje köpare på vår plattform har berättat för oss vilka företag den vill köpa. På mötet går vi igenom de köpare som passar ditt företag bäst och vad var och en av dem letar efter. Så ser du vem som kan vara intresserad, innan du bestämmer något.',
+          'Varje företag förlorar tid på olika ställen. I arbetssessionen kartlägger vi var manuellt arbete bromsar {company} och vilka verktyg som är inblandade. Så ser du vart tiden går, innan du bestämmer något.',
+          'Varje företag förlorar tid på olika ställen. I arbetssessionen kartlägger vi var manuellt arbete bromsar ditt team och vilka verktyg som är inblandade. Så ser du vart tiden går, innan du bestämmer något.',
         ],
       },
       6: {
         sector: [
-          'Här är vad som är möjligt i din bransch. {deal} Affärer som denna visar att det finns en verklig efterfrågan på företag som {company}. Varje försäljning är unik, och på mötet kan vi prata om hur en affär skulle kunna se ut för dig.',
-          'Här är vad som är möjligt i din bransch. Under de senaste åren har ägare till liknande företag sålt till köpare på vår plattform. Varje försäljning är unik, och på mötet kan vi prata om hur en affär skulle kunna se ut för {company}.',
-          'Här är vad som är möjligt i din bransch. Under de senaste åren har ägare till liknande företag sålt till köpare på vår plattform. Varje försäljning är unik, och på mötet kan vi prata om hur en affär skulle kunna se ut för dig och ditt företag.',
+          'Här är ett första bevis i din bransch. {deal} Varje företag är olika, och i arbetssessionen väljer vi den minsta lösningen som visar värdet för {company}.',
+          'Här är ett första bevis i din bransch. Ett bra första bevis är litet, praktiskt och snabbt att kontrollera tillsammans med ditt eget team. Varje företag är olika, och i arbetssessionen väljer vi den minsta lösningen som visar värdet för {company}.',
+          'Här är ett första bevis i din bransch. Ett bra första bevis är litet, praktiskt och snabbt att kontrollera tillsammans med ditt eget team. Varje företag är olika, och i arbetssessionen väljer vi den minsta lösningen som visar värdet för dig och ditt företag.',
         ],
         recent: [
-          'Här är vad som är möjligt för ägare som du. {deal} Affärer som denna visar att köparna på vår plattform letar efter etablerade företag. Varje försäljning är unik, och på mötet kan vi prata om hur en affär skulle kunna se ut för {company}.',
-          'Här är vad som är möjligt för ägare som du. Under de senaste åren har ägare till etablerade företag sålt till köpare på vår plattform. Varje försäljning är unik, och på mötet kan vi prata om hur en affär skulle kunna se ut för {company}.',
-          'Här är vad som är möjligt för ägare som du. Under de senaste åren har ägare till etablerade företag sålt till köpare på vår plattform. Varje försäljning är unik, och på mötet kan vi prata om hur en affär skulle kunna se ut för dig och ditt företag.',
+          'Här är ett första bevis för team som ditt. {deal} Varje företag är olika, och i arbetssessionen väljer vi den minsta lösningen som visar värdet för {company}.',
+          'Här är ett första bevis för team som ditt. Ett bra första bevis är litet, praktiskt och snabbt att kontrollera tillsammans med ditt eget team. Varje företag är olika, och i arbetssessionen väljer vi den minsta lösningen som visar värdet för {company}.',
+          'Här är ett första bevis för team som ditt. Ett bra första bevis är litet, praktiskt och snabbt att kontrollera tillsammans med ditt eget team. Varje företag är olika, och i arbetssessionen väljer vi den minsta lösningen som visar värdet för dig och ditt företag.',
         ],
       },
       7: [
-        'Dina uppgifter hålls konfidentiella, {first}. Köpare ser ditt företag bara som en anonym profil, och vi visar företagets namn först när du säger ja. Dina svar i formuläret går bara till Mergero, och vi raderar inspelningen av den här sidan när länken går ut.',
+        'Så här fungerar Velho, {first}. Först hittar vi det manuella arbete som bromsar ditt team. Sedan bygger vi lösningen med AI och automation. Till sist ser vi till att människor faktiskt använder den, så att den sparade tiden blir kvar.',
       ],
       8: [
-        'Tack för att du tittade, {first}. Om du vill höra mer kan du boka ett kort möte med mig under videon. I Teams pratar vi om dina mål, de intresserade köparna och ett möjligt värdeintervall för {company}. Mötet förpliktar dig inte till något. Jag ser fram emot vårt samtal.',
-        'Tack för att du tittade, {first}. Om du vill höra mer kan du boka ett kort möte med mig under videon. I Teams pratar vi om dina mål, de intresserade köparna och ett möjligt värdeintervall för ditt företag. Mötet förpliktar dig inte till något. Jag ser fram emot vårt samtal.',
+        'Tack för att du tittade, {first}. Om du vill höra mer kan du boka en arbetssession på tjugo minuter med mig under videon. I Teams väljer vi ett manuellt arbetsflöde i {company} och skissar en praktisk lösning. Det förpliktar dig inte till något. Jag ser fram emot vårt samtal.',
+        'Tack för att du tittade, {first}. Om du vill höra mer kan du boka en arbetssession på tjugo minuter med mig under videon. I Teams väljer vi ett manuellt arbetsflöde i ditt företag och skissar en praktisk lösning. Det förpliktar dig inte till något. Jag ser fram emot vårt samtal.',
       ],
     },
     lines: [
@@ -362,9 +365,9 @@ const TEXTS: Record<Lang, WriterTexts> = {
     outreach: {
       subject: 'En kort video om {company}',
       email:
-        'Hej {first},\n\njag heter {analyst} och är analytiker på Mergero. Vi hjälper ägare av etablerade företag att hitta rätt köpare. Jag har gjort en kort personlig video om {company}. Den visar köpare från Mergeros affärer och vad andra ägare har gjort.\n\nDu kan se videon här: {link}\n\nUnder videon kan du boka ett möte med mig. Länken är personlig och fungerar till och med {expires}.\n\nMed vänliga hälsningar\n{analyst}\nMergero',
+        'Hej {first},\n\njag heter {analyst} och är analytiker på Velho. Vi är en strategisk AI-partner för tillväxt: vi hittar det manuella arbete som bromsar ett företag, bygger lösningen med AI och automation och ser till att människor faktiskt använder den. Jag har gjort en kort personlig video om {company}.\n\nDu kan se videon här: {link}\n\nUnder videon kan du boka en arbetssession på tjugo minuter med mig. Länken är personlig och fungerar till och med {expires}.\n\nMed vänliga hälsningar\n{analyst}\nVelho',
       short:
-        'Hej {first}, det är {analyst} från Mergero. Jag har gjort en kort personlig video till dig om {company}: {link} Det tar bara några minuter att se den. Länken fungerar till och med {expires}.',
+        'Hej {first}, det är {analyst} från Velho. Jag har gjort en kort personlig video till dig om {company}: {link} Det tar bara några minuter att se den. Länken fungerar till och med {expires}.',
     },
     brief: {
       booked: '{owner} ({company}) har bokat ett möte.',
@@ -384,86 +387,86 @@ const TEXTS: Record<Lang, WriterTexts> = {
         revenue: 'Vad var omsättningen i ditt företag under det senaste räkenskapsåret?',
         profit: 'Vad var rörelseresultatet i ditt företag under det senaste räkenskapsåret?',
         custom: 'Kan vi gå igenom frågorna i formuläret som du inte har besvarat ännu?',
-        timing: 'När skulle en försäljning kunna vara ett realistiskt alternativ för dig?',
+        timing: 'När skulle en första automatisering vara användbar för dig?',
         staff: 'Hur många personer arbetar i ditt företag i dag?',
-        slide2: 'Vad vet du redan om Mergero och hur vi arbetar?',
+        slide2: 'Vad vet du redan om Velho och hur vi arbetar?',
         slide3: 'Hur skulle du beskriva ditt företag med några få ord?',
-        slide4: 'Hur ser du på företagets ekonomiska utveckling under de närmaste åren?',
-        slide5: 'Vilken typ av köpare skulle passa ditt företag bäst?',
-        slide6: 'Känner du till andra företagsförsäljningar i din bransch under de senaste åren?',
-        slide7: 'Hur viktig är konfidentialitet för dig vid en eventuell försäljning?',
+        slide4: 'Var växer manuellt arbete snabbast när ditt företag växer?',
+        slide5: 'Vilka verktyg och överlämningar tar mest tid i ditt team?',
+        slide6: 'Vilket litet arbetsflöde skulle vara det bästa första beviset?',
+        slide7: 'Vad skulle se till att ditt team faktiskt använder ett nytt verktyg?',
         goals: 'Vilka mål har du för företaget under de närmaste åren?',
-        decision: 'Vem mer skulle delta i ett beslut om en försäljning?',
-        successor: 'Finns det en efterträdare i familjen eller i ledningen?',
+        decision: 'Vem mer skulle delta i ett beslut om detta?',
+        successor: 'Vem i ditt team skulle ansvara för förändringen?',
       },
     },
   },
   nb: {
     scripts: {
       2: [
-        'Takk for at du tar deg tid, {first}. Mergero hjelper eiere av etablerte selskaper med å finne riktig kjøper. På plattformen vår MGX er det {buyerCount} kjøpere som leter etter selskaper å kjøpe. På skjermen ser du noen kjøpere fra transaksjonene våre og noen transaksjoner vi har gjennomført nylig.',
+        'Takk for at du tar deg tid, {first}. Velho er en strategisk partner for vekst. Vi finner det manuelle arbeidet som bremser selskapet ditt, bygger løsningen med AI og automatisering, og vi sørger for at folk faktisk tar den i bruk.',
       ],
       3: {
         site: [
-          'Vi har sett nøye på nettstedet til {company}, {first}. Slik forstår vi virksomheten din: {line} Selskaper som ditt er akkurat det kjøperne våre spør etter. Hvis vi har misforstått noe, kan du rette oss i møtet.',
-          'Vi har sett nøye på nettstedet til {company}, {first}. På skjermen ser du i tre korte linjer hvordan vi forstår virksomheten din. Selskaper som ditt er akkurat det kjøperne våre spør etter. Hvis vi har misforstått noe, kan du rette oss i møtet.',
-          'Vi har sett nøye på nettstedet ditt. På skjermen ser du i tre korte linjer hvordan vi forstår virksomheten din. Selskaper som ditt er akkurat det kjøperne våre spør etter. Hvis vi har misforstått noe, kan du rette oss i møtet.',
+          'Vi har sett nøye på nettstedet til {company}, {first}. Slik forstår vi virksomheten din: {line} Voksende selskaper taper ofte tid på manuelle overleveringer, og det er der vi begynner å lete.',
+          'Vi har sett nøye på nettstedet til {company}, {first}. På skjermen ser du i tre korte linjer hvordan vi forstår virksomheten din. Voksende selskaper taper ofte tid på manuelle overleveringer, og det er der vi begynner å lete.',
+          'Vi har sett nøye på nettstedet ditt. På skjermen ser du i tre korte linjer hvordan vi forstår virksomheten din. Voksende selskaper taper ofte tid på manuelle overleveringer, og det er der vi begynner å lete.',
         ],
         noSite: [
-          'Slik forstår vi virksomheten til {company}, {first}: {line} Selskaper som ditt er akkurat det kjøperne våre spør etter. Hvis vi har misforstått noe, kan du rette oss i møtet, slik at bildet av selskapet ditt blir riktig.',
-          'På skjermen ser du i tre korte linjer hvordan vi forstår virksomheten til {company}, {first}. Selskaper som ditt er akkurat det kjøperne våre spør etter. Hvis vi har misforstått noe, kan du rette oss i møtet, slik at bildet av selskapet ditt blir riktig.',
-          'På skjermen ser du i tre korte linjer hvordan vi forstår virksomheten din. Selskaper som ditt er akkurat det kjøperne våre spør etter. Hvis vi har misforstått noe, kan du rette oss i møtet, slik at bildet av selskapet ditt blir riktig.',
+          'Slik forstår vi virksomheten til {company}, {first}: {line} Voksende selskaper taper ofte tid på manuelle overleveringer, og det er der vi begynner å lete.',
+          'På skjermen ser du i tre korte linjer hvordan vi forstår virksomheten til {company}, {first}. Voksende selskaper taper ofte tid på manuelle overleveringer, og det er der vi begynner å lete.',
+          'På skjermen ser du i tre korte linjer hvordan vi forstår virksomheten din. Voksende selskaper taper ofte tid på manuelle overleveringer, og det er der vi begynner å lete.',
         ],
       },
       4: {
         figures: [
-          'Ifølge Asiakastieto hadde {company} en omsetning på {revenue} euro og et driftsresultat på {profit} euro i regnskapsåret {year}. Disse offentlige tallene er et godt utgangspunkt. I møtet kan vi se på hva de betyr for verdien av selskapet ditt.',
-          'Ifølge Asiakastieto hadde selskapet ditt en omsetning på {revenue} euro og et driftsresultat på {profit} euro i regnskapsåret {year}. Disse offentlige tallene er et godt utgangspunkt. I møtet kan vi se på hva de betyr for verdien av selskapet ditt.',
+          'Ifølge Asiakastieto hadde {company} en omsetning på {revenue} euro og et driftsresultat på {profit} euro i regnskapsåret {year}. Vekst betyr som regel mer manuelt arbeid: flere overleveringer, flere kontroller og mer kopiering mellom verktøy. Det er der vi ser først.',
+          'Ifølge Asiakastieto hadde selskapet ditt en omsetning på {revenue} euro og et driftsresultat på {profit} euro i regnskapsåret {year}. Vekst betyr som regel mer manuelt arbeid: flere overleveringer, flere kontroller og mer kopiering mellom verktøy. Det er der vi ser først.',
         ],
         loss: [
-          'Ifølge Asiakastieto hadde {company} en omsetning på {revenue} euro og et driftsunderskudd på {profit} euro i regnskapsåret {year}. Disse offentlige tallene er et godt utgangspunkt. I møtet kan vi se på hva de betyr for verdien av selskapet ditt.',
-          'Ifølge Asiakastieto hadde selskapet ditt en omsetning på {revenue} euro og et driftsunderskudd på {profit} euro i regnskapsåret {year}. Disse offentlige tallene er et godt utgangspunkt. I møtet kan vi se på hva de betyr for verdien av selskapet ditt.',
+          'Ifølge Asiakastieto hadde {company} en omsetning på {revenue} euro og et driftsunderskudd på {profit} euro i regnskapsåret {year}. Vekst betyr som regel mer manuelt arbeid: flere overleveringer, flere kontroller og mer kopiering mellom verktøy. Det er der vi ser først.',
+          'Ifølge Asiakastieto hadde selskapet ditt en omsetning på {revenue} euro og et driftsunderskudd på {profit} euro i regnskapsåret {year}. Vekst betyr som regel mer manuelt arbeid: flere overleveringer, flere kontroller og mer kopiering mellom verktøy. Det er der vi ser først.',
         ],
         calculator: [
-          'Vi har ingen offentlige tall for selskapet ditt. Hvis du oppgir et intervall for omsetning og resultat i skjemaet på denne siden, viser kalkulatoren et verdiintervall for selskapet ditt. Den bygger på faktiske transaksjoner i din bransje. Et omtrentlig intervall holder, og svarene dine går bare til Mergero.',
+          'Vi har ingen offentlige tall for selskapet ditt. Fortell oss hvor stor dere er i skjemaet på denne siden. Et omtrentlig intervall holder. Da ser vi hvor manuelt arbeid vokser raskest, og svarene dine går bare til Velho.',
         ],
         form: [
-          'Vi har ingen offentlige tall for selskapet ditt. Hvis du vil, kan du oppgi omsetning og resultat i skjemaet på denne siden. Et omtrentlig intervall holder. Med tallene kan vi forberede et bedre møte for deg, og svarene dine går bare til Mergero.',
+          'Vi har ingen offentlige tall for selskapet ditt. Fortell oss hvor stor dere er i skjemaet på denne siden. Et omtrentlig intervall holder. Da kan vi forberede en bedre arbeidsøkt for deg, og svarene dine går bare til Velho.',
         ],
       },
       5: {
         sector: [
-          'Disse kjøperne har gjort avtaler i din bransje med Mergero. På listen finner du for eksempel {buyers}. Under hvert navn ser du avtalen som kjøperen gjorde med oss. I møtet ser vi på hvilke kjøpere som kan passe for {company}. Under videoen finner du lenker til nettstedene deres.',
-          'Disse kjøperne har gjort avtaler i din bransje med Mergero. Under hvert navn ser du avtalen som kjøperen gjorde med oss. I møtet ser vi på hvilke kjøpere som kan passe for {company}. Under videoen finner du lenker til nettstedene deres, så du selv kan se hvem de er.',
-          'Disse kjøperne har gjort avtaler i din bransje med Mergero. Under hvert navn ser du avtalen som kjøperen gjorde med oss. I møtet ser vi på hvilke kjøpere som kan passe for selskapet ditt. Under videoen finner du lenker til nettstedene deres, så du selv kan se hvem de er.',
+          'Dette er verktøy vi ofte kobler sammen i din bransje, for eksempel {buyers}. Tiden går som regel til å kopiere data mellom dem. I arbeidsøkten kartlegger vi hvor manuelt arbeid bremser {company}. Under videoen finner du lenker til nettstedene deres.',
+          'Dette er verktøy vi ofte kobler sammen i din bransje. Tiden går som regel til å kopiere data mellom dem. I arbeidsøkten kartlegger vi hvor manuelt arbeid bremser {company}. Under videoen finner du lenker til nettstedene deres, så du selv kan se hva de er.',
+          'Dette er verktøy vi ofte kobler sammen i din bransje. Tiden går som regel til å kopiere data mellom dem. I arbeidsøkten kartlegger vi hvor manuelt arbeid bremser teamet ditt. Under videoen finner du lenker til nettstedene deres, så du selv kan se hva de er.',
         ],
         featured: [
-          'Disse kjøperne har gjort avtaler med Mergero, for eksempel {buyers}. Under hvert navn ser du avtalen som kjøperen gjorde med oss. I møtet ser vi på hvilke kjøpere som kan passe for {company}. Under videoen finner du lenker til nettstedene deres.',
-          'På skjermen ser du noen kjøpere som har gjort avtaler med Mergero. Under hvert navn ser du avtalen som kjøperen gjorde med oss. I møtet ser vi på hvilke kjøpere som kan passe for selskapet ditt. Under videoen finner du lenker til nettstedene deres.',
+          'Dette er verktøy vi ofte kobler sammen, for eksempel {buyers}. Tiden går som regel til å kopiere data mellom dem. I arbeidsøkten kartlegger vi hvor manuelt arbeid bremser {company}. Under videoen finner du lenker til nettstedene deres.',
+          'På skjermen ser du noen verktøy vi ofte kobler sammen. Tiden går som regel til å kopiere data mellom dem. I arbeidsøkten kartlegger vi hvor manuelt arbeid bremser teamet ditt. Under videoen finner du lenker til nettstedene deres.',
         ],
         empty: [
-          'Hver kjøper på plattformen vår har fortalt oss hvilke selskaper den vil kjøpe. I møtet går vi gjennom kjøperne som passer best for {company}, og hva hver av dem ser etter. Slik ser du hvem som kan være interessert, før du bestemmer deg for noe.',
-          'Hver kjøper på plattformen vår har fortalt oss hvilke selskaper den vil kjøpe. I møtet går vi gjennom kjøperne som passer best for selskapet ditt, og hva hver av dem ser etter. Slik ser du hvem som kan være interessert, før du bestemmer deg for noe.',
+          'Hvert selskap taper tid på ulike steder. I arbeidsøkten kartlegger vi hvor manuelt arbeid bremser {company} og hvilke verktøy som er involvert. Slik ser du hvor tiden går, før du bestemmer deg for noe.',
+          'Hvert selskap taper tid på ulike steder. I arbeidsøkten kartlegger vi hvor manuelt arbeid bremser teamet ditt og hvilke verktøy som er involvert. Slik ser du hvor tiden går, før du bestemmer deg for noe.',
         ],
       },
       6: {
         sector: [
-          'Her er hva som er mulig i din bransje. {deal} Slike transaksjoner viser at det er reell etterspørsel etter selskaper som {company}. Hvert salg er forskjellig, og i møtet kan vi snakke om hvordan en transaksjon kan se ut for deg.',
-          'Her er hva som er mulig i din bransje. De siste årene har eiere av lignende selskaper solgt til kjøpere på plattformen vår. Hvert salg er forskjellig, og i møtet kan vi snakke om hvordan en transaksjon kan se ut for {company}.',
-          'Her er hva som er mulig i din bransje. De siste årene har eiere av lignende selskaper solgt til kjøpere på plattformen vår. Hvert salg er forskjellig, og i møtet kan vi snakke om hvordan en transaksjon kan se ut for deg og selskapet ditt.',
+          'Her er et første bevis i din bransje. {deal} Hvert selskap er forskjellig, og i arbeidsøkten velger vi den minste løsningen som viser verdien for {company}.',
+          'Her er et første bevis i din bransje. Et godt første bevis er lite, praktisk og raskt å sjekke sammen med ditt eget team. Hvert selskap er forskjellig, og i arbeidsøkten velger vi den minste løsningen som viser verdien for {company}.',
+          'Her er et første bevis i din bransje. Et godt første bevis er lite, praktisk og raskt å sjekke sammen med ditt eget team. Hvert selskap er forskjellig, og i arbeidsøkten velger vi den minste løsningen som viser verdien for deg og selskapet ditt.',
         ],
         recent: [
-          'Her er hva som er mulig for eiere som deg. {deal} Slike transaksjoner viser at kjøperne på plattformen vår ser etter etablerte selskaper. Hvert salg er forskjellig, og i møtet kan vi snakke om hvordan en transaksjon kan se ut for {company}.',
-          'Her er hva som er mulig for eiere som deg. De siste årene har eiere av etablerte selskaper solgt til kjøpere på plattformen vår. Hvert salg er forskjellig, og i møtet kan vi snakke om hvordan en transaksjon kan se ut for {company}.',
-          'Her er hva som er mulig for eiere som deg. De siste årene har eiere av etablerte selskaper solgt til kjøpere på plattformen vår. Hvert salg er forskjellig, og i møtet kan vi snakke om hvordan en transaksjon kan se ut for deg og selskapet ditt.',
+          'Her er et første bevis for team som ditt. {deal} Hvert selskap er forskjellig, og i arbeidsøkten velger vi den minste løsningen som viser verdien for {company}.',
+          'Her er et første bevis for team som ditt. Et godt første bevis er lite, praktisk og raskt å sjekke sammen med ditt eget team. Hvert selskap er forskjellig, og i arbeidsøkten velger vi den minste løsningen som viser verdien for {company}.',
+          'Her er et første bevis for team som ditt. Et godt første bevis er lite, praktisk og raskt å sjekke sammen med ditt eget team. Hvert selskap er forskjellig, og i arbeidsøkten velger vi den minste løsningen som viser verdien for deg og selskapet ditt.',
         ],
       },
       7: [
-        'Opplysningene dine holdes fortrolige, {first}. Kjøpere ser selskapet ditt bare som en anonym profil, og vi viser navnet på selskapet først når du sier ja. Svarene dine i skjemaet går bare til Mergero, og vi sletter opptaket av denne siden når lenken utløper.',
+        'Slik arbeider Velho, {first}. Først finner vi det manuelle arbeidet som bremser selskapet ditt. Deretter bygger vi løsningen med kunstig intelligens og automatisering. Til slutt sørger vi for at ansatte faktisk tar den i bruk, så tiden dere sparer, ikke går tapt igjen.',
       ],
       8: [
-        'Takk for at du så videoen, {first}. Hvis du vil høre mer, kan du booke et kort møte med meg under videoen. I Teams snakker vi om målene dine, de interesserte kjøperne og et mulig verdiintervall for {company}. Møtet forplikter deg ikke til noe. Jeg ser frem til samtalen vår.',
-        'Takk for at du så videoen, {first}. Hvis du vil høre mer, kan du booke et kort møte med meg under videoen. I Teams snakker vi om målene dine, de interesserte kjøperne og et mulig verdiintervall for selskapet ditt. Møtet forplikter deg ikke til noe. Jeg ser frem til samtalen vår.',
+        'Takk for at du så videoen, {first}. Hvis du vil høre mer, kan du booke en arbeidsøkt på tjue minutter med meg under videoen. I Teams velger vi én manuell arbeidsflyt i {company} og skisserer en praktisk løsning. Det forplikter deg ikke til noe. Jeg ser frem til samtalen vår.',
+        'Takk for at du så videoen, {first}. Hvis du vil høre mer, kan du booke en arbeidsøkt på tjue minutter med meg under videoen. I Teams velger vi én manuell arbeidsflyt i selskapet ditt og skisserer en praktisk løsning. Det forplikter deg ikke til noe. Jeg ser frem til samtalen vår.',
       ],
     },
     lines: [
@@ -474,9 +477,9 @@ const TEXTS: Record<Lang, WriterTexts> = {
     outreach: {
       subject: 'En kort video om {company}',
       email:
-        'Hei {first},\n\njeg heter {analyst} og er analytiker i Mergero. Vi hjelper eiere av etablerte selskaper med å finne riktig kjøper. Jeg har laget en kort personlig video om {company}. Den viser kjøpere fra Mergeros avtaler og hva andre eiere har gjort.\n\nDu kan se videoen her: {link}\n\nUnder videoen kan du booke et møte med meg. Lenken er personlig og virker til og med {expires}.\n\nMed vennlig hilsen\n{analyst}\nMergero',
+        'Hei {first},\n\njeg heter {analyst} og er analytiker i Velho. Vi er en strategisk AI-partner for vekst: vi finner det manuelle arbeidet som bremser et selskap, bygger løsningen med AI og automatisering og sørger for at folk faktisk bruker den. Jeg har laget en kort personlig video om {company}.\n\nDu kan se videoen her: {link}\n\nUnder videoen kan du booke en arbeidsøkt på tjue minutter med meg. Lenken er personlig og virker til og med {expires}.\n\nMed vennlig hilsen\n{analyst}\nVelho',
       short:
-        'Hei {first}, dette er {analyst} fra Mergero. Jeg har laget en kort personlig video til deg om {company}: {link} Det tar bare noen minutter å se den. Lenken virker til og med {expires}.',
+        'Hei {first}, dette er {analyst} fra Velho. Jeg har laget en kort personlig video til deg om {company}: {link} Det tar bare noen minutter å se den. Lenken virker til og med {expires}.',
     },
     brief: {
       booked: '{owner} ({company}) har booket et møte.',
@@ -496,86 +499,86 @@ const TEXTS: Record<Lang, WriterTexts> = {
         revenue: 'Hva var omsetningen i selskapet ditt i det siste regnskapsåret?',
         profit: 'Hva var driftsresultatet i selskapet ditt i det siste regnskapsåret?',
         custom: 'Kan vi gå gjennom spørsmålene i skjemaet som du ikke har svart på ennå?',
-        timing: 'Når kan et salg være et realistisk alternativ for deg?',
+        timing: 'Når ville en første automatisering vært nyttig for deg?',
         staff: 'Hvor mange personer jobber i selskapet ditt i dag?',
-        slide2: 'Hva vet du allerede om Mergero og hvordan vi jobber?',
+        slide2: 'Hva vet du allerede om Velho og hvordan vi jobber?',
         slide3: 'Hvordan vil du beskrive selskapet ditt med noen få ord?',
-        slide4: 'Hvordan ser du på den økonomiske utviklingen i selskapet de neste årene?',
-        slide5: 'Hvilken type kjøper vil passe best for selskapet ditt?',
-        slide6: 'Kjenner du til andre salg av selskaper i din bransje de siste årene?',
-        slide7: 'Hvor viktig er fortrolighet for deg ved et mulig salg?',
+        slide4: 'Hvor vokser manuelt arbeid raskest når selskapet ditt vokser?',
+        slide5: 'Hvilke verktøy og overleveringer tar mest tid i teamet ditt?',
+        slide6: 'Hvilken liten arbeidsflyt ville vært det beste første beviset?',
+        slide7: 'Hva ville sørget for at teamet ditt faktisk bruker et nytt verktøy?',
         goals: 'Hvilke mål har du for selskapet de neste årene?',
-        decision: 'Hvem andre vil være med på en beslutning om salg?',
-        successor: 'Finnes det en etterfølger i familien eller i ledelsen?',
+        decision: 'Hvem andre vil være med på en beslutning om dette?',
+        successor: 'Hvem i teamet ditt ville eid endringen?',
       },
     },
   },
   da: {
     scripts: {
       2: [
-        'Tak, fordi du tager dig tid, {first}. Mergero hjælper ejere af etablerede virksomheder med at finde den rette køber. På vores platform MGX er der {buyerCount} købere, som leder efter virksomheder at købe. På skærmen ser du nogle købere fra vores handler og nogle handler, som vi har gennemført for nylig.',
+        'Tak, fordi du tager dig tid, {first}. Velho er en strategisk AI-partner for vækst. Vi finder det manuelle arbejde, der bremser en virksomhed, bygger løsningen med AI og automatisering og sørger for, at folk faktisk bruger den.',
       ],
       3: {
         site: [
-          'Vi har kigget grundigt på hjemmesiden for {company}, {first}. Sådan forstår vi din forretning: {line} Virksomheder som din er præcis, hvad vores købere spørger efter. Hvis vi har misforstået noget, kan du rette os på mødet.',
-          'Vi har kigget grundigt på hjemmesiden for {company}, {first}. På skærmen ser du i tre korte linjer, hvordan vi forstår din forretning. Virksomheder som din er præcis, hvad vores købere spørger efter. Hvis vi har misforstået noget, kan du rette os på mødet.',
-          'Vi har kigget grundigt på din hjemmeside. På skærmen ser du i tre korte linjer, hvordan vi forstår din forretning. Virksomheder som din er præcis, hvad vores købere spørger efter. Hvis vi har misforstået noget, kan du rette os på mødet.',
+          'Vi har kigget grundigt på hjemmesiden for {company}, {first}. Sådan forstår vi din forretning: {line} Voksende virksomheder mister ofte tid på manuelle overleveringer, og det er dér, vi begynder at lede.',
+          'Vi har kigget grundigt på hjemmesiden for {company}, {first}. På skærmen ser du i tre korte linjer, hvordan vi forstår din forretning. Voksende virksomheder mister ofte tid på manuelle overleveringer, og det er dér, vi begynder at lede.',
+          'Vi har kigget grundigt på din hjemmeside. På skærmen ser du i tre korte linjer, hvordan vi forstår din forretning. Voksende virksomheder mister ofte tid på manuelle overleveringer, og det er dér, vi begynder at lede.',
         ],
         noSite: [
-          'Sådan forstår vi forretningen i {company}, {first}: {line} Virksomheder som din er præcis, hvad vores købere spørger efter. Hvis vi har misforstået noget, kan du rette os på mødet, så billedet af din virksomhed bliver rigtigt.',
-          'På skærmen ser du i tre korte linjer, hvordan vi forstår forretningen i {company}, {first}. Virksomheder som din er præcis, hvad vores købere spørger efter. Hvis vi har misforstået noget, kan du rette os på mødet, så billedet af din virksomhed bliver rigtigt.',
-          'På skærmen ser du i tre korte linjer, hvordan vi forstår din forretning. Virksomheder som din er præcis, hvad vores købere spørger efter. Hvis vi har misforstået noget, kan du rette os på mødet, så billedet af din virksomhed bliver rigtigt.',
+          'Sådan forstår vi forretningen i {company}, {first}: {line} Voksende virksomheder mister ofte tid på manuelle overleveringer, og det er dér, vi begynder at lede.',
+          'På skærmen ser du i tre korte linjer, hvordan vi forstår forretningen i {company}, {first}. Voksende virksomheder mister ofte tid på manuelle overleveringer, og det er dér, vi begynder at lede.',
+          'På skærmen ser du i tre korte linjer, hvordan vi forstår din forretning. Voksende virksomheder mister ofte tid på manuelle overleveringer, og det er dér, vi begynder at lede.',
         ],
       },
       4: {
         figures: [
-          'Ifølge Asiakastieto havde {company} en omsætning på {revenue} euro og et driftsresultat på {profit} euro i regnskabsåret {year}. Disse offentlige tal er et godt udgangspunkt. På mødet kan vi se på, hvad de betyder for værdien af din virksomhed.',
-          'Ifølge Asiakastieto havde din virksomhed en omsætning på {revenue} euro og et driftsresultat på {profit} euro i regnskabsåret {year}. Disse offentlige tal er et godt udgangspunkt. På mødet kan vi se på, hvad de betyder for værdien af din virksomhed.',
+          'Ifølge Asiakastieto havde {company} en omsætning på {revenue} euro og et driftsresultat på {profit} euro i regnskabsåret {year}. Vækst giver som regel mere manuelt arbejde: flere overleveringer, flere kontroller og mere kopiering mellem værktøjer. Det er dér, vi kigger først.',
+          'Ifølge Asiakastieto havde din virksomhed en omsætning på {revenue} euro og et driftsresultat på {profit} euro i regnskabsåret {year}. Vækst giver som regel mere manuelt arbejde: flere overleveringer, flere kontroller og mere kopiering mellem værktøjer. Det er dér, vi kigger først.',
         ],
         loss: [
-          'Ifølge Asiakastieto havde {company} en omsætning på {revenue} euro og et driftsunderskud på {profit} euro i regnskabsåret {year}. Disse offentlige tal er et godt udgangspunkt. På mødet kan vi se på, hvad de betyder for værdien af din virksomhed.',
-          'Ifølge Asiakastieto havde din virksomhed en omsætning på {revenue} euro og et driftsunderskud på {profit} euro i regnskabsåret {year}. Disse offentlige tal er et godt udgangspunkt. På mødet kan vi se på, hvad de betyder for værdien af din virksomhed.',
+          'Ifølge Asiakastieto havde {company} en omsætning på {revenue} euro og et driftsunderskud på {profit} euro i regnskabsåret {year}. Vækst giver som regel mere manuelt arbejde: flere overleveringer, flere kontroller og mere kopiering mellem værktøjer. Det er dér, vi kigger først.',
+          'Ifølge Asiakastieto havde din virksomhed en omsætning på {revenue} euro og et driftsunderskud på {profit} euro i regnskabsåret {year}. Vækst giver som regel mere manuelt arbejde: flere overleveringer, flere kontroller og mere kopiering mellem værktøjer. Det er dér, vi kigger først.',
         ],
         calculator: [
-          'Vi har ingen offentlige tal for din virksomhed. Hvis du angiver et interval for omsætning og resultat i formularen på denne side, viser beregneren et værdiinterval for din virksomhed. Den bygger på faktiske handler i din branche. Et omtrentligt interval er nok, og dine svar går kun til Mergero.',
+          'Vi har ingen offentlige tal for din virksomhed. Fortæl os, hvor stor I er, i formularen på denne side. Et omtrentligt interval er nok. Så kan vi se, hvor manuelt arbejde vokser hurtigst, og dine svar går kun til Velho.',
         ],
         form: [
-          'Vi har ingen offentlige tal for din virksomhed. Hvis du vil, kan du angive omsætning og resultat i formularen på denne side. Et omtrentligt interval er nok. Med tallene kan vi forberede et bedre møde for dig, og dine svar går kun til Mergero.',
+          'Vi har ingen offentlige tal for din virksomhed. Fortæl os, hvor stor I er, i formularen på denne side. Et omtrentligt interval er nok. Så kan vi forberede en bedre arbejdssession for dig, og dine svar går kun til Velho.',
         ],
       },
       5: {
         sector: [
-          'Disse købere har lavet handler i din branche med Mergero. På listen finder du for eksempel {buyers}. Under hvert navn ser du den handel, som køberen lavede med os. På mødet ser vi på, hvilke købere der kan passe til {company}. Under videoen finder du links til deres hjemmesider.',
-          'Disse købere har lavet handler i din branche med Mergero. Under hvert navn ser du den handel, som køberen lavede med os. På mødet ser vi på, hvilke købere der kan passe til {company}. Under videoen finder du links til deres hjemmesider, så du selv kan se, hvem de er.',
-          'Disse købere har lavet handler i din branche med Mergero. Under hvert navn ser du den handel, som køberen lavede med os. På mødet ser vi på, hvilke købere der kan passe til din virksomhed. Under videoen finder du links til deres hjemmesider, så du selv kan se, hvem de er.',
+          'Det er værktøjer, som vi ofte forbinder i din branche, for eksempel {buyers}. Tiden går som regel med at kopiere data mellem dem. I arbejdssessionen kortlægger vi, hvor manuelt arbejde bremser {company}. Under videoen finder du links til deres hjemmesider.',
+          'Det er værktøjer, som vi ofte forbinder i din branche. Tiden går som regel med at kopiere data mellem dem. I arbejdssessionen kortlægger vi, hvor manuelt arbejde bremser {company}. Under videoen finder du links til deres hjemmesider, så du selv kan se, hvad de er.',
+          'Det er værktøjer, som vi ofte forbinder i din branche. Tiden går som regel med at kopiere data mellem dem. I arbejdssessionen kortlægger vi, hvor manuelt arbejde bremser dit team. Under videoen finder du links til deres hjemmesider, så du selv kan se, hvad de er.',
         ],
         featured: [
-          'Disse købere har lavet handler med Mergero, for eksempel {buyers}. Under hvert navn ser du den handel, som køberen lavede med os. På mødet ser vi på, hvilke købere der kan passe til {company}. Under videoen finder du links til deres hjemmesider.',
-          'På skærmen ser du nogle købere, der har lavet handler med Mergero. Under hvert navn ser du den handel, som køberen lavede med os. På mødet ser vi på, hvilke købere der kan passe til din virksomhed. Under videoen finder du links til deres hjemmesider.',
+          'Det er værktøjer, som vi ofte forbinder, for eksempel {buyers}. Tiden går som regel med at kopiere data mellem dem. I arbejdssessionen kortlægger vi, hvor manuelt arbejde bremser {company}. Under videoen finder du links til deres hjemmesider.',
+          'På skærmen ser du nogle værktøjer, som vi ofte forbinder. Tiden går som regel med at kopiere data mellem dem. I arbejdssessionen kortlægger vi, hvor manuelt arbejde bremser dit team. Under videoen finder du links til deres hjemmesider.',
         ],
         empty: [
-          'Hver køber på vores platform har fortalt os, hvilke virksomheder den vil købe. På mødet gennemgår vi de købere, der passer bedst til {company}, og hvad hver af dem leder efter. Sådan ser du, hvem der kunne være interesseret, før du beslutter noget.',
-          'Hver køber på vores platform har fortalt os, hvilke virksomheder den vil købe. På mødet gennemgår vi de købere, der passer bedst til din virksomhed, og hvad hver af dem leder efter. Sådan ser du, hvem der kunne være interesseret, før du beslutter noget.',
+          'Hver virksomhed mister tid forskellige steder. I arbejdssessionen kortlægger vi, hvor manuelt arbejde bremser {company}, og hvilke værktøjer der er involveret. Sådan ser du, hvor tiden går, før du beslutter noget.',
+          'Hver virksomhed mister tid forskellige steder. I arbejdssessionen kortlægger vi, hvor manuelt arbejde bremser dit team, og hvilke værktøjer der er involveret. Sådan ser du, hvor tiden går, før du beslutter noget.',
         ],
       },
       6: {
         sector: [
-          'Her er, hvad der er muligt i din branche. {deal} Handler som denne viser, at der er reel efterspørgsel efter virksomheder som {company}. Hvert salg er forskelligt, og på mødet kan vi tale om, hvordan en handel kunne se ud for dig.',
-          'Her er, hvad der er muligt i din branche. I de seneste år har ejere af lignende virksomheder solgt til købere på vores platform. Hvert salg er forskelligt, og på mødet kan vi tale om, hvordan en handel kunne se ud for {company}.',
-          'Her er, hvad der er muligt i din branche. I de seneste år har ejere af lignende virksomheder solgt til købere på vores platform. Hvert salg er forskelligt, og på mødet kan vi tale om, hvordan en handel kunne se ud for dig og din virksomhed.',
+          'Her er et første bevis i din branche. {deal} Hver virksomhed er forskellig, og i arbejdssessionen vælger vi den mindste løsning, der viser værdien for {company}.',
+          'Her er et første bevis i din branche. Et godt første bevis er lille, praktisk og hurtigt at tjekke sammen med dit eget team. Hver virksomhed er forskellig, og i arbejdssessionen vælger vi den mindste løsning, der viser værdien for {company}.',
+          'Her er et første bevis i din branche. Et godt første bevis er lille, praktisk og hurtigt at tjekke sammen med dit eget team. Hver virksomhed er forskellig, og i arbejdssessionen vælger vi den mindste løsning, der viser værdien for dig og din virksomhed.',
         ],
         recent: [
-          'Her er, hvad der er muligt for ejere som dig. {deal} Handler som denne viser, at køberne på vores platform leder efter etablerede virksomheder. Hvert salg er forskelligt, og på mødet kan vi tale om, hvordan en handel kunne se ud for {company}.',
-          'Her er, hvad der er muligt for ejere som dig. I de seneste år har ejere af etablerede virksomheder solgt til købere på vores platform. Hvert salg er forskelligt, og på mødet kan vi tale om, hvordan en handel kunne se ud for {company}.',
-          'Her er, hvad der er muligt for ejere som dig. I de seneste år har ejere af etablerede virksomheder solgt til købere på vores platform. Hvert salg er forskelligt, og på mødet kan vi tale om, hvordan en handel kunne se ud for dig og din virksomhed.',
+          'Her er et første bevis for teams som dit. {deal} Hver virksomhed er forskellig, og i arbejdssessionen vælger vi den mindste løsning, der viser værdien for {company}.',
+          'Her er et første bevis for teams som dit. Et godt første bevis er lille, praktisk og hurtigt at tjekke sammen med dit eget team. Hver virksomhed er forskellig, og i arbejdssessionen vælger vi den mindste løsning, der viser værdien for {company}.',
+          'Her er et første bevis for teams som dit. Et godt første bevis er lille, praktisk og hurtigt at tjekke sammen med dit eget team. Hver virksomhed er forskellig, og i arbejdssessionen vælger vi den mindste løsning, der viser værdien for dig og din virksomhed.',
         ],
       },
       7: [
-        'Dine oplysninger forbliver fortrolige, {first}. Købere ser kun din virksomhed som en anonym profil, og vi viser først virksomhedens navn, når du siger ja. Dine svar i formularen går kun til Mergero, og vi sletter optagelsen af denne side, når linket udløber.',
+        'Sådan virker Velho, {first}. Først finder vi det manuelle arbejde, der bremser dit team. Derefter bygger vi løsningen med AI og automatisering. Til sidst sørger vi for, at folk faktisk bruger den, så den sparede tid også forbliver sparet.',
       ],
       8: [
-        'Tak, fordi du så videoen, {first}. Hvis du vil høre mere, kan du booke et kort møde med mig under videoen. På Teams taler vi om dine mål, de interesserede købere og et muligt værdiinterval for {company}. Mødet forpligter dig ikke til noget. Jeg glæder mig til vores samtale.',
-        'Tak, fordi du så videoen, {first}. Hvis du vil høre mere, kan du booke et kort møde med mig under videoen. På Teams taler vi om dine mål, de interesserede købere og et muligt værdiinterval for din virksomhed. Mødet forpligter dig ikke til noget. Jeg glæder mig til vores samtale.',
+        'Tak, fordi du så videoen, {first}. Hvis du vil høre mere, kan du booke en arbejdssession på tyve minutter med mig under videoen. På Teams vælger vi ét manuelt arbejdsforløb i {company} og skitserer en praktisk løsning. Det forpligter dig ikke til noget. Jeg glæder mig til vores samtale.',
+        'Tak, fordi du så videoen, {first}. Hvis du vil høre mere, kan du booke en arbejdssession på tyve minutter med mig under videoen. På Teams vælger vi ét manuelt arbejdsforløb i din virksomhed og skitserer en praktisk løsning. Det forpligter dig ikke til noget. Jeg glæder mig til vores samtale.',
       ],
     },
     lines: [
@@ -586,9 +589,9 @@ const TEXTS: Record<Lang, WriterTexts> = {
     outreach: {
       subject: 'En kort video om {company}',
       email:
-        'Hej {first},\n\njeg hedder {analyst} og er analytiker hos Mergero. Vi hjælper ejere af etablerede virksomheder med at finde den rigtige køber. Jeg har lavet en kort personlig video om {company}. Den viser købere fra Mergeros handler, og hvad andre ejere har gjort.\n\nDu kan se videoen her: {link}\n\nUnder videoen kan du booke et møde med mig. Linket er personligt og virker til og med {expires}.\n\nMed venlig hilsen\n{analyst}\nMergero',
+        'Hej {first},\n\njeg hedder {analyst} og er analytiker hos Velho. Vi er en strategisk AI-partner for vækst: vi finder det manuelle arbejde, der bremser en virksomhed, bygger løsningen med AI og automatisering og sørger for, at folk faktisk bruger den. Jeg har lavet en kort personlig video om {company}.\n\nDu kan se videoen her: {link}\n\nUnder videoen kan du booke en arbejdssession på tyve minutter med mig. Linket er personligt og virker til og med {expires}.\n\nMed venlig hilsen\n{analyst}\nVelho',
       short:
-        'Hej {first}, det er {analyst} fra Mergero. Jeg har lavet en kort personlig video til dig om {company}: {link} Det tager kun et par minutter at se den. Linket virker til og med {expires}.',
+        'Hej {first}, det er {analyst} fra Velho. Jeg har lavet en kort personlig video til dig om {company}: {link} Det tager kun et par minutter at se den. Linket virker til og med {expires}.',
     },
     brief: {
       booked: '{owner} ({company}) har booket et møde.',
@@ -608,86 +611,86 @@ const TEXTS: Record<Lang, WriterTexts> = {
         revenue: 'Hvad var omsætningen i din virksomhed i det seneste regnskabsår?',
         profit: 'Hvad var driftsresultatet i din virksomhed i det seneste regnskabsår?',
         custom: 'Kan vi gennemgå de spørgsmål i formularen, som du ikke har besvaret endnu?',
-        timing: 'Hvornår kunne et salg være en realistisk mulighed for dig?',
+        timing: 'Hvornår ville en første automatisering være nyttig for dig?',
         staff: 'Hvor mange medarbejdere har din virksomhed i dag?',
-        slide2: 'Hvad ved du allerede om Mergero, og hvordan vi arbejder?',
+        slide2: 'Hvad ved du allerede om Velho, og hvordan vi arbejder?',
         slide3: 'Hvordan vil du beskrive din virksomhed med få ord?',
-        slide4: 'Hvordan ser du virksomhedens økonomiske udvikling i de kommende år?',
-        slide5: 'Hvilken type køber ville passe bedst til din virksomhed?',
-        slide6: 'Kender du til andre virksomhedssalg i din branche i de seneste år?',
-        slide7: 'Hvor vigtig er fortrolighed for dig ved et muligt salg?',
+        slide4: 'Hvor vokser manuelt arbejde hurtigst, når din virksomhed vokser?',
+        slide5: 'Hvilke værktøjer og overleveringer tager mest tid i dit team?',
+        slide6: 'Hvilket lille arbejdsforløb ville være det bedste første bevis?',
+        slide7: 'Hvad ville sikre, at dit team faktisk bruger et nyt værktøj?',
         goals: 'Hvilke mål har du for virksomheden i de kommende år?',
-        decision: 'Hvem ellers vil være med i en beslutning om et salg?',
-        successor: 'Er der en efterfølger i familien eller i ledelsen?',
+        decision: 'Hvem ellers vil være med i en beslutning om dette?',
+        successor: 'Hvem i dit team ville eje forandringen?',
       },
     },
   },
   de: {
     scripts: {
       2: [
-        'Vielen Dank, dass Sie sich kurz Zeit nehmen. Mergero hilft Inhabern etablierter Unternehmen, den passenden Käufer zu finden. Auf unserer Plattform MGX suchen {buyerCount} Käufer nach Unternehmen, die sie übernehmen können. Auf dem Bildschirm sehen Sie einige Käufer aus unseren Transaktionen und einige Transaktionen, die wir kürzlich abgeschlossen haben.',
+        'Vielen Dank, dass Sie sich kurz Zeit nehmen. Velho ist ein strategischer KI-Partner für Wachstum. Wir finden die manuelle Arbeit, die ein Unternehmen ausbremst, bauen die Lösung mit KI und Automatisierung und sorgen dafür, dass die Menschen sie wirklich nutzen.',
       ],
       3: {
         site: [
-          'Wir haben uns die Website von {company} genau angesehen. So verstehen wir Ihr Geschäft: {line} Unternehmen wie Ihres sind genau das, wonach unsere Käufer fragen. Falls wir etwas falsch verstanden haben, können Sie uns im Gespräch gern korrigieren.',
-          'Wir haben uns die Website von {company} genau angesehen. Auf dem Bildschirm sehen Sie in drei kurzen Zeilen, wie wir Ihr Geschäft verstehen. Unternehmen wie Ihres sind genau das, wonach unsere Käufer fragen. Falls wir etwas falsch verstanden haben, können Sie uns im Gespräch gern korrigieren.',
-          'Wir haben uns Ihre Website genau angesehen. Auf dem Bildschirm sehen Sie in drei kurzen Zeilen, wie wir Ihr Geschäft verstehen. Unternehmen wie Ihres sind genau das, wonach unsere Käufer fragen. Falls wir etwas falsch verstanden haben, können Sie uns im Gespräch gern korrigieren.',
+          'Wir haben uns die Website von {company} genau angesehen. So verstehen wir Ihr Geschäft: {line} Wachsende Unternehmen verlieren oft Zeit durch manuelle Übergaben, und genau dort beginnen wir zu suchen.',
+          'Wir haben uns die Website von {company} genau angesehen. Auf dem Bildschirm sehen Sie in drei kurzen Zeilen, wie wir Ihr Geschäft verstehen. Wachsende Unternehmen verlieren oft Zeit durch manuelle Übergaben, und genau dort beginnen wir zu suchen.',
+          'Wir haben uns Ihre Website genau angesehen. Auf dem Bildschirm sehen Sie in drei kurzen Zeilen, wie wir Ihr Geschäft verstehen. Wachsende Unternehmen verlieren oft Zeit durch manuelle Übergaben, und genau dort beginnen wir zu suchen.',
         ],
         noSite: [
-          'So verstehen wir das Geschäft von {company}: {line} Unternehmen wie Ihres sind genau das, wonach unsere Käufer fragen. Falls wir etwas falsch verstanden haben, können Sie uns im Gespräch gern korrigieren, damit das Bild Ihres Unternehmens stimmt.',
-          'Auf dem Bildschirm sehen Sie in drei kurzen Zeilen, wie wir das Geschäft von {company} verstehen. Unternehmen wie Ihres sind genau das, wonach unsere Käufer fragen. Falls wir etwas falsch verstanden haben, können Sie uns im Gespräch gern korrigieren.',
-          'Auf dem Bildschirm sehen Sie in drei kurzen Zeilen, wie wir Ihr Geschäft verstehen. Unternehmen wie Ihres sind genau das, wonach unsere Käufer fragen. Falls wir etwas falsch verstanden haben, können Sie uns im Gespräch gern korrigieren.',
+          'So verstehen wir das Geschäft von {company}: {line} Wachsende Unternehmen verlieren oft Zeit durch manuelle Übergaben, und genau dort beginnen wir zu suchen.',
+          'Auf dem Bildschirm sehen Sie in drei kurzen Zeilen, wie wir das Geschäft von {company} verstehen. Wachsende Unternehmen verlieren oft Zeit durch manuelle Übergaben, und genau dort beginnen wir zu suchen.',
+          'Auf dem Bildschirm sehen Sie in drei kurzen Zeilen, wie wir Ihr Geschäft verstehen. Wachsende Unternehmen verlieren oft Zeit durch manuelle Übergaben, und genau dort beginnen wir zu suchen.',
         ],
       },
       4: {
         figures: [
-          'Laut Asiakastieto erzielte {company} im Geschäftsjahr {year} einen Umsatz von {revenue} Euro und ein Betriebsergebnis von {profit} Euro. Diese öffentlichen Zahlen sind ein guter Ausgangspunkt. Im Gespräch können wir uns ansehen, was sie für den Wert Ihres Unternehmens bedeuten.',
-          'Laut Asiakastieto erzielte Ihr Unternehmen im Geschäftsjahr {year} einen Umsatz von {revenue} Euro und ein Betriebsergebnis von {profit} Euro. Diese öffentlichen Zahlen sind ein guter Ausgangspunkt. Im Gespräch können wir uns ansehen, was sie für den Wert Ihres Unternehmens bedeuten.',
+          'Laut Asiakastieto erzielte {company} im Geschäftsjahr {year} einen Umsatz von {revenue} Euro und ein Betriebsergebnis von {profit} Euro. Wachstum bringt meist mehr manuelle Arbeit mit sich: mehr Übergaben, mehr Kontrollen und mehr Kopieren zwischen Tools. Dort schauen wir zuerst hin.',
+          'Laut Asiakastieto erzielte Ihr Unternehmen im Geschäftsjahr {year} einen Umsatz von {revenue} Euro und ein Betriebsergebnis von {profit} Euro. Wachstum bringt meist mehr manuelle Arbeit mit sich: mehr Übergaben, mehr Kontrollen und mehr Kopieren zwischen Tools. Dort schauen wir zuerst hin.',
         ],
         loss: [
-          'Laut Asiakastieto erzielte {company} im Geschäftsjahr {year} einen Umsatz von {revenue} Euro und einen Betriebsverlust von {profit} Euro. Diese öffentlichen Zahlen sind ein guter Ausgangspunkt. Im Gespräch können wir uns ansehen, was sie für den Wert Ihres Unternehmens bedeuten.',
-          'Laut Asiakastieto erzielte Ihr Unternehmen im Geschäftsjahr {year} einen Umsatz von {revenue} Euro und einen Betriebsverlust von {profit} Euro. Diese öffentlichen Zahlen sind ein guter Ausgangspunkt. Im Gespräch können wir uns ansehen, was sie für den Wert Ihres Unternehmens bedeuten.',
+          'Laut Asiakastieto erzielte {company} im Geschäftsjahr {year} einen Umsatz von {revenue} Euro und einen Betriebsverlust von {profit} Euro. Wachstum bringt meist mehr manuelle Arbeit mit sich: mehr Übergaben, mehr Kontrollen und mehr Kopieren zwischen Tools. Dort schauen wir zuerst hin.',
+          'Laut Asiakastieto erzielte Ihr Unternehmen im Geschäftsjahr {year} einen Umsatz von {revenue} Euro und einen Betriebsverlust von {profit} Euro. Wachstum bringt meist mehr manuelle Arbeit mit sich: mehr Übergaben, mehr Kontrollen und mehr Kopieren zwischen Tools. Dort schauen wir zuerst hin.',
         ],
         calculator: [
-          'Für Ihr Unternehmen liegen uns keine öffentlichen Zahlen vor. Wenn Sie im Formular auf dieser Seite eine Spanne für Umsatz und Ergebnis eingeben, zeigt Ihnen der Rechner eine Wertspanne für Ihr Unternehmen. Er beruht auf echten Transaktionen aus Ihrer Branche. Eine grobe Spanne genügt, und Ihre Angaben gehen nur an Mergero.',
+          'Für Ihr Unternehmen liegen uns keine öffentlichen Zahlen vor. Bitte geben Sie im Formular auf dieser Seite Ihre Größe an. Eine grobe Spanne genügt. So sehen wir, wo manuelle Arbeit am schnellsten wächst, und Ihre Angaben gehen nur an Velho.',
         ],
         form: [
-          'Für Ihr Unternehmen liegen uns keine öffentlichen Zahlen vor. Wenn Sie möchten, können Sie Umsatz und Ergebnis im Formular auf dieser Seite angeben. Eine grobe Spanne genügt. Mit diesen Zahlen können wir das Gespräch besser vorbereiten, und Ihre Angaben gehen nur an Mergero.',
+          'Für Ihr Unternehmen liegen uns keine öffentlichen Zahlen vor. Bitte geben Sie im Formular auf dieser Seite Ihre Größe an. Eine grobe Spanne genügt. So können wir eine bessere Arbeitssitzung für Sie vorbereiten, und Ihre Angaben gehen nur an Velho.',
         ],
       },
       5: {
         sector: [
-          'Diese Käufer haben mit Mergero Transaktionen in Ihrer Branche abgeschlossen, zum Beispiel {buyers}. Unter jedem Namen sehen Sie ihre Transaktion mit uns. Im Gespräch schauen wir, welche Käufer zu {company} passen könnten. Unter dem Video finden Sie die Links zu ihren Websites.',
-          'Diese Käufer haben mit Mergero Transaktionen in Ihrer Branche abgeschlossen. Unter jedem Namen sehen Sie die Transaktion, die der Käufer mit uns abgeschlossen hat. Im Gespräch schauen wir, welche Käufer zu {company} passen könnten. Unter dem Video finden Sie die Links zu ihren Websites, so können Sie selbst sehen, wer sie sind.',
-          'Diese Käufer haben mit Mergero Transaktionen in Ihrer Branche abgeschlossen. Unter jedem Namen sehen Sie die Transaktion, die der Käufer mit uns abgeschlossen hat. Im Gespräch schauen wir, welche Käufer zu Ihrem Unternehmen passen könnten. Unter dem Video finden Sie die Links zu ihren Websites, so können Sie selbst sehen, wer sie sind.',
+          'Das sind Tools, die wir in Ihrer Branche oft verbinden, zum Beispiel {buyers}. Die Zeit geht meist ins Kopieren von Daten zwischen ihnen. In der Arbeitssitzung erfassen wir, wo manuelle Arbeit {company} ausbremst. Unter dem Video finden Sie Links zu ihren Websites.',
+          'Das sind Tools, die wir in Ihrer Branche oft verbinden. Die Zeit geht meist ins Kopieren von Daten zwischen ihnen. In der Arbeitssitzung erfassen wir, wo manuelle Arbeit {company} ausbremst. Unter dem Video finden Sie Links zu ihren Websites, damit Sie sich selbst ein Bild machen können.',
+          'Das sind Tools, die wir in Ihrer Branche oft verbinden. Die Zeit geht meist ins Kopieren von Daten zwischen ihnen. In der Arbeitssitzung erfassen wir, wo manuelle Arbeit Ihr Team ausbremst. Unter dem Video finden Sie Links zu ihren Websites, damit Sie sich selbst ein Bild machen können.',
         ],
         featured: [
-          'Diese Käufer haben Transaktionen mit Mergero abgeschlossen, zum Beispiel {buyers}. Unter jedem Namen sehen Sie ihre Transaktion mit uns. Im Gespräch schauen wir, welche Käufer zu {company} passen könnten. Unter dem Video finden Sie die Links zu ihren Websites.',
-          'Auf dem Bildschirm sehen Sie einige Käufer, die Transaktionen mit Mergero abgeschlossen haben. Unter jedem Namen sehen Sie die Transaktion, die der Käufer mit uns abgeschlossen hat. Im Gespräch schauen wir, welche Käufer zu Ihrem Unternehmen passen könnten. Unter dem Video finden Sie die Links zu ihren Websites.',
+          'Das sind Tools, die wir oft verbinden, zum Beispiel {buyers}. Die Zeit geht meist ins Kopieren von Daten zwischen ihnen. In der Arbeitssitzung erfassen wir, wo manuelle Arbeit {company} ausbremst. Unter dem Video finden Sie Links zu ihren Websites.',
+          'Auf dem Bildschirm sehen Sie einige Tools, die wir oft verbinden. Die Zeit geht meist ins Kopieren von Daten zwischen ihnen. In der Arbeitssitzung erfassen wir, wo manuelle Arbeit Ihr Team ausbremst. Unter dem Video finden Sie Links zu ihren Websites.',
         ],
         empty: [
-          'Jeder Käufer auf unserer Plattform hat uns gesagt, welche Unternehmen er kaufen möchte. Im Gespräch gehen wir die Käufer durch, die am besten zu {company} passen, und was jeder von ihnen sucht. So sehen Sie, wer interessiert sein könnte, bevor Sie etwas entscheiden.',
-          'Jeder Käufer auf unserer Plattform hat uns gesagt, welche Unternehmen er kaufen möchte. Im Gespräch gehen wir die Käufer durch, die am besten zu Ihrem Unternehmen passen, und was jeder von ihnen sucht. So sehen Sie, wer interessiert sein könnte, bevor Sie etwas entscheiden.',
+          'Jedes Unternehmen verliert Zeit an anderen Stellen. In der Arbeitssitzung erfassen wir, wo manuelle Arbeit {company} ausbremst und welche Tools beteiligt sind. So sehen Sie, wohin die Zeit geht, bevor Sie etwas entscheiden.',
+          'Jedes Unternehmen verliert Zeit an anderen Stellen. In der Arbeitssitzung erfassen wir, wo manuelle Arbeit Ihr Team ausbremst und welche Tools beteiligt sind. So sehen Sie, wohin die Zeit geht, bevor Sie etwas entscheiden.',
         ],
       },
       6: {
         sector: [
-          'Das ist in Ihrer Branche möglich. {deal} Transaktionen wie diese zeigen, dass es eine echte Nachfrage nach Unternehmen wie {company} gibt. Jeder Verkauf ist anders, und im Gespräch können wir darüber sprechen, wie eine Transaktion für Sie aussehen könnte.',
-          'Das ist in Ihrer Branche möglich. In den letzten Jahren haben Inhaber ähnlicher Unternehmen an Käufer auf unserer Plattform verkauft. Jeder Verkauf ist anders, und im Gespräch können wir darüber sprechen, wie eine Transaktion für {company} aussehen könnte.',
-          'Das ist in Ihrer Branche möglich. In den letzten Jahren haben Inhaber ähnlicher Unternehmen an Käufer auf unserer Plattform verkauft. Jeder Verkauf ist anders, und im Gespräch können wir darüber sprechen, wie eine Transaktion für Sie und Ihr Unternehmen aussehen könnte.',
+          'Das ist ein erster Beweis in Ihrer Branche. {deal} Jedes Unternehmen ist anders, und in der Arbeitssitzung wählen wir die kleinste Lösung, die den Nutzen für {company} zeigt.',
+          'Das ist ein erster Beweis in Ihrer Branche. Ein guter erster Beweis ist klein, praktisch und mit Ihrem eigenen Team schnell zu prüfen. Jedes Unternehmen ist anders, und in der Arbeitssitzung wählen wir die kleinste Lösung, die den Nutzen für {company} zeigt.',
+          'Das ist ein erster Beweis in Ihrer Branche. Ein guter erster Beweis ist klein, praktisch und mit Ihrem eigenen Team schnell zu prüfen. Jedes Unternehmen ist anders, und in der Arbeitssitzung wählen wir die kleinste Lösung, die den Nutzen für Sie und Ihr Unternehmen zeigt.',
         ],
         recent: [
-          'Das ist für Inhaber wie Sie möglich. {deal} Transaktionen wie diese zeigen, dass die Käufer auf unserer Plattform etablierte Unternehmen suchen. Jeder Verkauf ist anders, und im Gespräch können wir darüber sprechen, wie eine Transaktion für {company} aussehen könnte.',
-          'Das ist für Inhaber wie Sie möglich. In den letzten Jahren haben Inhaber etablierter Unternehmen an Käufer auf unserer Plattform verkauft. Jeder Verkauf ist anders, und im Gespräch können wir darüber sprechen, wie eine Transaktion für {company} aussehen könnte.',
-          'Das ist für Inhaber wie Sie möglich. In den letzten Jahren haben Inhaber etablierter Unternehmen an Käufer auf unserer Plattform verkauft. Jeder Verkauf ist anders, und im Gespräch können wir darüber sprechen, wie eine Transaktion für Sie und Ihr Unternehmen aussehen könnte.',
+          'Das ist ein erster Beweis für Teams wie Ihres. {deal} Jedes Unternehmen ist anders, und in der Arbeitssitzung wählen wir die kleinste Lösung, die den Nutzen für {company} zeigt.',
+          'Das ist ein erster Beweis für Teams wie Ihres. Ein guter erster Beweis ist klein, praktisch und mit Ihrem eigenen Team schnell zu prüfen. Jedes Unternehmen ist anders, und in der Arbeitssitzung wählen wir die kleinste Lösung, die den Nutzen für {company} zeigt.',
+          'Das ist ein erster Beweis für Teams wie Ihres. Ein guter erster Beweis ist klein, praktisch und mit Ihrem eigenen Team schnell zu prüfen. Jedes Unternehmen ist anders, und in der Arbeitssitzung wählen wir die kleinste Lösung, die den Nutzen für Sie und Ihr Unternehmen zeigt.',
         ],
       },
       7: [
-        'Ihre Daten bleiben vertraulich. Käufer sehen Ihr Unternehmen nur als anonymes Profil, und den Namen nennen wir erst, wenn Sie zustimmen. Ihre Angaben im Formular gehen nur an Mergero, und die Aufzeichnung dieser Seite löschen wir, wenn der Link abläuft. Sie entscheiden, wie es weitergeht.',
+        'So arbeitet Velho. Zuerst finden wir die manuelle Arbeit, die Ihr Team ausbremst. Dann bauen wir die Lösung mit KI und Automatisierung. Zum Schluss sorgen wir dafür, dass die Menschen sie wirklich nutzen, damit die gewonnene Zeit auch gewonnen bleibt.',
       ],
       8: [
-        'Vielen Dank, dass Sie sich das Video angesehen haben. Wenn Sie mehr erfahren möchten, buchen Sie unter dem Video einen kurzen Termin mit mir. Per Teams sprechen wir über Ihre Ziele, die interessierten Käufer und eine mögliche Wertspanne für {company}. Das Gespräch ist für Sie unverbindlich. Ich freue mich darauf.',
-        'Vielen Dank, dass Sie sich das Video angesehen haben. Wenn Sie mehr erfahren möchten, buchen Sie unter dem Video einen kurzen Termin mit mir. Per Teams sprechen wir über Ihre Ziele, die interessierten Käufer und eine mögliche Wertspanne für Ihr Unternehmen. Das Gespräch ist für Sie unverbindlich. Ich freue mich darauf.',
+        'Vielen Dank, dass Sie sich das Video angesehen haben. Wenn Sie mehr erfahren möchten, buchen Sie unter dem Video eine Arbeitssitzung von zwanzig Minuten mit mir. Per Teams wählen wir einen manuellen Arbeitsablauf bei {company} und skizzieren eine praktische Lösung. Das verpflichtet Sie zu nichts. Ich freue mich auf unser Gespräch.',
+        'Vielen Dank, dass Sie sich das Video angesehen haben. Wenn Sie mehr erfahren möchten, buchen Sie unter dem Video eine Arbeitssitzung von zwanzig Minuten mit mir. Per Teams wählen wir einen manuellen Arbeitsablauf in Ihrem Unternehmen und skizzieren eine praktische Lösung. Das verpflichtet Sie zu nichts. Ich freue mich auf unser Gespräch.',
       ],
     },
     lines: [
@@ -698,9 +701,9 @@ const TEXTS: Record<Lang, WriterTexts> = {
     outreach: {
       subject: 'Ein kurzes Video über {company}',
       email:
-        'Guten Tag {name},\n\nmein Name ist {analyst}, ich arbeite bei Mergero. Wir helfen Inhabern etablierter Unternehmen, den richtigen Käufer zu finden. Ich habe ein kurzes persönliches Video über {company} erstellt. Es zeigt Käufer aus Mergero-Transaktionen und was andere Inhaber erreicht haben.\n\nSie können das Video hier ansehen: {link}\n\nUnter dem Video können Sie einen Termin mit mir buchen. Der Link ist persönlich und gilt bis zum {expires}.\n\nMit freundlichen Grüßen\n{analyst}\nMergero',
+        'Guten Tag {name},\n\nmein Name ist {analyst}, ich arbeite bei Velho. Wir sind ein strategischer KI-Partner für Wachstum: Wir finden die manuelle Arbeit, die ein Unternehmen ausbremst, bauen die Lösung mit KI und Automatisierung und sorgen dafür, dass die Menschen sie wirklich nutzen. Ich habe ein kurzes persönliches Video über {company} erstellt.\n\nSie können das Video hier ansehen: {link}\n\nUnter dem Video können Sie eine Arbeitssitzung von zwanzig Minuten mit mir buchen. Der Link ist persönlich und gilt bis zum {expires}.\n\nMit freundlichen Grüßen\n{analyst}\nVelho',
       short:
-        'Guten Tag {name}, hier ist {analyst} von Mergero. Ich habe ein kurzes persönliches Video für Sie über {company} erstellt: {link} Es dauert nur wenige Minuten. Der Link gilt bis zum {expires}.',
+        'Guten Tag {name}, hier ist {analyst} von Velho. Ich habe ein kurzes persönliches Video für Sie über {company} erstellt: {link} Es dauert nur wenige Minuten. Der Link gilt bis zum {expires}.',
     },
     brief: {
       booked: '{owner} ({company}) hat einen Termin gebucht.',
@@ -720,17 +723,17 @@ const TEXTS: Record<Lang, WriterTexts> = {
         revenue: 'Wie hoch war der Umsatz Ihres Unternehmens im letzten Geschäftsjahr?',
         profit: 'Wie hoch war das Betriebsergebnis Ihres Unternehmens im letzten Geschäftsjahr?',
         custom: 'Können wir die Fragen im Formular durchgehen, die Sie noch nicht beantwortet haben?',
-        timing: 'Wann könnte ein Verkauf für Sie eine realistische Option sein?',
+        timing: 'Wann wäre eine erste Automatisierung für Sie nützlich?',
         staff: 'Wie viele Mitarbeitende hat Ihr Unternehmen heute?',
-        slide2: 'Was wissen Sie bereits über Mergero und unsere Arbeitsweise?',
+        slide2: 'Was wissen Sie bereits über Velho und unsere Arbeitsweise?',
         slide3: 'Wie würden Sie Ihr Unternehmen in wenigen Worten beschreiben?',
-        slide4: 'Wie sehen Sie die finanzielle Entwicklung Ihres Unternehmens in den nächsten Jahren?',
-        slide5: 'Welche Art von Käufer würde am besten zu Ihrem Unternehmen passen?',
-        slide6: 'Kennen Sie andere Unternehmensverkäufe in Ihrer Branche aus den letzten Jahren?',
-        slide7: 'Wie wichtig ist Ihnen Vertraulichkeit bei einem möglichen Verkauf?',
+        slide4: 'Wo wächst manuelle Arbeit am schnellsten, wenn Ihr Unternehmen wächst?',
+        slide5: 'Welche Tools und Übergaben kosten Ihr Team am meisten Zeit?',
+        slide6: 'Welcher kleine Arbeitsablauf wäre der beste erste Beweis?',
+        slide7: 'Was würde sicherstellen, dass Ihr Team ein neues Tool wirklich nutzt?',
         goals: 'Welche Ziele haben Sie für das Unternehmen in den nächsten Jahren?',
-        decision: 'Wer wäre außer Ihnen an einer Entscheidung über einen Verkauf beteiligt?',
-        successor: 'Gibt es eine Nachfolge in der Familie oder im Management?',
+        decision: 'Wer wäre außer Ihnen an einer Entscheidung dazu beteiligt?',
+        successor: 'Wer in Ihrem Team würde die Veränderung verantworten?',
       },
     },
   },

@@ -367,7 +367,9 @@ function buildTimeline(
     [7, { template: 'privacy' }],
     [8, { template: 'book-meeting', analystName: analyst.name, company: snapshot.company }],
   ]
-  const intro = readyIntro(analyst, lang)
+  // ponytail: the Velho story skips the M&A slides (2 who-we-are, 5 buyers, 6 deals); templates stay for later reuse.
+  const story = slides.filter(([slide]) => slide !== 2 && slide !== 5 && slide !== 6)
+  const intro = readyIntro(analyst)
   const segments: Segment[] = [
     {
       slide: 1,
@@ -378,7 +380,7 @@ function buildTimeline(
       startS: null,
       endS: null,
     },
-    ...slides.map(
+    ...story.map(
       ([slide, variables]): SlideSegment => ({
         slide,
         template: variables.template,

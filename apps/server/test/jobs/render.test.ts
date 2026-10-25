@@ -75,7 +75,7 @@ describe('render job, deal', () => {
     expect(job.status).toBe('done')
     const input = inputs[0] as RenderInput
     expect(input.storageDir).toBe(paths.root)
-    expect(input.brand.logoOnDark).toBe('config/mergero-logo-white.svg')
+    expect(input.brand.logoOnDark).toBe('config/velho-logo-white.svg')
     expect(input.timeline.segments[0]).toMatchObject({
       durationS: 1,
       startS: 0,

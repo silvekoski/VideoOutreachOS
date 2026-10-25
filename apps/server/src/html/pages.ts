@@ -6,10 +6,10 @@ import { brand } from '../domain/config.ts'
 import { env } from '../env.ts'
 import { escapeHtml, scriptJson } from './escape.ts'
 
-const ADMIN_TITLE = 'Mergero video tool'
+const ADMIN_TITLE = 'Velho Video Outreach'
 
 const THEME_SCRIPT =
-  '<script>(function(){try{var t=localStorage.getItem("theme")||"dark";var d=t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);document.documentElement.style.colorScheme=d?"dark":"light"}catch(e){}})()</script>'
+  '<script>(function(){try{var t=localStorage.getItem("theme")||"light";var d=t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);document.documentElement.style.colorScheme=d?"dark":"light"}catch(e){}})()</script>'
 
 const HEAD_START = `<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -58,7 +58,7 @@ export function videoDocument({ data, pageUrl, imageUrl, assets }: VideoDocument
   const meta = [
     metaTag('name', 'description', strings.og.description),
     metaTag('property', 'og:type', 'website'),
-    metaTag('property', 'og:site_name', 'Mergero'),
+    metaTag('property', 'og:site_name', 'Velho'),
     metaTag('property', 'og:locale', LANGUAGE_LOCALES[data.pageLanguage].replace('-', '_')),
     metaTag('property', 'og:url', pageUrl),
     metaTag('property', 'og:title', ogTitle),
@@ -163,12 +163,12 @@ export function messagePage({ lang, title, text, contact = null }: MessagePageIn
 <html lang="${escapeHtml(lang)}">
 <head>
 ${HEAD_START}
-<title>${escapeHtml(title)} | Mergero</title>
+<title>${escapeHtml(title)} | Velho</title>
 <style>${styles()}</style>
 </head>
 <body>
 <main>
-<img class="brand" src="${logoDataUrl()}" alt="Mergero" width="500" height="68">
+<img class="brand" src="${logoDataUrl()}" alt="Velho" width="500" height="68">
 <h1>${escapeHtml(title)}</h1>
 <p class="lead">${escapeHtml(text)}</p>${sections}
 </main>

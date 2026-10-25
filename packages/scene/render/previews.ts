@@ -83,8 +83,9 @@ function faceFilter(): string {
 }
 
 function siteFilter(): string {
+  // ponytail: text drawn as bars, Homebrew ffmpeg ships without drawtext (no freetype). Real text needs an ffmpeg with freetype.
   const text = (value: string, x: number, y: number, size: number, color: string) =>
-    `drawtext=text='${value}':x=${x}:y=${y}:fontsize=${size}:fontcolor=${color}`
+    `drawbox=x=${x}:y=${y + Math.round(size * 0.15)}:w=${Math.round(value.length * size * 0.55)}:h=${Math.round(size * 0.7)}:color=${color}:t=fill`
   const box = (x: number, y: number, w: number, h: number, color: string) =>
     `drawbox=x=${x}:y=${y}:w=${w}:h=${h}:color=${color}:t=fill`
   return [

@@ -22,7 +22,7 @@ function valuationText(valuation: ValuationResult | null): string {
     return `${range}. From ${valuation.dealCount} closed deals in NACE ${valuation.nace2 ?? 'unknown'}${multiples}.`
   }
   return valuation.dealCount < 3
-    ? 'No range: MGX has fewer than 3 closed deals with this NACE code. Mergero gives a range after the meeting.'
+    ? 'No range: MGX has fewer than 3 closed deals with this NACE code. We give a range after the meeting.'
     : 'No range: the profit is 0 or less.'
 }
 

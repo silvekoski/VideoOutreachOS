@@ -53,10 +53,10 @@ export function CommandPalette() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" aria-keyshortcuts="Control+K Meta+K" className="mr-1 rounded-full text-muted-foreground">
+        <Button variant="outline" aria-keyshortcuts="Control+K Meta+K" className="h-9 justify-start rounded-full bg-muted/60 font-normal text-muted-foreground shadow-none sm:w-72">
           <Search aria-hidden="true" />
-          <span className="sr-only sm:not-sr-only">Search</span>
-          <kbd className="hidden rounded border bg-muted px-1 font-mono text-[10px] sm:inline">{MAC ? '⌘K' : 'Ctrl K'}</kbd>
+          <span className="sr-only sm:not-sr-only">Search deals or commands…</span>
+          <kbd className="ml-auto hidden rounded border bg-card px-1.5 font-mono text-[10px] sm:inline">{MAC ? '⌘K' : 'Ctrl K'}</kbd>
         </Button>
       </DialogTrigger>
       <DialogContent {...returnFocus} className="top-1/3 translate-y-0 overflow-hidden rounded-xl! p-0" showCloseButton={false}>

@@ -107,7 +107,7 @@ describe('POST /v/:code/form', () => {
   it('uses a default lost reason when the owner gives none', async () => {
     const deal = publishedDeal(h)
     await post(deal.linkCode, { ...BODY, timing: 'not_interested', notInterestedReason: null })
-    expect(requireDeal(h.db, DEAL_ID).lostReason).toBe('Not interested in a sale')
+    expect(requireDeal(h.db, DEAL_ID).lostReason).toBe('Not right now')
   })
 
   it('rejects an empty or invalid form without a call to MGX', async () => {

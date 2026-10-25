@@ -2,7 +2,7 @@ import { buildCaptions } from '@mergero/shared'
 import type { Timeline } from '@mergero/shared'
 import { Hono } from 'hono'
 import type { AnalystRow } from '../../db/rows.ts'
-import { requireAnalyst } from '../../domain/analysts.ts'
+import { INTRO_LANG, requireAnalyst } from '../../domain/analysts.ts'
 import { requireDeal } from '../../domain/deals.ts'
 import { DomainError } from '../../domain/errors.ts'
 import { getTimeline } from '../../domain/timelines.ts'
@@ -13,7 +13,7 @@ const CAPTIONS_FILE = /^captions\.v(\d+)\.vtt$/u
 
 function introTranscript(timeline: Timeline, analyst: AnalystRow): string | null {
   const variables = timeline.segments.find((segment) => segment.template === 'facecam')?.variables
-  const text = variables && 'transcript' in variables ? variables.transcript : analyst.intros[timeline.language]?.transcript
+  const text = variables && 'transcript' in variables ? variables.transcript : analyst.intros[INTRO_LANG]?.transcript
   return typeof text === 'string' ? text.trim() || null : null
 }
 

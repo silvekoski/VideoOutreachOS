@@ -106,7 +106,7 @@ describe('pipeline end to end with the fake providers and the real scene', () =>
     const row = newestTimeline(t.db, DEAL_ID)
     expect(row).toMatchObject({ version: 1, renderStatus: 'rendered', approvedAt: null })
     const slides = row?.timeline.segments.filter((segment): segment is SlideSegment => segment.template !== 'facecam') ?? []
-    expect(slides.map((segment) => segment.audio.status)).toEqual(Array(7).fill('ok'))
+    expect(slides.map((segment) => segment.audio.status)).toEqual(Array(4).fill('ok'))
     for (const segment of row?.timeline.segments ?? []) {
       expect(segment.startS).not.toBeNull()
       expect(segment.endS).toBeGreaterThan(segment.startS ?? 0)

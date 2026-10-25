@@ -84,12 +84,12 @@ const SECTOR_WORDS: Record<Lang, RegExp> = {
 const WEBSITE_WORDS = /website|verkkosivu|webbplats|nettsted|hjemmeside/iu
 
 const LIKE_YOURS: Record<Lang, RegExp> = {
-  en: /like yours|companies like|your sector/iu,
-  fi: /kaltaisiasi|sellainen yritys|toimialaltasi/iu,
-  sv: /företag som|din bransch/iu,
-  nb: /selskaper som|din bransje/iu,
-  da: /virksomheder som|din branche/iu,
-  de: /Unternehmen wie|Ihrer Branche/iu,
+  en: /your sector/iu,
+  fi: /toimialallasi/iu,
+  sv: /din bransch/iu,
+  nb: /din bransje/iu,
+  da: /din branche/iu,
+  de: /Ihrer Branche/iu,
 }
 
 const LINK_WORDS = /links?\b|linkit|länkar|lenker/iu
@@ -184,15 +184,14 @@ describe('fallbackScript', () => {
   })
 
   it('addresses the owner by first name only when it exists', () => {
-    expect(fallbackScript(7, context('en'))).toMatch(/^Your data stays private, Matti\./u)
-    expect(fallbackScript(7, context('en', { ownerFirstName: ' ' }))).toMatch(/^Your data stays private\./u)
+    expect(fallbackScript(7, context('en'))).toMatch(/^This is how Velho works, Matti\./u)
+    expect(fallbackScript(7, context('en', { ownerFirstName: ' ' }))).toMatch(/^This is how Velho works\./u)
     expect(fallbackScript(7, context('de'))).not.toContain('Matti')
   })
 
   it('writes the calculator text only with the calculator', () => {
     const ask = { figures: FIGURES[2] as Financials }
-    expect(fallbackScript(4, context('de', { ...ask, calculator: true }))).toContain('Rechner')
-    expect(fallbackScript(4, context('de', { ...ask, calculator: false }))).not.toContain('Rechner')
+    expect(fallbackScript(4, context('de', { ...ask, calculator: true }))).not.toBe(fallbackScript(4, context('de', { ...ask, calculator: false })))
   })
 })
 
@@ -379,8 +378,8 @@ describe('fallbackBriefText', () => {
     expect(output.questions).toEqual([
       'What was the revenue of your company in the last fiscal year?',
       'Can we go through the questions in the form that you did not answer yet?',
-      'When could a sale be a realistic option for you?',
-      'What kind of buyer would suit your company best?',
+      'When would a first automation be useful for you?',
+      'Which tools and handoffs take the most time in your team?',
       'What are your goals for the company in the next few years?',
     ])
   })
@@ -457,8 +456,8 @@ describe('checkOutreach', () => {
   it('rejects a dash used as a pause, but not a dash in the company name', () => {
     const error = 'text has a dash (\u2013, \u2014 or " - "), use a comma, a period or parentheses'
     expect(checkOutreach({ ...valid, subject: `Nordic Steel \u2013 a short video` }, context).errors).toEqual([error])
-    expect(checkOutreach({ ...valid, message: valid.message.replace('. It shows', '\u2014it shows') }, context).errors).toEqual([error])
-    expect(checkOutreach({ ...valid, message: valid.message.replace('. It shows', ' - it shows') }, context).errors).toEqual([error])
+    expect(checkOutreach({ ...valid, message: valid.message.replace('. I made', '\u2014I made') }, context).errors).toEqual([error])
+    expect(checkOutreach({ ...valid, message: valid.message.replace('. I made', ' - I made') }, context).errors).toEqual([error])
     const dashed = outreachContext('en', 'email', { company: 'Ahlskog Transport - Kuljetus Oy' })
     expect(checkOutreach(fallbackOutreach(dashed), dashed)).toEqual({ ok: true, errors: [] })
   })

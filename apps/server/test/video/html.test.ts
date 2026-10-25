@@ -96,8 +96,8 @@ describe('createHtmlRoutes', () => {
       expect(res.status, route).toBe(200)
       const html = await res.text()
       expect(html.startsWith('<!DOCTYPE html>\n<html lang="en">')).toBe(true)
-      expect(html).toContain('<title>Mergero video tool</title>')
-      expect(html).toContain('localStorage.getItem("theme")||"dark"')
+      expect(html).toContain('<title>Velho Video Outreach</title>')
+      expect(html).toContain('localStorage.getItem("theme")||"light"')
       expect(html).toContain('<script type="module" src="http://vite.test/src/admin/main.tsx"></script>')
       expect(html).toContain('<div id="root"></div>')
     }

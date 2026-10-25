@@ -14,10 +14,12 @@ export default defineConfig({
     origin: 'http://localhost:5173',
     fs: { deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', `${storageDir}/**`] },
   },
+  preview: { host: '127.0.0.1', port: 4173 },
   build: {
     manifest: true,
     rollupOptions: {
       input: {
+        index: path.resolve(import.meta.dirname, 'index.html'),
         admin: path.resolve(import.meta.dirname, 'src/admin/main.tsx'),
         video: path.resolve(import.meta.dirname, 'src/video/main.tsx'),
       },

@@ -11,7 +11,7 @@ import {
 import { THEMES } from './themes'
 
 export function ThemeMenu() {
-  const { theme = 'dark', setTheme } = useTheme()
+  const { theme = 'light', setTheme } = useTheme()
   const current = THEMES.find((item) => item.value === theme) ?? THEMES[1]
   return (
     <DropdownMenu>

@@ -1,5 +1,5 @@
 {
-  "company": "Mergero",
+  "company": "Velho",
   "website": "https://mergero.com",
   "privacyUrl": "https://mergero.com/privacy-policy/",
   "email": "office@mergero.com",
@@ -8,14 +8,14 @@
     "publicBuyerCount": 1700
   },
   "brand": {
-    "primary": "#0027FF",
+    "primary": "#2563EB",
     "ink": "#111111",
     "text": "#333333",
     "muted": "#6B6B6B",
     "surface": "#F5F5F5",
     "white": "#FFFFFF",
-    "logoOnDark": "config/mergero-logo-white.svg",
-    "logoOnLight": "config/mergero-logo-dark.svg"
+    "logoOnDark": "config/velho-logo-white.svg",
+    "logoOnLight": "config/velho-logo-dark.svg"
   },
   "offices": {
     "helsinki": {

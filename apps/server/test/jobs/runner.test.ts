@@ -42,7 +42,7 @@ describe('job runner', () => {
     expect(scrape).toMatchObject({ status: 'failed', error: 'The worker stopped while the job was running' })
     expect(getDeal(t.db, DEAL_ID)?.scrape).toMatchObject({ ok: false, reason: 'error', homeUrl: 'https://acme.test/' })
     expect(jobsForDeal(t.db, DEAL_ID, ['write-script']).map((job) => job.payload)).toEqual([
-      { dealId: DEAL_ID, version: 1, slides: [2, 3, 4, 5, 6, 7, 8], lines: false },
+      { dealId: DEAL_ID, version: 1, slides: [3, 4, 7, 8], lines: false },
     ])
     expect(claimNext(t.db, T0)).toMatchObject({ key: jobKeys.backup(T0), attempts: 2 })
   })

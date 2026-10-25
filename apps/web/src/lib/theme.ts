@@ -1,7 +1,7 @@
 import { readStorage } from './storage'
 
 export const THEME_STORAGE_KEY = 'theme'
-export const DEFAULT_THEME = 'dark'
+export const DEFAULT_THEME = 'light'
 
 export function applyStoredTheme(): void {
   const stored = readStorage(THEME_STORAGE_KEY) ?? DEFAULT_THEME

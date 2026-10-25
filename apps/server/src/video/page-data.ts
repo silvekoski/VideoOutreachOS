@@ -6,7 +6,7 @@ import type { DealRow, TimelineRow } from '../db/rows.ts'
 import { requireAnalyst } from '../domain/analysts.ts'
 import { contactFor } from '../domain/config.ts'
 import { addDays } from '../domain/deals.ts'
-import { calculatorEnabled, calculatorFor } from './valuation.ts'
+import { calculatorFor } from './valuation.ts'
 
 export function mediaUrls(code: string, version: number, preview: boolean): VideoPageData['media'] {
   const base = `/v/${code}`
@@ -62,7 +62,7 @@ export function buildPageData(
     buyers,
     buyerScope: buyersVariables?.template === 'buyers' ? (buyersVariables.scope ?? 'sector') : 'sector',
     calculator: calculatorFor(deal),
-    calculatorEnabled: calculatorEnabled(deal),
+    calculatorEnabled: false, // ponytail: valuation calculator is an M&A feature; the Velho story has no sale to value.
     customQuestions: deal.customQuestions,
     formSent: deal.formSentAt !== null,
     meetingAt: deal.meetingAt,

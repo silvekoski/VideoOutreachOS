@@ -41,7 +41,7 @@ export function DealHeader({ deal }: { deal: DealDetailDto }) {
 
   return (
     <header className="grid gap-3 print:hidden">
-      <title>{`${deal.company} | Mergero video tool`}</title>
+      <title>{`${deal.company} | Velho Video Outreach`}</title>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 id="page-title" tabIndex={-1} className="text-lg font-semibold tracking-tight outline-none">{deal.company}</h1>

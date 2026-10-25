@@ -53,7 +53,7 @@ export class FeatherlessClient implements LanguageModelClient {
           authorization: `Bearer ${this.#apiKey}`,
           'content-type': 'application/json',
           accept: 'text/event-stream',
-          'x-title': 'Mergero video tool',
+          'x-title': 'Velho Video Outreach',
         },
         body: JSON.stringify(body),
         signal,

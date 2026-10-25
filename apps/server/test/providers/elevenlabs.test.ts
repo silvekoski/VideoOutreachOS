@@ -45,14 +45,14 @@ describe('ElevenLabsClient', () => {
     expect(speechBodies(fetch)).toEqual([{ text: 'Hej.', model_id: 'eleven_multilingual_v2' }])
   })
 
-  it('uses a trained model for a professional voice that has no training for the configured model', async () => {
+  it('uses one trained model in each language for a professional voice that has no training for the configured model', async () => {
     const fetch = mockFetch(() => new Response(mp3), PVC)
     const client = new ElevenLabsClient('xi-key', 'eleven_v3')
     await client.synthesize({ voiceId: 'pvc', text: 'Hei.', language: 'fi' })
     await client.synthesize({ voiceId: 'pvc', text: 'Hei Nora.', language: 'nb' })
     expect(speechBodies(fetch)).toEqual([
       { text: 'Hei.', model_id: 'eleven_multilingual_v2' },
-      { text: 'Hei Nora.', model_id: 'eleven_flash_v2_5', language_code: 'no' },
+      { text: 'Hei Nora.', model_id: 'eleven_multilingual_v2' },
     ])
     expect(fetch.mock.calls.filter(([url]) => url.endsWith('/v1/voices/pvc'))).toHaveLength(1)
   })
