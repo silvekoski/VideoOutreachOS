@@ -1,12 +1,24 @@
-![Mergero VideoOutreachOS: personalized video outreach that turns business prospects into booked meetings.](docs/mergero-banner.png)
+![Velho Video Outreach: a personal video for every prospect, and a reason to talk.](docs/velho-banner.png)
 
-# VideoOutreachOS
+# Velho Video Outreach
 
-The Mergero video tool makes a personalized video for the owner of a company in the Mergero Pipedrive pipeline. The owner gets a link. The link opens a page with the video, a valuation calculator and a button that books a Teams meeting with the analyst.
+Velho Video Outreach makes a short personal video for the owner of a growing B2B company. The tool reads the company website, writes the script, speaks it in the voice of the sender and renders the video. The owner gets a link. The link opens a page with the video, a short form and a calendar that books a 20-minute working session with Velho.
 
-The tool records the engagement and moves the company through the Pipedrive pipeline. It also makes follow-up tasks and writes a meeting brief before each meeting.
+Built for the [Velho challenge](https://prompthack.aaltoes.com/hackathon-04/challenges/velho) at Aaltoes Prompt Hackathon 04. Velho is a strategic AI growth partner. It finds the manual work that slows a company down, builds the fix with AI and automation, and makes sure people actually use it. The video tells that story to one company at a time.
 
-The PRD.md file holds the requirements. The `.planning/` folder holds the design notes. The `.planning/architecture.md` file is the contract for the code.
+**Live demo:** https://velho-video-outreach.bobs.build
+
+## The video
+
+| Slide | What it says |
+|---|---|
+| 1. Intro | The face-cam intro of the sender. |
+| 2. Your company | What the company does, read from its website, and where a company like it usually loses time to manual work. |
+| 3. Your growth | Revenue and profit from public figures, and why growth adds manual work. Without figures, the owner gives the team size in the form. |
+| 4. How Velho works | Find the manual work, build the fix with AI and automation, make sure people use it. |
+| 5. Book a working session | 20 minutes on Teams: pick one manual workflow and sketch a practical fix. |
+
+The video speaks Finnish, Swedish, Norwegian, Danish, German or English, based on the company. The tool records how the owner watches, moves the deal through the pipeline, makes follow-up tasks and writes a meeting brief before each session.
 
 ## Repository layout
 
@@ -14,12 +26,12 @@ The PRD.md file holds the requirements. The `.planning/` folder holds the design
 |---|---|
 | `apps/server` | Hono API and worker (1 package, 2 entry points) |
 | `apps/web` | Vite app for the admin panel and the video page |
-| `apps/mgx-mock` | MGX MCP server mock and buyer logos |
-| `packages/shared` | types, zod schemas, pure logic, i18n |
+| `apps/mgx-mock` | MCP server mock, buyer logos and the demo company websites |
+| `packages/shared` | types, zod schemas, pure logic, i18n, template scripts |
 | `packages/scene` | Revideo scene and render |
 | `scripts` | Pipedrive setup and seed |
-| `config` | Pipedrive field and stage IDs, Mergero facts and brand |
-| `seed` | demo data for the fake providers |
+| `config` | Pipedrive field and stage IDs, brand and contact facts |
+| `seed` | demo data for the fake providers, and the demo websites in `seed/sites` |
 | `e2e` | Playwright tests |
 
 ## Requirements
@@ -45,7 +57,7 @@ Open http://localhost:3000. The command starts four processes:
 |---|---|---|
 | API | http://localhost:3000 | admin panel, video page, media, mock Asiakastieto |
 | Worker | none | scrape, scripts, audio, render, Pipedrive writes, hourly sweep, backup |
-| Mock MGX | http://localhost:3100 | MCP server, buyer logos |
+| Mock MGX | http://localhost:3100 | MCP server, logos, demo company websites |
 | Vite | http://localhost:5173 | front end modules in development |
 
 Without API keys, each external service uses a local fake. The avatar in the top bar then shows an amber dot, and the avatar menu lists the "Demo providers":
@@ -54,66 +66,61 @@ Without API keys, each external service uses a local fake. The avatar in the top
 |---|---|---|
 | Pipedrive | `PIPEDRIVE_API_TOKEN`, `PIPEDRIVE_COMPANY_DOMAIN` | JSON store copied from `seed/pipedrive.json` |
 | Firecrawl | `FIRECRAWL_API_KEY` | local Chrome scraper |
-| Featherless (Kimi-K3) | `FEATHERLESS_API_KEY` | template writer |
+| Featherless (Kimi-K3) | `FEATHERLESS_API_KEY` | template writer in six languages |
 | ElevenLabs | `ELEVENLABS_API_KEY` | macOS `say`, else silence |
 
-The companies in `seed/pipedrive.json` are real companies with public websites, so the scrapers can read them. The seed file has no figures for these companies. Slide 4 asks the owner to enter the figures. The email addresses use the reserved domain `example.com`, so that no message goes to a real person.
+For local tests without a face-cam intro or a voice clone, set `DEV_BYPASS=1`. Then a sender without an intro gets a 3 s placeholder clip, and a sender without a voice clone gets the macOS `say` voice. The bypass has no effect when `NODE_ENV` is `production`.
 
-For local tests without a face-cam intro or a voice clone, set `DEV_BYPASS=1`. Then an analyst without an intro gets a 3 s placeholder clip, and an analyst without a voice clone gets the macOS `say` voice. The worker makes the clip at start and moves the blocked deals forward. The bypass has no effect when `NODE_ENV` is `production`.
+## Demo companies
+
+The seed has 12 fictional Finnish companies that fit Velho's customers: established companies with real operations and a reason to talk now. Each one has a small website in `seed/sites`, which the mock MGX serves, and public figures in `seed/asiakastieto.json`. The email addresses use the reserved domain `example.com`, so no message goes to a real person.
+
+| Company | Business | City | Why now |
+|---|---|---|---|
+| Pohjanmaan Ohutlevy Oy | sheet metal | Seinäjoki | hiring a production planner |
+| Saimaan Terminaalit Oy | warehousing and logistics | Lappeenranta | new terminal in Kouvola |
+| Hämeen Kiinteistöpalvelu Oy | property maintenance | Tampere | merged two local companies |
+| Leipomo Kultajyvä Oy | bakery | Lahti | new retail chain customer |
+| Kaarnan Sähkö Oy | electrical contracting | Oulu | new office in Kajaani |
+| Lounais-Tilitoimisto Oy | accounting | Turku | fast client growth |
+| Keski-Suomen Puutuote Oy | sawmill and wood products | Jyväskylä | new planing line |
+| Vaasan Konehuolto Oy | machine maintenance | Vaasa | new service contracts |
+| Kymen Tukkupalvelu Oy | food wholesale | Kotka | new webshop for restaurants |
+| Itä-Suomen Rakennus Oy | construction | Joensuu | won public contracts |
+| Satakunnan Kuljetus Oy | road freight | Pori | growing the fleet |
+| Hämeenlinnan Hoivapalvelut Oy | elderly care | Hämeenlinna | two new care homes |
 
 ## Make a first video
 
-1. Select an analyst in the top bar.
-2. Open the profile menu. Record the face-cam intro and its transcript in each language that you use. Upload a voice sample and the signed consent.
-3. Open a deal: http://localhost:3000/deals/4001. The Video field in Pipedrive opens the same address.
-4. Wait until the deal is in the Review stage. Check the scripts and the slides, then select "Approve and publish".
-5. Copy the link for a channel from the deal page.
-
-| Deal | Country | Video language |
-|---|---|---|
-| 4001 | Finland | Finnish |
-| 4002 | Finland | Swedish |
-| 4003 | Finland | Finnish |
-| 4004 | Sweden | Swedish |
-| 4005 | Norway | Norwegian |
-| 4006 | Denmark | Danish |
-| 4007 | Germany | German |
-| 4008 | Austria | German |
-| 4009 | Switzerland | German |
-| 4010 | Iceland | English |
+1. Open the profile menu. Record the face-cam intro and its transcript in each language that you use. Upload a voice sample and the signed consent.
+2. On the Deals page, select **Generate videos** and pick the companies.
+3. Wait until the deal is in the Review stage, about two minutes. Check the scripts and the slides, then select **Approve and publish**.
+4. Copy the link for a channel from the deal page.
 
 ## Deal stages
 
 A deal moves forward through these stages. It does not move back.
 
-1. **Draft**: the worker scrapes the website, writes the scripts, makes the audio and renders the video.
-2. **Review**: the analyst checks the scripts and the slides.
-3. **Link sent**: the analyst publishes the video, and the link is live.
+1. **Draft**: the worker reads the website, writes the scripts, makes the audio and renders the video.
+2. **Review**: the sender checks the scripts and the slides.
+3. **Link sent**: the sender publishes the video, and the link is live.
 4. **Opened**: the owner opens the link.
 5. **Form sent**: the owner sends the form.
-6. **Meeting booked**: the owner books a meeting. The tool closes the open follow-up tasks for the deal.
+6. **Meeting booked**: the owner books a working session. The tool closes the open follow-up tasks for the deal.
 
-A deal goes to **Failed** when a worker job fails. If the owner selects "not interested" in the form, the deal goes to **Lost**. The tool then sets the deal to lost in Pipedrive, with the reason. The tool also follows each won, lost and reopened deal in Pipedrive.
+A deal goes to **Failed** when a worker job fails. If the owner says "not right now" in the form, the deal goes to **Lost**, and the tool sets it to lost in Pipedrive with the reason.
 
 ## Connect a real Pipedrive account
 
-Run `pnpm setup:pipedrive`. The script does these steps:
+Run `pnpm setup:pipedrive`. The script makes the custom fields and the stages in Pipedrive, writes `config/pipedrive.json` and fills the Video field. Run `pnpm seed:pipedrive` to copy the demo companies into your Pipedrive account. This step is optional.
 
-- It makes the custom fields and the stages in Pipedrive.
-- It writes the `config/pipedrive.json` file.
-- It fills the Video field.
-
-Run `pnpm seed:pipedrive` to copy the demo companies, persons and deals into your Pipedrive account. This step is optional.
-
-The API reads the Pipedrive changes at a 10 s interval while an admin panel is open. With no open panel, it uses a 60 s interval. When less than 20 % of the daily token budget remains, it uses a 120 s interval.
-
-A lost, won or deleted deal in Pipedrive closes the deal in the tool. "Edit contact" on the deal page saves the company and contact data in Pipedrive.
+The API reads the Pipedrive changes at a 10 s interval while an admin panel is open, and at a 60 s interval otherwise.
 
 ## Production
 
-To build the tool, run `pnpm build`. To start the tool, run `pnpm start`.
+To build the tool, run `pnpm build`. To start the tool, run `pnpm start`. The live demo runs on a Verda CPU instance with systemd and Caddy. `deploy/mergero.service` is the service unit, and `scripts/deploy.sh` updates the server from `main`.
 
-Run the tool on a private address only. The admin panel has no sign-in.
+The admin panel has no sign-in. Run the tool on a private address, or behind your own access control.
 
 ## Checks
 
@@ -124,11 +131,7 @@ Run the tool on a private address only. The admin panel has no sign-in.
 | Unit tests | `pnpm test` |
 | End-to-end tests (Playwright, mobile Chrome and mobile Safari) | `pnpm e2e` |
 
-Before the first e2e run, install WebKit with `pnpm exec playwright install webkit`. The mobile Chrome tests use the installed Google Chrome.
-
-The e2e run builds the web app. Then it starts its own API, worker and mock MGX on free ports, with the fake providers and a temporary folder. It uploads an intro, a voice sample and a consent. Then it renders and publishes 3 demo deals (4001, 4007 and 4009) before the tests start.
-
-This setup takes some minutes. To keep the temporary folder and its logs after the run, set `MERGERO_E2E_KEEP=1`.
+Before the first e2e run, install WebKit with `pnpm exec playwright install webkit`.
 
 ## Data
 
